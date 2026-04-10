@@ -90,7 +90,6 @@ async function startOAuthLogin() {
     redirect_uri: getRedirectUri(),
     code_challenge: challenge,
     code_challenge_method: 'S256',
-    scope: 'public',
     state: stateVal,
   });
 
@@ -137,7 +136,18 @@ async function exchangeCodeForToken(code) {
 }
 
 async function restoreOrAuthorize() {
-  const code = new URLSearchParams(window.location.search).get('code');
+  const qp = new URLSearchParams(window.location.search);
+  const oauthError = qp.get('error');
+  if (oauthError) {
+    const desc = qp.get('error_description') || qp.get('message') || oauthError;
+    el.msg.textContent = `FFLogs認証エラー: ${decodeURIComponent(desc)}`;
+    history.replaceState({}, '', getRedirectUri());
+    state.token = localStorage.getItem(TOKEN_KEY) || '';
+    el.authStatus.textContent = state.token ? '連携済み' : '未連携';
+    return;
+  }
+
+  const code = qp.get('code');
   if (code) {
     state.token = await exchangeCodeForToken(code);
   } else {

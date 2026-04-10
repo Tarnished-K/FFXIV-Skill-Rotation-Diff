@@ -96,7 +96,8 @@ async function fetchReportData(reportId, apiKey) {
 }
 
 function extractSelectableFights(reportJson) {
-  return (reportJson.fights || []).filter(f => f.boss && f.boss !== 0);
+  // ボス戦かつKillのみ選択対象にする
+  return (reportJson.fights || []).filter(f => f.boss && f.boss !== 0 && f.kill === true);
 }
 
 function getPlayersFromFight(reportJson, fightId) {
@@ -107,8 +108,14 @@ function getPlayersFromFight(reportJson, fightId) {
 
   const allowedIds = new Set(fight.friendlyPlayers || []);
   const players = (reportJson.friendlies || [])
-    .filter(p => allowedIds.size === 0 || allowedIds.has(p.id))
     .filter(p => !p.petOwner)
+    .filter(p => {
+      // レポートによっては fight.friendlyPlayers が不完全な場合があるため
+      // friendly 側の fights 配列も併用して厳密に絞る
+      const inAllowed = allowedIds.size > 0 ? allowedIds.has(p.id) : true;
+      const inFightByList = Array.isArray(p.fights) ? p.fights.includes(Number(fightId)) : true;
+      return inAllowed && inFightByList;
+    })
     .map(p => ({
       id: String(p.id),
       name: p.name || `Unknown-${p.id}`,
@@ -243,10 +250,12 @@ el.loadBtn.addEventListener('click', async () => {
 
     fillFightSelect(el.fightA, fightsA);
     fillFightSelect(el.fightB, fightsB);
+    el.playerA.innerHTML = '';
+    el.playerB.innerHTML = '';
     el.step2.classList.remove('hidden');
     el.step3.classList.add('hidden');
     el.step4.classList.add('hidden');
-    el.msg.textContent = `戦闘一覧取得成功: A=${fightsA.length}件 / B=${fightsB.length}件`; 
+    el.msg.textContent = `Kill戦闘一覧取得成功: A=${fightsA.length}件 / B=${fightsB.length}件`; 
   } catch (e) {
     el.msg.textContent = `取得失敗: ${e.message}`;
   } finally {

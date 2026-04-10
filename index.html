@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FFXIV Skill Rotation Diff (MVP)</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>FFXIV Skill Rotation Diff</h1>
+      <p>FFLogs URL 2件からスキル回しを比較するMVP</p>
+    </header>
+
+    <main>
+      <section class="card" id="step1">
+        <h2>1. ログURL入力</h2>
+        <label>FFLogs API Key（V1）
+          <input id="apiKey" type="password" placeholder="FFLogs V1 API Key" />
+        </label>
+        <label>ログURL A <input id="urlA" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
+        <label>ログURL B <input id="urlB" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
+        <button id="loadBtn">読み込み開始</button>
+        <p id="step1Message" class="message"></p>
+      </section>
+
+      <section class="card hidden" id="step2">
+        <h2>2. 戦闘データ選択（Killのみ）</h2>
+        <div class="player-grid">
+          <label>ログA 戦闘
+            <select id="fightA"></select>
+          </label>
+          <label>ログB 戦闘
+            <select id="fightB"></select>
+          </label>
+        </div>
+        <button id="loadPlayersBtn">この戦闘でプレイヤー一覧を取得</button>
+        <p id="step2Message" class="submessage"></p>
+      </section>
+
+      <section class="card hidden" id="step3">
+        <h2>3. 比較プレイヤー選択</h2>
+        <div class="player-grid">
+          <label>ログAプレイヤー
+            <select id="playerA"></select>
+          </label>
+          <label>ログBプレイヤー
+            <select id="playerB"></select>
+          </label>
+        </div>
+        <button id="compareBtn">比較開始</button>
+      </section>
+
+      <section class="card hidden" id="step4">
+        <h2>4. 比較結果</h2>
+        <div class="tabs">
+          <button class="tab active" data-tab="all">全体TL</button>
+          <button class="tab" data-tab="odd">奇数分TL</button>
+          <button class="tab" data-tab="even">偶数分TL</button>
+          <button class="tab" data-tab="dps">DPS推移</button>
+        </div>
+
+        <div id="timelineWrap" class="timeline-wrap"></div>
+        <canvas id="dpsCanvas" class="hidden" width="1200" height="280"></canvas>
+      </section>
+    </main>
+
+    <footer>
+      <small>注: まず戦闘を選んでからプレイヤーを選択します。TL/DPSは現在サンプル描画です。</small>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

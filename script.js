@@ -1,5 +1,6 @@
 const state = {
   iconMap: [],
+  apiKey: '',
   urlA: null,
   urlB: null,
   playersA: [],
@@ -14,6 +15,7 @@ const state = {
 };
 
 const el = {
+  apiKey: document.getElementById('apiKey'),
   urlA: document.getElementById('urlA'),
   urlB: document.getElementById('urlB'),
   loadBtn: document.getElementById('loadBtn'),
@@ -32,9 +34,9 @@ function parseFFLogsUrl(raw) {
   try {
     const u = new URL(raw);
     const match = u.pathname.match(/\/reports\/([A-Za-z0-9]+)/);
-    const fight = u.searchParams.get('fight');
-    if (!match || !fight) return null;
-    return { reportId: match[1], fightId: Number(fight), original: raw };
+    const fight = Number(u.searchParams.get('fight'));
+    if (!match || Number.isNaN(fight)) return null;
+    return { reportId: match[1], fightId: fight, original: raw };
   } catch {
     return null;
   }
@@ -52,27 +54,56 @@ async function loadIconMap() {
 }
 
 function findIcon(actionNameEn) {
-  const found = state.iconMap.find(r => r.action_name_en === actionNameEn || (r.aliases || []).includes(actionNameEn));
+  const found = state.iconMap.find(
+    r => r.action_name_en === actionNameEn || (r.aliases || []).includes(actionNameEn),
+  );
   return found?.icon_path || '';
 }
 
-function makeMockPlayers(seed) {
-  return [
-    { id: `${seed}-1`, name: 'Player Alpha', job: 'PLD' },
-    { id: `${seed}-2`, name: 'Player Beta', job: 'WAR' },
-    { id: `${seed}-3`, name: 'Player Gamma', job: 'SAM' },
-  ];
+function normalizeJobCode(type) {
+  if (!type) return 'UNK';
+  return String(type).toUpperCase();
 }
 
-function makeMockTimeline() {
+async function fetchReportPlayers(reportId, fightId, apiKey) {
+  const url = `https://www.fflogs.com/v1/report/fights/${reportId}?api_key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`FFLogs API error: ${res.status}`);
+  }
+  const json = await res.json();
+  const fight = (json.fights || []).find(f => Number(f.id) === Number(fightId));
+  if (!fight) {
+    throw new Error(`fight=${fightId} が見つかりません`);
+  }
+
+  const allowedIds = new Set(fight.friendlyPlayers || []);
+  const players = (json.friendlies || [])
+    .filter(p => allowedIds.size === 0 || allowedIds.has(p.id))
+    .filter(p => !p.petOwner)
+    .map(p => ({
+      id: String(p.id),
+      name: p.name || `Unknown-${p.id}`,
+      job: normalizeJobCode(p.type),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+
+  if (!players.length) {
+    throw new Error('プレイヤー一覧を取得できませんでした');
+  }
+  return players;
+}
+
+function makeSampleTimeline(baseName) {
   const actions = ['Fast Blade', 'Riot Blade', 'Royal Authority', 'Fight or Flight', 'Requiescat'];
   return Array.from({ length: 45 }, (_, i) => ({
     t: i * 6,
     action: actions[i % actions.length],
+    actor: baseName,
   }));
 }
 
-function makeMockDps() {
+function makeSampleDps() {
   let x = 20000;
   return Array.from({ length: 120 }, (_, i) => {
     x += (Math.random() - 0.5) * 1200;
@@ -81,7 +112,9 @@ function makeMockDps() {
 }
 
 function fillPlayerSelect(select, players) {
-  select.innerHTML = players.map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`).join('');
+  select.innerHTML = players
+    .map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`)
+    .join('');
 }
 
 function filterTimeline(records, tab) {
@@ -98,11 +131,14 @@ function renderTimeline() {
   const pxPerSec = 6;
   const width = Math.max(1200, maxT * pxPerSec + 120);
 
-  const buildEvents = (records, cls) => records.map(r => {
-    const x = 40 + r.t * pxPerSec;
-    const icon = findIcon(r.action);
-    return `<div class="event ${cls}" style="left:${x}px; top:${cls==='a' ? 30 : 110}px" title="${r.t}s ${r.action}">${icon ? `<img src="${icon}" alt="${r.action}" />` : ''}</div>`;
-  }).join('');
+  const buildEvents = (records, cls) =>
+    records
+      .map(r => {
+        const x = 40 + r.t * pxPerSec;
+        const icon = findIcon(r.action);
+        return `<div class="event ${cls}" style="left:${x}px; top:${cls === 'a' ? 30 : 110}px" title="${r.t}s ${r.action}">${icon ? `<img src="${icon}" alt="${r.action}" />` : ''}</div>`;
+      })
+      .join('');
 
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px">
@@ -122,13 +158,14 @@ function renderDps() {
   ctx.fillStyle = '#020617';
   ctx.fillRect(0, 0, cvs.width, cvs.height);
 
+  const maxV = Math.max(...state.dpsA.map(p => p.v), ...state.dpsB.map(p => p.v), 1);
   const drawLine = (arr, color) => {
-    const maxV = Math.max(...state.dpsA.map(p => p.v), ...state.dpsB.map(p => p.v), 1);
     ctx.beginPath();
     arr.forEach((p, i) => {
       const x = (p.t / 600) * (cvs.width - 40) + 20;
       const y = cvs.height - 20 - (p.v / maxV) * (cvs.height - 40);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     });
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -142,30 +179,51 @@ function renderDps() {
 el.loadBtn.addEventListener('click', async () => {
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
+  state.apiKey = el.apiKey.value.trim();
+
+  if (!state.apiKey) {
+    el.msg.textContent = 'FFLogs API Key（V1）を入力してください。';
+    return;
+  }
   if (!parsedA || !parsedB) {
     el.msg.textContent = 'FFLogs URL形式を確認してください（fightパラメータ必須）。';
     return;
   }
 
-  state.urlA = parsedA;
-  state.urlB = parsedB;
-  state.iconMap = await loadIconMap();
-  state.playersA = makeMockPlayers(parsedA.reportId);
-  state.playersB = makeMockPlayers(parsedB.reportId);
+  el.loadBtn.disabled = true;
+  el.msg.textContent = 'FFLogsからプレイヤー一覧を取得中...';
 
-  fillPlayerSelect(el.playerA, state.playersA);
-  fillPlayerSelect(el.playerB, state.playersB);
-  el.msg.textContent = `読み込み成功: A=${parsedA.reportId} fight=${parsedA.fightId}, B=${parsedB.reportId} fight=${parsedB.fightId}`;
-  el.step2.classList.remove('hidden');
+  try {
+    state.urlA = parsedA;
+    state.urlB = parsedB;
+    state.iconMap = await loadIconMap();
+    state.playersA = await fetchReportPlayers(parsedA.reportId, parsedA.fightId, state.apiKey);
+    state.playersB = await fetchReportPlayers(parsedB.reportId, parsedB.fightId, state.apiKey);
+
+    fillPlayerSelect(el.playerA, state.playersA);
+    fillPlayerSelect(el.playerB, state.playersB);
+    el.msg.textContent = `取得成功: A=${state.playersA.length}人 / B=${state.playersB.length}人`;
+    el.step2.classList.remove('hidden');
+  } catch (e) {
+    el.msg.textContent = `取得失敗: ${e.message}`;
+  } finally {
+    el.loadBtn.disabled = false;
+  }
 });
 
 el.compareBtn.addEventListener('click', () => {
   state.selectedA = state.playersA.find(p => p.id === el.playerA.value);
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
-  state.timelineA = makeMockTimeline();
-  state.timelineB = makeMockTimeline();
-  state.dpsA = makeMockDps();
-  state.dpsB = makeMockDps();
+
+  if (!state.selectedA || !state.selectedB) {
+    return;
+  }
+
+  // TL/DPS本番取得は次フェーズ。ここでは選択した実プレイヤー名に紐づいたサンプルを描画。
+  state.timelineA = makeSampleTimeline(state.selectedA.name);
+  state.timelineB = makeSampleTimeline(state.selectedB.name);
+  state.dpsA = makeSampleDps();
+  state.dpsB = makeSampleDps();
 
   el.step3.classList.remove('hidden');
   state.currentTab = 'all';

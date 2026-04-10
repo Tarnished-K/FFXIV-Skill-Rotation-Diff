@@ -25,7 +25,20 @@
       </section>
 
       <section class="card hidden" id="step2">
-        <h2>2. 比較プレイヤー選択</h2>
+        <h2>2. 戦闘データ選択（ボス名・討伐時間）</h2>
+        <div class="player-grid">
+          <label>ログA 戦闘
+            <select id="fightA"></select>
+          </label>
+          <label>ログB 戦闘
+            <select id="fightB"></select>
+          </label>
+        </div>
+        <button id="loadPlayersBtn">この戦闘でプレイヤー一覧を取得</button>
+      </section>
+
+      <section class="card hidden" id="step3">
+        <h2>3. 比較プレイヤー選択</h2>
         <div class="player-grid">
           <label>ログAプレイヤー
             <select id="playerA"></select>
@@ -37,8 +50,8 @@
         <button id="compareBtn">比較開始</button>
       </section>
 
-      <section class="card hidden" id="step3">
-        <h2>3. 比較結果</h2>
+      <section class="card hidden" id="step4">
+        <h2>4. 比較結果</h2>
         <div class="tabs">
           <button class="tab active" data-tab="all">全体TL</button>
           <button class="tab" data-tab="odd">奇数分TL</button>
@@ -52,7 +65,7 @@
     </main>
 
     <footer>
-      <small>注: プレイヤー一覧はFFLogs APIから取得。TL/DPSは現在サンプル描画です。</small>
+      <small>注: まず戦闘を選んでからプレイヤーを選択します。TL/DPSは現在サンプル描画です。</small>
     </footer>
 
     <script src="script.js"></script>

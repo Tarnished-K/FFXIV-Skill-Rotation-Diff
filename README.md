@@ -3,8 +3,9 @@
 ブラウザのみで動くMVPです。
 
 ## 現在の実装
-- FFLogs URL 2件入力 + reportId/fightId抽出
-- FFLogs API（V1）を使った実プレイヤー一覧取得
+- FFLogs URL 2件入力（report単位）
+- FFLogs API（V1）で戦闘一覧（ボス名/討伐時間）を取得
+- 戦闘を各ログ1件ずつ選択後、その戦闘に参加したプレイヤー一覧を取得
 - プレイヤー選択UI
 - 横スクロールTL比較（全体/奇数分/偶数分）
 - DPS推移（Canvas）

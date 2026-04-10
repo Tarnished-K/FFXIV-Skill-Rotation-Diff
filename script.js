@@ -46,6 +46,8 @@ const el = {
 };
 
 function getRedirectUri() {
+  // FFLogs側の登録と完全一致させるため、ルート配下は末尾スラッシュを付けない
+  if (window.location.pathname === '/' || window.location.pathname === '') return window.location.origin;
   return window.location.origin + window.location.pathname;
 }
 
@@ -92,7 +94,7 @@ async function startOAuthLogin() {
     state: stateVal,
   });
 
-  window.location.href = `https://www.fflogs.com/oauth/authorize?${params.toString()}`;
+  window.location.href = `https://ja.fflogs.com/oauth/authorize?${params.toString()}`;
 }
 
 async function exchangeCodeForToken(code) {
@@ -112,7 +114,7 @@ async function exchangeCodeForToken(code) {
     code_verifier: verifier,
   });
 
-  const res = await fetch('https://www.fflogs.com/oauth/token', {
+  const res = await fetch('https://ja.fflogs.com/oauth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
@@ -148,7 +150,7 @@ async function graphqlRequest(query, variables = {}) {
   if (!state.token) {
     throw new Error('FFLogs連携が必要です');
   }
-  const res = await fetch('https://www.fflogs.com/api/v2/client', {
+  const res = await fetch('https://ja.fflogs.com/api/v2/client', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -2,7 +2,6 @@ const FFLOGS_V2_CLIENT_ID = 'a182a7d9-18bd-49d6-a5d3-26f40a3f3a7d';
 const AUTH_STATE_KEY = 'fflogs_v2_state';
 const AUTH_VERIFIER_KEY = 'fflogs_v2_verifier';
 const TOKEN_KEY = 'fflogs_v2_access_token';
-
 const state = {
   iconMap: [],
   token: '',
@@ -24,8 +23,8 @@ const state = {
   timelineCountA: 0,
   timelineCountB: 0,
   actionById: new Map(),
+  zoom: 1,
 };
-
 const el = {
   connectBtn: document.getElementById('connectBtn'),
   disconnectBtn: document.getElementById('disconnectBtn'),
@@ -47,14 +46,22 @@ const el = {
   tabs: [...document.querySelectorAll('.tab')],
   timelineWrap: document.getElementById('timelineWrap'),
   dpsCanvas: document.getElementById('dpsCanvas'),
+  zoomInBtn: document.getElementById('zoomInBtn'),
+  zoomOutBtn: document.getElementById('zoomOutBtn'),
+  zoomLabel: document.getElementById('zoomLabel'),
+  debugLog: document.getElementById('debugLog'),
 };
-
+function logDebug(message, payload = null) {
+  const t = new Date().toLocaleTimeString();
+  const line = payload ? `[${t}] ${message} ${JSON.stringify(payload).slice(0, 500)}` : `[${t}] ${message}`;
+  el.debugLog.textContent += line + "\n";
+  el.debugLog.scrollTop = el.debugLog.scrollHeight;
+}
 function getRedirectUri() {
   // FFLogs側の登録と完全一致させるため、ルート配下は末尾スラッシュを付けない
   if (window.location.pathname === '/' || window.location.pathname === '') return window.location.origin;
   return window.location.origin + window.location.pathname;
 }
-
 function randomString(length = 64) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
   let out = '';
@@ -63,12 +70,10 @@ function randomString(length = 64) {
   for (let i = 0; i < arr.length; i++) out += chars[arr[i] % chars.length];
   return out;
 }
-
 async function sha256Base64Url(value) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
   return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
-
 function parseFFLogsUrl(raw) {
   try {
     const u = new URL(raw);
@@ -79,15 +84,12 @@ function parseFFLogsUrl(raw) {
     return null;
   }
 }
-
 async function startOAuthLogin() {
   const verifier = randomString(96);
   const stateVal = randomString(32);
   const challenge = await sha256Base64Url(verifier);
-
   localStorage.setItem(AUTH_VERIFIER_KEY, verifier);
   localStorage.setItem(AUTH_STATE_KEY, stateVal);
-
   const params = new URLSearchParams({
     client_id: FFLOGS_V2_CLIENT_ID,
     response_type: 'code',
@@ -96,19 +98,15 @@ async function startOAuthLogin() {
     code_challenge_method: 'S256',
     state: stateVal,
   });
-
   window.location.href = `https://ja.fflogs.com/oauth/authorize?${params.toString()}`;
 }
-
 async function exchangeCodeForToken(code) {
   const savedState = localStorage.getItem(AUTH_STATE_KEY);
   const verifier = localStorage.getItem(AUTH_VERIFIER_KEY);
   const currentState = new URLSearchParams(window.location.search).get('state');
-
   if (!savedState || !verifier || !currentState || savedState !== currentState) {
     throw new Error('OAuth state検証に失敗しました。再連携してください。');
   }
-
   const body = new URLSearchParams({
     client_id: FFLOGS_V2_CLIENT_ID,
     grant_type: 'authorization_code',
@@ -116,29 +114,24 @@ async function exchangeCodeForToken(code) {
     redirect_uri: getRedirectUri(),
     code_verifier: verifier,
   });
-
   const res = await fetch('https://ja.fflogs.com/oauth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
   });
-
   if (!res.ok) {
     throw new Error(`token取得失敗: ${res.status}`);
   }
-
   const json = await res.json();
   if (!json.access_token) {
     throw new Error('access_tokenが返却されませんでした');
   }
-
   localStorage.setItem(TOKEN_KEY, json.access_token);
   localStorage.removeItem(AUTH_STATE_KEY);
   localStorage.removeItem(AUTH_VERIFIER_KEY);
   history.replaceState({}, '', getRedirectUri());
   return json.access_token;
 }
-
 async function restoreOrAuthorize() {
   const qp = new URLSearchParams(window.location.search);
   const oauthError = qp.get('error');
@@ -150,7 +143,6 @@ async function restoreOrAuthorize() {
     el.authStatus.textContent = state.token ? '連携済み' : '未連携';
     return;
   }
-
   const code = qp.get('code');
   if (code) {
     state.token = await exchangeCodeForToken(code);
@@ -159,7 +151,6 @@ async function restoreOrAuthorize() {
   }
   el.authStatus.textContent = state.token ? '連携済み' : '未連携';
 }
-
 async function graphqlRequest(query, variables = {}) {
   if (!state.token) {
     throw new Error('FFLogs連携が必要です');
@@ -172,18 +163,15 @@ async function graphqlRequest(query, variables = {}) {
     },
     body: JSON.stringify({ query, variables }),
   });
-
   if (!res.ok) {
     throw new Error(`GraphQL request failed: ${res.status}`);
   }
-
   const json = await res.json();
   if (json.errors?.length) {
     throw new Error(json.errors[0].message || 'GraphQLエラー');
   }
   return json.data;
 }
-
 async function fetchReportDataV2(reportCode) {
   const query = `
     query ReportCore($code: String!) {
@@ -211,7 +199,6 @@ async function fetchReportDataV2(reportCode) {
       }
     }
   `;
-
   const data = await graphqlRequest(query, { code: reportCode });
   const report = data?.reportData?.report;
   if (!report) {
@@ -219,12 +206,11 @@ async function fetchReportDataV2(reportCode) {
   }
   return report;
 }
-
 async function loadIconMap() {
   const candidates = [
-    '/job-icons/job_icon.json',
     '/public/job-icons/job_icon.json',
     './public/job-icons/job_icon.json',
+    '/job-icons/job_icon.json',
     '/public/job-icons/ffxiv_job_action_icon_map.json',
     './public/job-icons/ffxiv_job_action_icon_map.json'
   ];
@@ -234,6 +220,7 @@ async function loadIconMap() {
       if (!res.ok) continue;
       const data = await res.json();
       const records = data.records || data;
+      logDebug(`icon map loaded: ${path}`, {count: records.length});
       state.actionById = new Map();
       for (const r of records) {
         if (r?.action_id) state.actionById.set(Number(r.action_id), r);
@@ -244,13 +231,12 @@ async function loadIconMap() {
     }
   }
   state.actionById = new Map();
+  logDebug("icon map not found on all candidate paths");
   return [];
 }
-
 function normalizeActionKey(v) {
   return String(v || '').toLowerCase().replace(/[^a-z0-9぀-ヿ一-龯]/g, '');
 }
-
 function getActionMeta(actionName, actionId) {
   let found = null;
   if (actionId && state.actionById.has(Number(actionId))) {
@@ -263,51 +249,42 @@ function getActionMeta(actionName, actionId) {
       return names.includes(key);
     });
   }
-
   const raw = found?.icon_path || '';
   let icon = '';
   if (raw) {
     const normalized = raw.startsWith('/job-icons/') ? '/public' + raw : raw;
     icon = encodeURI(normalized);
   }
-
   return {
     icon,
     category: String(found?.category || found?.action_type || '').toLowerCase(),
     label: found?.action_name_ja || found?.action_name_en || actionName || 'Unknown',
   };
 }
-
 function normalizeJobCode(type, subType) {
   const c = (subType || type || '').toString().toUpperCase();
   return c || 'UNK';
 }
-
 function formatDurationMs(ms) {
   const sec = Math.floor(ms / 1000);
   const m = Math.floor(sec / 60);
   const s = String(sec % 60).padStart(2, '0');
   return `${m}:${s}`;
 }
-
 function formatFightLabel(fight, index) {
   const duration = formatDurationMs((fight.endTime || 0) - (fight.startTime || 0));
   const status = fight.kill ? 'Kill' : 'Wipe';
   const name = fight.name || `Fight ${fight.id}`;
   return `#${index + 1} ${name} / ${duration} / ${status}`;
 }
-
 function extractSelectableFights(reportJson) {
   // V2では ReportFight に boss が無いので encounterID を使ってボス戦判定
   return (reportJson.fights || []).filter(f => Number(f.encounterID || 0) > 0 && f.kill === true);
 }
-
 function getPlayersFromFight(reportJson, fightId) {
   const fight = (reportJson.fights || []).find(f => Number(f.id) === Number(fightId));
   if (!fight) throw new Error(`fight=${fightId} が見つかりません`);
-
   const allowedIds = new Set(fight.friendlyPlayers || []);
-
   const base = (reportJson.masterData?.actors || [])
     .filter(a => !a.petOwner)
     .filter(a => (a.type || '').toLowerCase() !== 'pet')
@@ -315,13 +292,10 @@ function getPlayersFromFight(reportJson, fightId) {
       const n = String(a.name || '').toLowerCase();
       return !n.includes('limit break') && !n.includes('リミットブレイク');
     });
-
   // V2では actor.fights が取得できないため、fight.friendlyPlayers を主軸に絞る
   let filtered = base.filter(a => (allowedIds.size > 0 ? allowedIds.has(a.id) : true));
-
   // fallback: friendlyPlayers が空の場合のみ全actorから採用
   if (!filtered.length && allowedIds.size === 0) filtered = base;
-
   const players = filtered
     .map(a => ({
       id: String(a.id),
@@ -329,23 +303,18 @@ function getPlayersFromFight(reportJson, fightId) {
       job: normalizeJobCode(a.type, a.subType),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
-
   if (!players.length) throw new Error('選択戦闘に紐づくプレイヤー一覧を取得できませんでした');
   return players;
 }
-
 function fillFightSelect(select, fights) {
   select.innerHTML = fights.map((f, i) => `<option value="${f.id}">${formatFightLabel(f, i)}</option>`).join('');
 }
-
 function fillPlayerSelect(select, players) {
   select.innerHTML = players.map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`).join('');
 }
-
 async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
   const all = [];
   let startTime = null;
-
   const query = `
     query PlayerCasts($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
       reportData {
@@ -358,7 +327,6 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
       }
     }
   `;
-
   while (true) {
     const vars = {
       code: reportCode,
@@ -369,7 +337,7 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
     const data = await graphqlRequest(query, vars);
     const block = data?.reportData?.report?.events;
     const rows = block?.data || [];
-
+    if (rows.length && all.length === 0) logDebug("events sample", rows[0]);
     for (const e of rows) {
       const actionId = Number(e?.abilityGameID || e?.ability?.guid || 0);
       const meta = getActionMeta(e?.ability?.name || e?.abilityName || '', actionId);
@@ -379,19 +347,15 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
       const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
       all.push({ t, action: String(name), actionId, category: meta.category });
     }
-
     if (!block?.nextPageTimestamp) break;
     startTime = block.nextPageTimestamp;
   }
-
   return all.sort((a, b) => a.t - b.t);
 }
-
 function makeSampleTimeline() {
   const actions = ['Fast Blade', 'Riot Blade', 'Royal Authority', 'Fight or Flight', 'Requiescat'];
   return Array.from({ length: 45 }, (_, i) => ({ t: i * 6, action: actions[i % actions.length] }));
 }
-
 function makeSampleDps() {
   let x = 20000;
   return Array.from({ length: 120 }, (_, i) => {
@@ -399,14 +363,12 @@ function makeSampleDps() {
     return { t: i * 5, v: Math.max(1000, Math.round(x)) };
   });
 }
-
 function filterTimeline(records, tab) {
   if (tab === 'all') return records;
   if (tab === 'odd') return records.filter(r => Math.floor(r.t / 60) % 2 === 1);
   if (tab === 'even') return records.filter(r => Math.floor(r.t / 60) % 2 === 0 && r.t >= 60);
   return records;
 }
-
 function buildRuler(maxT, pxPerSec) {
   const marks = [];
   for (let sec = 0; sec <= Math.ceil(maxT); sec++) {
@@ -417,23 +379,19 @@ function buildRuler(maxT, pxPerSec) {
   }
   return `<div class="ruler">${marks.join('')}</div>`;
 }
-
 function renderTimeline() {
   const a = filterTimeline(state.timelineA, state.currentTab);
   const b = filterTimeline(state.timelineB, state.currentTab);
   const maxT = Math.max(1, ...a.map(x => x.t), ...b.map(x => x.t));
-  const pxPerSec = 16;
+  const pxPerSec = 16 * state.zoom;
   const width = Math.max(1800, maxT * pxPerSec + 220);
-
   const laneTop = {
     a_gcd: 22,
     a_ogcd: 54,
     b_gcd: 118,
     b_ogcd: 150,
   };
-
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
-
   const buildEvents = (records, owner) => {
     const lanesLastX = { gcd: -999, ogcd: -999 };
     return records.map(r => {
@@ -441,7 +399,6 @@ function renderTimeline() {
       const x = 60 + r.t * pxPerSec;
       if (x - lanesLastX[lane] < 20) return '';
       lanesLastX[lane] = x;
-
       const meta = getActionMeta(r.action, r.actionId);
       const icon = meta.icon;
       const fallback = (meta.label || r.action || '?').slice(0, 2).toUpperCase();
@@ -449,7 +406,6 @@ function renderTimeline() {
       return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${meta.label}">${icon ? `<img src="${icon}" alt="${meta.label}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');
   };
-
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px">
       ${buildRuler(maxT, pxPerSec)}
@@ -458,17 +414,15 @@ function renderTimeline() {
       ${buildEvents(a, 'a')}
       ${buildEvents(b, 'b')}
     </div>
-    <div class="legend">${state.selectedA?.name || 'A'} (上:GCD / 下:oGCD)  vs  ${state.selectedB?.name || 'B'} (上:GCD / 下:oGCD)</div>
+    <div class="legend">上段プレイヤー: ${state.selectedA?.name || 'A'}（上:GCD / 下:oGCD）<br/>下段プレイヤー: ${state.selectedB?.name || 'B'}（上:GCD / 下:oGCD）</div>
   `;
 }
-
 function renderDps() {
   const cvs = el.dpsCanvas;
   const ctx = cvs.getContext('2d');
   ctx.clearRect(0, 0, cvs.width, cvs.height);
   ctx.fillStyle = '#020617';
   ctx.fillRect(0, 0, cvs.width, cvs.height);
-
   const maxV = Math.max(...state.dpsA.map(p => p.v), ...state.dpsB.map(p => p.v), 1);
   const drawLine = (arr, color) => {
     ctx.beginPath();
@@ -481,18 +435,17 @@ function renderDps() {
     ctx.lineWidth = 2;
     ctx.stroke();
   };
-
   drawLine(state.dpsA, '#38bdf8');
   drawLine(state.dpsB, '#f97316');
 }
-
 el.connectBtn.addEventListener('click', () => {
+  logDebug('click: connect');
   startOAuthLogin().catch(e => {
     el.msg.textContent = `連携開始失敗: ${e.message}`;
   });
 });
-
 el.disconnectBtn.addEventListener('click', () => {
+  logDebug('click: disconnect');
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(AUTH_STATE_KEY);
   localStorage.removeItem(AUTH_VERIFIER_KEY);
@@ -500,11 +453,10 @@ el.disconnectBtn.addEventListener('click', () => {
   el.authStatus.textContent = '未連携';
   el.msg.textContent = 'FFLogs連携を解除しました。';
 });
-
 el.loadBtn.addEventListener('click', async () => {
+  logDebug('click: load reports', {urlA: el.urlA.value, urlB: el.urlB.value});
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
-
   if (!state.token) {
     el.msg.textContent = '先に「FFLogsと連携（V2）」を実行してください。';
     return;
@@ -513,11 +465,9 @@ el.loadBtn.addEventListener('click', async () => {
     el.msg.textContent = 'FFLogs URL形式を確認してください。';
     return;
   }
-
   el.loadBtn.disabled = true;
   el.msg.textContent = 'V2でレポートを読み込み中...';
   el.step2Message.textContent = '';
-
   try {
     state.urlA = parsedA;
     state.urlB = parsedB;
@@ -527,11 +477,9 @@ el.loadBtn.addEventListener('click', async () => {
     }
     state.reportA = await fetchReportDataV2(parsedA.reportId);
     state.reportB = await fetchReportDataV2(parsedB.reportId);
-
     const fightsA = extractSelectableFights(state.reportA);
     const fightsB = extractSelectableFights(state.reportB);
     if (!fightsA.length || !fightsB.length) throw new Error('選択可能なKill戦闘が見つかりませんでした。');
-
     fillFightSelect(el.fightA, fightsA);
     fillFightSelect(el.fightB, fightsB);
     el.playerA.innerHTML = '';
@@ -546,15 +494,13 @@ el.loadBtn.addEventListener('click', async () => {
     el.loadBtn.disabled = false;
   }
 });
-
 el.loadPlayersBtn.addEventListener('click', () => {
+  logDebug('click: load players', {fightA: el.fightA.value, fightB: el.fightB.value});
   try {
     state.selectedFightA = Number(el.fightA.value);
     state.selectedFightB = Number(el.fightB.value);
-
     state.playersA = getPlayersFromFight(state.reportA, state.selectedFightA);
     state.playersB = getPlayersFromFight(state.reportB, state.selectedFightB);
-
     fillPlayerSelect(el.playerA, state.playersA);
     fillPlayerSelect(el.playerB, state.playersB);
     el.step3.classList.remove('hidden');
@@ -564,15 +510,13 @@ el.loadPlayersBtn.addEventListener('click', () => {
     el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
   }
 });
-
 el.compareBtn.addEventListener('click', async () => {
+  logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
   state.selectedA = state.playersA.find(p => p.id === el.playerA.value);
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
   if (!state.selectedA || !state.selectedB) return;
-
   const fightA = (state.reportA?.fights || []).find(f => Number(f.id) === Number(state.selectedFightA));
   const fightB = (state.reportB?.fights || []).find(f => Number(f.id) === Number(state.selectedFightB));
-
   el.step2Message.textContent = '選択プレイヤーのTLを取得中...';
   try {
     state.timelineA = await fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id));
@@ -592,7 +536,6 @@ el.compareBtn.addEventListener('click', async () => {
     state.dpsB = makeSampleDps();
     el.step2Message.textContent = `TL取得失敗(サンプル表示): ${e.message}`;
   }
-
   el.step4.classList.remove('hidden');
   state.currentTab = 'all';
   el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
@@ -600,13 +543,23 @@ el.compareBtn.addEventListener('click', async () => {
   el.timelineWrap.classList.remove('hidden');
   renderTimeline();
 });
-
+el.zoomInBtn.addEventListener('click', () => {
+  state.zoom = Math.min(3, +(state.zoom + 0.25).toFixed(2));
+  el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
+  if (!el.timelineWrap.classList.contains('hidden')) renderTimeline();
+  logDebug('zoom in', {zoom: state.zoom});
+});
+el.zoomOutBtn.addEventListener('click', () => {
+  state.zoom = Math.max(0.5, +(state.zoom - 0.25).toFixed(2));
+  el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
+  if (!el.timelineWrap.classList.contains('hidden')) renderTimeline();
+  logDebug('zoom out', {zoom: state.zoom});
+});
 el.tabs.forEach(tab => {
   tab.addEventListener('click', () => {
     el.tabs.forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     state.currentTab = tab.dataset.tab;
-
     if (state.currentTab === 'dps') {
       el.timelineWrap.classList.add('hidden');
       el.dpsCanvas.classList.remove('hidden');
@@ -618,7 +571,6 @@ el.tabs.forEach(tab => {
     }
   });
 });
-
 restoreOrAuthorize().catch(e => {
   el.msg.textContent = `認証初期化失敗: ${e.message}`;
 });

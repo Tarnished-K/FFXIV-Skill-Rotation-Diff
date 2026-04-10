@@ -107,15 +107,41 @@ function getPlayersFromFight(reportJson, fightId) {
   }
 
   const allowedIds = new Set(fight.friendlyPlayers || []);
-  const players = (reportJson.friendlies || [])
-    .filter(p => !p.petOwner)
-    .filter(p => {
-      // レポートによっては fight.friendlyPlayers が不完全な場合があるため
-      // friendly 側の fights 配列も併用して厳密に絞る
-      const inAllowed = allowedIds.size > 0 ? allowedIds.has(p.id) : true;
-      const inFightByList = Array.isArray(p.fights) ? p.fights.includes(Number(fightId)) : true;
-      return inAllowed && inFightByList;
-    })
+
+  const belongsToFight = (friendly) => {
+    if (!Array.isArray(friendly.fights) || friendly.fights.length === 0) {
+      return true;
+    }
+    return friendly.fights.some(entry => {
+      if (typeof entry === 'number') return entry === Number(fightId);
+      if (entry && typeof entry === 'object') {
+        const id = entry.id ?? entry.fight ?? entry.fightID;
+        return Number(id) === Number(fightId);
+      }
+      return false;
+    });
+  };
+
+  const base = (reportJson.friendlies || []).filter(p => !p.petOwner);
+
+  // 1st: fight.friendlyPlayers と friendly.fights の両方で絞る
+  let filtered = base.filter(p => {
+    const inAllowed = allowedIds.size > 0 ? allowedIds.has(p.id) : true;
+    const inFight = belongsToFight(p);
+    return inAllowed && inFight;
+  });
+
+  // 2nd fallback: 1件も出ない場合は friendlyPlayers のみで絞る
+  if (!filtered.length && allowedIds.size > 0) {
+    filtered = base.filter(p => allowedIds.has(p.id));
+  }
+
+  // 3rd fallback: それでも0件なら fights 情報のみで絞る
+  if (!filtered.length) {
+    filtered = base.filter(belongsToFight);
+  }
+
+  const players = filtered
     .map(p => ({
       id: String(p.id),
       name: p.name || `Unknown-${p.id}`,
@@ -124,7 +150,7 @@ function getPlayersFromFight(reportJson, fightId) {
     .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
 
   if (!players.length) {
-    throw new Error('プレイヤー一覧を取得できませんでした');
+    throw new Error('選択戦闘に紐づくプレイヤー一覧を取得できませんでした');
   }
   return players;
 }

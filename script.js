@@ -29,6 +29,7 @@ const el = {
   step3: document.getElementById('step3'),
   step4: document.getElementById('step4'),
   msg: document.getElementById('step1Message'),
+  step2Message: document.getElementById('step2Message'),
   fightA: document.getElementById('fightA'),
   fightB: document.getElementById('fightB'),
   playerA: document.getElementById('playerA'),
@@ -122,7 +123,12 @@ function getPlayersFromFight(reportJson, fightId) {
     });
   };
 
-  const base = (reportJson.friendlies || []).filter(p => !p.petOwner);
+  const base = (reportJson.friendlies || [])
+    .filter(p => !p.petOwner)
+    .filter(p => {
+      const n = String(p.name || '').toLowerCase();
+      return !n.includes('limit break') && !n.includes('リミットブレイク');
+    });
 
   // 1st: fight.friendlyPlayers と friendly.fights の両方で絞る
   let filtered = base.filter(p => {
@@ -259,6 +265,7 @@ el.loadBtn.addEventListener('click', async () => {
 
   el.loadBtn.disabled = true;
   el.msg.textContent = 'レポートを読み込み中...';
+  el.step2Message.textContent = '';
 
   try {
     state.urlA = parsedA;
@@ -301,9 +308,9 @@ el.loadPlayersBtn.addEventListener('click', () => {
     fillPlayerSelect(el.playerB, state.playersB);
     el.step3.classList.remove('hidden');
     el.step4.classList.add('hidden');
-    el.msg.textContent = `プレイヤー取得成功: A=${state.playersA.length}人 / B=${state.playersB.length}人`;
+    el.step2Message.textContent = `プレイヤー取得成功: A=${state.playersA.length}人 / B=${state.playersB.length}人`;
   } catch (e) {
-    el.msg.textContent = `プレイヤー取得失敗: ${e.message}`;
+    el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
   }
 });
 

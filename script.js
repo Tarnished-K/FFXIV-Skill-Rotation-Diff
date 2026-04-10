@@ -2,6 +2,29 @@ const FFLOGS_V2_CLIENT_ID = 'a182a7d9-18bd-49d6-a5d3-26f40a3f3a7d';
 const AUTH_STATE_KEY = 'fflogs_v2_state';
 const AUTH_VERIFIER_KEY = 'fflogs_v2_verifier';
 const TOKEN_KEY = 'fflogs_v2_access_token';
+const JOB_ICON_SCOPE_MAP = {
+  PLD: '01_PLD',
+  WAR: '02_WAR',
+  DRK: '03_DRK',
+  GNB: '04_GNB',
+  MNK: '05_MNK',
+  SAM: '06_SAM',
+  DRG: '07_DRG',
+  RPR: '08_RPR',
+  NIN: '09_NIN',
+  VPR: '10_VPR',
+  BRD: '11_BRD',
+  MCH: '12_MCH',
+  DNC: '13_DNC',
+  BLM: '14_BLM',
+  SMN: '15_SMN',
+  RDM: '16_RDM',
+  PCT: '17_PCT',
+  WHM: '18_WHM',
+  SCH: '19_SCH',
+  AST: '20_AST',
+  SGE: '21_SGE',
+};
 const state = {
   iconMap: [],
   token: '',
@@ -242,7 +265,7 @@ async function loadIconMap() {
 function normalizeActionKey(v) {
   return String(v || '').toLowerCase().replace(/[^a-z0-9぀-ヿ一-龯]/g, '');
 }
-function getActionMeta(actionName, actionId) {
+function getActionMeta(actionName, actionId, preferredJobCode = '') {
   let found = null;
   if (actionId && state.actionById.has(Number(actionId))) {
     found = state.actionById.get(Number(actionId));
@@ -257,8 +280,29 @@ function getActionMeta(actionName, actionId) {
   const raw = found?.icon_path || '';
   let icon = '';
   if (raw) {
-    const normalized = raw.startsWith('/job-icons/') ? '/public' + raw : raw;
-    icon = encodeURI(normalized);
+    const mappedJob = JOB_ICON_SCOPE_MAP[String(preferredJobCode || '').toUpperCase()];
+    const rawMatch = raw.match(/^\/job-icons\/jobs\/([A-Z]+)\/(.+)$/);
+    if (rawMatch) {
+      const rawJob = rawMatch[1];
+      const rawTail = rawMatch[2];
+      const fileName = rawTail.split('/').pop();
+      const categoryDir = found?.category === 'role_action'
+        ? 'Role_Actions'
+        : found?.category === 'trait'
+          ? 'Traits'
+          : found?.category === 'pet_actions'
+            ? 'Pet_Actions'
+            : '';
+      const tail = categoryDir ? `${categoryDir}/${fileName}` : rawTail;
+      const targetScope = mappedJob || JOB_ICON_SCOPE_MAP[rawJob] || '';
+      if (targetScope) {
+        icon = encodeURI(`/public/job-icons/${targetScope}/${tail}`);
+      }
+    }
+    if (!icon) {
+      const normalized = raw.startsWith('/job-icons/') ? '/public' + raw : raw;
+      icon = encodeURI(normalized);
+    }
   }
   return {
     icon,
@@ -325,7 +369,7 @@ function fillFightSelect(select, fights) {
 function fillPlayerSelect(select, players) {
   select.innerHTML = players.map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`).join('');
 }
-async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
+async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode = '') {
   const all = [];
   let startTime = null;
   const query = `
@@ -354,12 +398,12 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
     for (const e of rows) {
       const actionId = Number(e?.abilityGameID || e?.ability?.guid || 0);
       const resolvedName = e?.ability?.name || e?.abilityName || state.abilityById.get(actionId) || '';
-      const meta = getActionMeta(resolvedName, actionId);
+      const meta = getActionMeta(resolvedName, actionId, playerJobCode);
       const name = meta.label || resolvedName || '';
       const ts = Number(e?.timestamp || 0);
       if (!name || !ts) continue;
       const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
-      all.push({ t, action: String(name), actionId, category: meta.category });
+      all.push({ t, action: String(name), actionId, category: meta.category, icon: meta.icon, label: meta.label });
     }
     if (!block?.nextPageTimestamp) break;
     startTime = block.nextPageTimestamp;
@@ -413,11 +457,10 @@ function renderTimeline() {
       const x = 60 + r.t * pxPerSec;
       if (x - lanesLastX[lane] < 20) return '';
       lanesLastX[lane] = x;
-      const meta = getActionMeta(r.action, r.actionId);
-      const icon = meta.icon;
-      const fallback = (meta.label || r.action || '?').slice(0, 2).toUpperCase();
+      const icon = r.icon || '';
+      const fallback = (r.label || r.action || '?').slice(0, 2).toUpperCase();
       const top = laneTop[`${owner}_${lane}`];
-      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${meta.label}">${icon ? `<img src="${icon}" alt="${meta.label}" />` : `<span>${fallback}</span>`}</div>`;
+      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${r.label || r.action}">${icon ? `<img src="${icon}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');
   };
   el.timelineWrap.innerHTML = `
@@ -537,8 +580,8 @@ el.compareBtn.addEventListener('click', async () => {
   const fightB = (state.reportB?.fights || []).find(f => Number(f.id) === Number(state.selectedFightB));
   el.step2Message.textContent = '選択プレイヤーのTLを取得中...';
   try {
-    state.timelineA = await fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id));
-    state.timelineB = await fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id));
+    state.timelineA = await fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job);
+    state.timelineB = await fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job);
     state.timelineCountA = state.timelineA.length;
     state.timelineCountB = state.timelineB.length;
     state.dpsA = makeSampleDps();

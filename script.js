@@ -202,7 +202,6 @@ async function fetchReportDataV2(reportCode) {
               type
               subType
               petOwner
-              fights
             }
           }
         }
@@ -219,14 +218,18 @@ async function fetchReportDataV2(reportCode) {
 }
 
 async function loadIconMap() {
-  try {
-    const res = await fetch('/job-icons/job_icon.json');
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.records || data;
-  } catch {
-    return [];
+  const candidates = ['/job-icons/job_icon.json', '/public/job-icons/job_icon.json', './public/job-icons/job_icon.json'];
+  for (const path of candidates) {
+    try {
+      const res = await fetch(path);
+      if (!res.ok) continue;
+      const data = await res.json();
+      return data.records || data;
+    } catch {
+      // try next candidate
+    }
   }
+  return [];
 }
 
 function findIcon(actionNameEn) {
@@ -266,18 +269,6 @@ function getPlayersFromFight(reportJson, fightId) {
 
   const allowedIds = new Set(fight.friendlyPlayers || []);
 
-  const belongsToFight = actor => {
-    if (!Array.isArray(actor.fights) || actor.fights.length === 0) return true;
-    return actor.fights.some(entry => {
-      if (typeof entry === 'number') return entry === Number(fightId);
-      if (entry && typeof entry === 'object') {
-        const id = entry.id ?? entry.fight ?? entry.fightID;
-        return Number(id) === Number(fightId);
-      }
-      return false;
-    });
-  };
-
   const base = (reportJson.masterData?.actors || [])
     .filter(a => !a.petOwner)
     .filter(a => (a.type || '').toLowerCase() !== 'pet')
@@ -286,14 +277,11 @@ function getPlayersFromFight(reportJson, fightId) {
       return !n.includes('limit break') && !n.includes('リミットブレイク');
     });
 
-  let filtered = base.filter(a => {
-    const inAllowed = allowedIds.size > 0 ? allowedIds.has(a.id) : true;
-    const inFight = belongsToFight(a);
-    return inAllowed && inFight;
-  });
+  // V2では actor.fights が取得できないため、fight.friendlyPlayers を主軸に絞る
+  let filtered = base.filter(a => (allowedIds.size > 0 ? allowedIds.has(a.id) : true));
 
-  if (!filtered.length && allowedIds.size > 0) filtered = base.filter(a => allowedIds.has(a.id));
-  if (!filtered.length) filtered = base.filter(belongsToFight);
+  // fallback: friendlyPlayers が空の場合のみ全actorから採用
+  if (!filtered.length && allowedIds.size === 0) filtered = base;
 
   const players = filtered
     .map(a => ({

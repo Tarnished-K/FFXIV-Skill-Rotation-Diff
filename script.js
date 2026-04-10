@@ -265,6 +265,9 @@ async function loadIconMap() {
 function normalizeActionKey(v) {
   return String(v || '').toLowerCase().replace(/[^a-z0-9぀-ヿ一-龯]/g, '');
 }
+function uniq(values) {
+  return [...new Set(values.filter(Boolean))];
+}
 function getActionMeta(actionName, actionId, preferredJobCode = '') {
   let found = null;
   if (actionId && state.actionById.has(Number(actionId))) {
@@ -278,7 +281,7 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
     });
   }
   const raw = found?.icon_path || '';
-  let icon = '';
+  const iconCandidates = [];
   if (raw) {
     const mappedJob = JOB_ICON_SCOPE_MAP[String(preferredJobCode || '').toUpperCase()];
     const rawMatch = raw.match(/^\/job-icons\/jobs\/([A-Z]+)\/(.+)$/);
@@ -296,16 +299,18 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
       const tail = categoryDir ? `${categoryDir}/${fileName}` : rawTail;
       const targetScope = mappedJob || JOB_ICON_SCOPE_MAP[rawJob] || '';
       if (targetScope) {
-        icon = encodeURI(`/public/job-icons/${targetScope}/${tail}`);
+        iconCandidates.push(`/public/job-icons/${targetScope}/${tail}`);
       }
+      if (JOB_ICON_SCOPE_MAP[rawJob]) iconCandidates.push(`/public/job-icons/${JOB_ICON_SCOPE_MAP[rawJob]}/${tail}`);
+      iconCandidates.push(`/public/job-icons/jobs/${rawJob}/${rawTail}`);
     }
-    if (!icon) {
-      const normalized = raw.startsWith('/job-icons/') ? '/public' + raw : raw;
-      icon = encodeURI(normalized);
-    }
+    iconCandidates.push(raw.startsWith('/job-icons/') ? '/public' + raw : raw);
+    iconCandidates.push(raw);
   }
+  const uniqueCandidates = uniq(iconCandidates).map(x => encodeURI(x));
   return {
-    icon,
+    icon: uniqueCandidates[0] || '',
+    iconCandidates: uniqueCandidates,
     category: String(found?.category || found?.action_type || '').toLowerCase(),
     label: found?.action_name_ja || found?.action_name_en || actionName || 'Unknown',
   };
@@ -403,7 +408,7 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode 
       const ts = Number(e?.timestamp || 0);
       if (!name || !ts) continue;
       const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
-      all.push({ t, action: String(name), actionId, category: meta.category, icon: meta.icon, label: meta.label });
+      all.push({ t, action: String(name), actionId, category: meta.category, icon: meta.icon, iconCandidates: meta.iconCandidates || [], label: meta.label });
     }
     if (!block?.nextPageTimestamp) break;
     startTime = block.nextPageTimestamp;
@@ -460,7 +465,8 @@ function renderTimeline() {
       const icon = r.icon || '';
       const fallback = (r.label || r.action || '?').slice(0, 2).toUpperCase();
       const top = laneTop[`${owner}_${lane}`];
-      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${r.label || r.action}">${icon ? `<img src="${icon}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
+      const candidates = (r.iconCandidates || []).join('|');
+      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${r.label || r.action}">${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');
   };
   el.timelineWrap.innerHTML = `
@@ -473,6 +479,21 @@ function renderTimeline() {
     </div>
     <div class="legend">上段プレイヤー: ${state.selectedA?.name || 'A'}（上:GCD / 下:oGCD）<br/>下段プレイヤー: ${state.selectedB?.name || 'B'}（上:GCD / 下:oGCD）</div>
   `;
+  el.timelineWrap.querySelectorAll('img.event-icon').forEach(img => {
+    const queue = (img.dataset.fallbacks || '').split('|').filter(Boolean);
+    const seen = new Set([img.getAttribute('src')]);
+    img.addEventListener('error', () => {
+      while (queue.length) {
+        const next = queue.shift();
+        if (!seen.has(next)) {
+          seen.add(next);
+          img.src = next;
+          return;
+        }
+      }
+      img.replaceWith(Object.assign(document.createElement('span'), { textContent: (img.alt || '?').slice(0, 2).toUpperCase() }));
+    });
+  });
 }
 function renderDps() {
   const cvs = el.dpsCanvas;

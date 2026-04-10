@@ -22,3 +22,6 @@ button { cursor:pointer; }
 .legend { margin-top:8px; font-size:12px; color:#93c5fd; }
 
 .submessage { color:#93c5fd; min-height:20px; margin-top:10px; }
+
+.oauth-row { display:flex; gap:12px; align-items:center; margin-bottom:8px; }
+.oauth-row button { width:auto; }

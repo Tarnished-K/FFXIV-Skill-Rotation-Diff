@@ -14,10 +14,11 @@
 
     <main>
       <section class="card" id="step1">
-        <h2>1. ログURL入力</h2>
-        <label>FFLogs API Key（V1）
-          <input id="apiKey" type="password" placeholder="FFLogs V1 API Key" />
-        </label>
+        <h2>1. FFLogs連携 & ログURL入力</h2>
+        <div class="oauth-row">
+          <button id="connectBtn" type="button">FFLogsと連携（V2）</button>
+          <span id="authStatus" class="submessage">未連携</span>
+        </div>
         <label>ログURL A <input id="urlA" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
         <label>ログURL B <input id="urlB" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
         <button id="loadBtn">読み込み開始</button>
@@ -66,7 +67,7 @@
     </main>
 
     <footer>
-      <small>注: まず戦闘を選んでからプレイヤーを選択します。TL/DPSは現在サンプル描画です。</small>
+      <small>注: FFLogs V2(PKCE)で連携。まず戦闘を選んでからプレイヤーを選択します。TL/DPSは現在サンプル描画です。</small>
     </footer>
 
     <script src="script.js"></script>

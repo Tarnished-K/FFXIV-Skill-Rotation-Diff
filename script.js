@@ -1,6 +1,11 @@
+const FFLOGS_V2_CLIENT_ID = 'a182a7d9-18bd-49d6-a5d3-26f40a3f3a7d';
+const AUTH_STATE_KEY = 'fflogs_v2_state';
+const AUTH_VERIFIER_KEY = 'fflogs_v2_verifier';
+const TOKEN_KEY = 'fflogs_v2_access_token';
+
 const state = {
   iconMap: [],
-  apiKey: '',
+  token: '',
   urlA: null,
   urlB: null,
   reportA: null,
@@ -19,7 +24,8 @@ const state = {
 };
 
 const el = {
-  apiKey: document.getElementById('apiKey'),
+  connectBtn: document.getElementById('connectBtn'),
+  authStatus: document.getElementById('authStatus'),
   urlA: document.getElementById('urlA'),
   urlB: document.getElementById('urlB'),
   loadBtn: document.getElementById('loadBtn'),
@@ -39,6 +45,26 @@ const el = {
   dpsCanvas: document.getElementById('dpsCanvas'),
 };
 
+function getRedirectUri() {
+  // FFLogs側の登録と完全一致させるため、ルート配下は末尾スラッシュを付けない
+  if (window.location.pathname === '/' || window.location.pathname === '') return window.location.origin;
+  return window.location.origin + window.location.pathname;
+}
+
+function randomString(length = 64) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  let out = '';
+  const arr = new Uint8Array(length);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < arr.length; i++) out += chars[arr[i] % chars.length];
+  return out;
+}
+
+async function sha256Base64Url(value) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 function parseFFLogsUrl(raw) {
   try {
     const u = new URL(raw);
@@ -48,6 +74,137 @@ function parseFFLogsUrl(raw) {
   } catch {
     return null;
   }
+}
+
+async function startOAuthLogin() {
+  const verifier = randomString(96);
+  const stateVal = randomString(32);
+  const challenge = await sha256Base64Url(verifier);
+
+  localStorage.setItem(AUTH_VERIFIER_KEY, verifier);
+  localStorage.setItem(AUTH_STATE_KEY, stateVal);
+
+  const params = new URLSearchParams({
+    client_id: FFLOGS_V2_CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: getRedirectUri(),
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+    scope: 'public',
+    state: stateVal,
+  });
+
+  window.location.href = `https://ja.fflogs.com/oauth/authorize?${params.toString()}`;
+}
+
+async function exchangeCodeForToken(code) {
+  const savedState = localStorage.getItem(AUTH_STATE_KEY);
+  const verifier = localStorage.getItem(AUTH_VERIFIER_KEY);
+  const currentState = new URLSearchParams(window.location.search).get('state');
+
+  if (!savedState || !verifier || !currentState || savedState !== currentState) {
+    throw new Error('OAuth state検証に失敗しました。再連携してください。');
+  }
+
+  const body = new URLSearchParams({
+    client_id: FFLOGS_V2_CLIENT_ID,
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: getRedirectUri(),
+    code_verifier: verifier,
+  });
+
+  const res = await fetch('https://ja.fflogs.com/oauth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+
+  if (!res.ok) {
+    throw new Error(`token取得失敗: ${res.status}`);
+  }
+
+  const json = await res.json();
+  if (!json.access_token) {
+    throw new Error('access_tokenが返却されませんでした');
+  }
+
+  localStorage.setItem(TOKEN_KEY, json.access_token);
+  localStorage.removeItem(AUTH_STATE_KEY);
+  localStorage.removeItem(AUTH_VERIFIER_KEY);
+  history.replaceState({}, '', getRedirectUri());
+  return json.access_token;
+}
+
+async function restoreOrAuthorize() {
+  const code = new URLSearchParams(window.location.search).get('code');
+  if (code) {
+    state.token = await exchangeCodeForToken(code);
+  } else {
+    state.token = localStorage.getItem(TOKEN_KEY) || '';
+  }
+  el.authStatus.textContent = state.token ? '連携済み' : '未連携';
+}
+
+async function graphqlRequest(query, variables = {}) {
+  if (!state.token) {
+    throw new Error('FFLogs連携が必要です');
+  }
+  const res = await fetch('https://ja.fflogs.com/api/v2/client', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${state.token}`,
+    },
+    body: JSON.stringify({ query, variables }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`GraphQL request failed: ${res.status}`);
+  }
+
+  const json = await res.json();
+  if (json.errors?.length) {
+    throw new Error(json.errors[0].message || 'GraphQLエラー');
+  }
+  return json.data;
+}
+
+async function fetchReportDataV2(reportCode) {
+  const query = `
+    query ReportCore($code: String!) {
+      reportData {
+        report(code: $code) {
+          fights {
+            id
+            boss
+            name
+            kill
+            startTime
+            endTime
+            friendlyPlayers
+          }
+          masterData {
+            actors {
+              id
+              name
+              type
+              subType
+              petOwner
+              fights
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const data = await graphqlRequest(query, { code: reportCode });
+  const report = data?.reportData?.report;
+  if (!report) {
+    throw new Error('レポートデータ取得に失敗しました');
+  }
+  return report;
 }
 
 async function loadIconMap() {
@@ -68,9 +225,9 @@ function findIcon(actionNameEn) {
   return found?.icon_path || '';
 }
 
-function normalizeJobCode(type) {
-  if (!type) return 'UNK';
-  return String(type).toUpperCase();
+function normalizeJobCode(type, subType) {
+  const c = (subType || type || '').toString().toUpperCase();
+  return c || 'UNK';
 }
 
 function formatDurationMs(ms) {
@@ -81,39 +238,25 @@ function formatDurationMs(ms) {
 }
 
 function formatFightLabel(fight, index) {
-  const duration = formatDurationMs((fight.end_time || 0) - (fight.start_time || 0));
+  const duration = formatDurationMs((fight.endTime || 0) - (fight.startTime || 0));
   const status = fight.kill ? 'Kill' : 'Wipe';
   const name = fight.name || `Fight ${fight.id}`;
   return `#${index + 1} ${name} / ${duration} / ${status}`;
 }
 
-async function fetchReportData(reportId, apiKey) {
-  const url = `https://www.fflogs.com/v1/report/fights/${reportId}?api_key=${encodeURIComponent(apiKey)}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`FFLogs API error: ${res.status}`);
-  }
-  return res.json();
-}
-
 function extractSelectableFights(reportJson) {
-  // ボス戦かつKillのみ選択対象にする
   return (reportJson.fights || []).filter(f => f.boss && f.boss !== 0 && f.kill === true);
 }
 
 function getPlayersFromFight(reportJson, fightId) {
   const fight = (reportJson.fights || []).find(f => Number(f.id) === Number(fightId));
-  if (!fight) {
-    throw new Error(`fight=${fightId} が見つかりません`);
-  }
+  if (!fight) throw new Error(`fight=${fightId} が見つかりません`);
 
   const allowedIds = new Set(fight.friendlyPlayers || []);
 
-  const belongsToFight = (friendly) => {
-    if (!Array.isArray(friendly.fights) || friendly.fights.length === 0) {
-      return true;
-    }
-    return friendly.fights.some(entry => {
+  const belongsToFight = actor => {
+    if (!Array.isArray(actor.fights) || actor.fights.length === 0) return true;
+    return actor.fights.some(entry => {
       if (typeof entry === 'number') return entry === Number(fightId);
       if (entry && typeof entry === 'object') {
         const id = entry.id ?? entry.fight ?? entry.fightID;
@@ -123,63 +266,46 @@ function getPlayersFromFight(reportJson, fightId) {
     });
   };
 
-  const base = (reportJson.friendlies || [])
-    .filter(p => !p.petOwner)
-    .filter(p => {
-      const n = String(p.name || '').toLowerCase();
+  const base = (reportJson.masterData?.actors || [])
+    .filter(a => !a.petOwner)
+    .filter(a => (a.type || '').toLowerCase() !== 'pet')
+    .filter(a => {
+      const n = String(a.name || '').toLowerCase();
       return !n.includes('limit break') && !n.includes('リミットブレイク');
     });
 
-  // 1st: fight.friendlyPlayers と friendly.fights の両方で絞る
-  let filtered = base.filter(p => {
-    const inAllowed = allowedIds.size > 0 ? allowedIds.has(p.id) : true;
-    const inFight = belongsToFight(p);
+  let filtered = base.filter(a => {
+    const inAllowed = allowedIds.size > 0 ? allowedIds.has(a.id) : true;
+    const inFight = belongsToFight(a);
     return inAllowed && inFight;
   });
 
-  // 2nd fallback: 1件も出ない場合は friendlyPlayers のみで絞る
-  if (!filtered.length && allowedIds.size > 0) {
-    filtered = base.filter(p => allowedIds.has(p.id));
-  }
-
-  // 3rd fallback: それでも0件なら fights 情報のみで絞る
-  if (!filtered.length) {
-    filtered = base.filter(belongsToFight);
-  }
+  if (!filtered.length && allowedIds.size > 0) filtered = base.filter(a => allowedIds.has(a.id));
+  if (!filtered.length) filtered = base.filter(belongsToFight);
 
   const players = filtered
-    .map(p => ({
-      id: String(p.id),
-      name: p.name || `Unknown-${p.id}`,
-      job: normalizeJobCode(p.type),
+    .map(a => ({
+      id: String(a.id),
+      name: a.name || `Unknown-${a.id}`,
+      job: normalizeJobCode(a.type, a.subType),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
 
-  if (!players.length) {
-    throw new Error('選択戦闘に紐づくプレイヤー一覧を取得できませんでした');
-  }
+  if (!players.length) throw new Error('選択戦闘に紐づくプレイヤー一覧を取得できませんでした');
   return players;
 }
 
 function fillFightSelect(select, fights) {
-  select.innerHTML = fights
-    .map((f, i) => `<option value="${f.id}">${formatFightLabel(f, i)}</option>`)
-    .join('');
+  select.innerHTML = fights.map((f, i) => `<option value="${f.id}">${formatFightLabel(f, i)}</option>`).join('');
 }
 
 function fillPlayerSelect(select, players) {
-  select.innerHTML = players
-    .map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`)
-    .join('');
+  select.innerHTML = players.map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`).join('');
 }
 
-function makeSampleTimeline(baseName) {
+function makeSampleTimeline() {
   const actions = ['Fast Blade', 'Riot Blade', 'Royal Authority', 'Fight or Flight', 'Requiescat'];
-  return Array.from({ length: 45 }, (_, i) => ({
-    t: i * 6,
-    action: actions[i % actions.length],
-    actor: baseName,
-  }));
+  return Array.from({ length: 45 }, (_, i) => ({ t: i * 6, action: actions[i % actions.length] }));
 }
 
 function makeSampleDps() {
@@ -204,14 +330,11 @@ function renderTimeline() {
   const pxPerSec = 6;
   const width = Math.max(1200, maxT * pxPerSec + 120);
 
-  const buildEvents = (records, cls) =>
-    records
-      .map(r => {
-        const x = 40 + r.t * pxPerSec;
-        const icon = findIcon(r.action);
-        return `<div class="event ${cls}" style="left:${x}px; top:${cls === 'a' ? 30 : 110}px" title="${r.t}s ${r.action}">${icon ? `<img src="${icon}" alt="${r.action}" />` : ''}</div>`;
-      })
-      .join('');
+  const buildEvents = (records, cls) => records.map(r => {
+    const x = 40 + r.t * pxPerSec;
+    const icon = findIcon(r.action);
+    return `<div class="event ${cls}" style="left:${x}px; top:${cls === 'a' ? 30 : 110}px" title="${r.t}s ${r.action}">${icon ? `<img src="${icon}" alt="${r.action}" />` : ''}</div>`;
+  }).join('');
 
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px">
@@ -237,8 +360,7 @@ function renderDps() {
     arr.forEach((p, i) => {
       const x = (p.t / 600) * (cvs.width - 40) + 20;
       const y = cvs.height - 20 - (p.v / maxV) * (cvs.height - 40);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -249,13 +371,18 @@ function renderDps() {
   drawLine(state.dpsB, '#f97316');
 }
 
+el.connectBtn.addEventListener('click', () => {
+  startOAuthLogin().catch(e => {
+    el.msg.textContent = `連携開始失敗: ${e.message}`;
+  });
+});
+
 el.loadBtn.addEventListener('click', async () => {
-  state.apiKey = el.apiKey.value.trim();
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
 
-  if (!state.apiKey) {
-    el.msg.textContent = 'FFLogs API Key（V1）を入力してください。';
+  if (!state.token) {
+    el.msg.textContent = '先に「FFLogsと連携（V2）」を実行してください。';
     return;
   }
   if (!parsedA || !parsedB) {
@@ -264,22 +391,19 @@ el.loadBtn.addEventListener('click', async () => {
   }
 
   el.loadBtn.disabled = true;
-  el.msg.textContent = 'レポートを読み込み中...';
+  el.msg.textContent = 'V2でレポートを読み込み中...';
   el.step2Message.textContent = '';
 
   try {
     state.urlA = parsedA;
     state.urlB = parsedB;
     state.iconMap = await loadIconMap();
-    state.reportA = await fetchReportData(parsedA.reportId, state.apiKey);
-    state.reportB = await fetchReportData(parsedB.reportId, state.apiKey);
+    state.reportA = await fetchReportDataV2(parsedA.reportId);
+    state.reportB = await fetchReportDataV2(parsedB.reportId);
 
     const fightsA = extractSelectableFights(state.reportA);
     const fightsB = extractSelectableFights(state.reportB);
-
-    if (!fightsA.length || !fightsB.length) {
-      throw new Error('選択可能な戦闘データが見つかりませんでした。');
-    }
+    if (!fightsA.length || !fightsB.length) throw new Error('選択可能なKill戦闘が見つかりませんでした。');
 
     fillFightSelect(el.fightA, fightsA);
     fillFightSelect(el.fightB, fightsB);
@@ -288,7 +412,7 @@ el.loadBtn.addEventListener('click', async () => {
     el.step2.classList.remove('hidden');
     el.step3.classList.add('hidden');
     el.step4.classList.add('hidden');
-    el.msg.textContent = `Kill戦闘一覧取得成功: A=${fightsA.length}件 / B=${fightsB.length}件`; 
+    el.msg.textContent = `Kill戦闘一覧取得成功: A=${fightsA.length}件 / B=${fightsB.length}件`;
   } catch (e) {
     el.msg.textContent = `取得失敗: ${e.message}`;
   } finally {
@@ -319,8 +443,8 @@ el.compareBtn.addEventListener('click', () => {
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
   if (!state.selectedA || !state.selectedB) return;
 
-  state.timelineA = makeSampleTimeline(state.selectedA.name);
-  state.timelineB = makeSampleTimeline(state.selectedB.name);
+  state.timelineA = makeSampleTimeline();
+  state.timelineB = makeSampleTimeline();
   state.dpsA = makeSampleDps();
   state.dpsB = makeSampleDps();
 
@@ -348,4 +472,8 @@ el.tabs.forEach(tab => {
       renderTimeline();
     }
   });
+});
+
+restoreOrAuthorize().catch(e => {
+  el.msg.textContent = `認証初期化失敗: ${e.message}`;
 });

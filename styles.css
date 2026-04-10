@@ -25,3 +25,5 @@ button { cursor:pointer; }
 
 .oauth-row { display:flex; gap:12px; align-items:center; margin-bottom:8px; }
 .oauth-row button { width:auto; }
+
+.ghost { width:auto; opacity:0.9; }

@@ -236,7 +236,10 @@ function findIcon(actionNameEn) {
   const found = state.iconMap.find(
     r => r.action_name_en === actionNameEn || (r.aliases || []).includes(actionNameEn),
   );
-  return found?.icon_path || '';
+  const raw = found?.icon_path || '';
+  if (!raw) return '';
+  if (raw.startsWith('/job-icons/')) return '/public' + raw;
+  return raw;
 }
 
 function normalizeJobCode(type, subType) {
@@ -301,6 +304,49 @@ function fillFightSelect(select, fights) {
 
 function fillPlayerSelect(select, players) {
   select.innerHTML = players.map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`).join('');
+}
+
+async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
+  const all = [];
+  let startTime = null;
+
+  const query = `
+    query PlayerCasts($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: Casts, fightIDs: [$fightID], sourceID: $sourceID, startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+
+  while (true) {
+    const vars = {
+      code: reportCode,
+      fightID: Number(fight.id),
+      sourceID: Number(sourceId),
+      startTime,
+    };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+
+    for (const e of rows) {
+      const name = e?.ability?.name || e?.ability?.guid || e?.type || '';
+      const ts = Number(e?.timestamp || 0);
+      if (!name || !ts) continue;
+      const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      all.push({ t, action: String(name) });
+    }
+
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+
+  return all.sort((a, b) => a.t - b.t);
 }
 
 function makeSampleTimeline() {
@@ -447,15 +493,29 @@ el.loadPlayersBtn.addEventListener('click', () => {
   }
 });
 
-el.compareBtn.addEventListener('click', () => {
+el.compareBtn.addEventListener('click', async () => {
   state.selectedA = state.playersA.find(p => p.id === el.playerA.value);
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
   if (!state.selectedA || !state.selectedB) return;
 
-  state.timelineA = makeSampleTimeline();
-  state.timelineB = makeSampleTimeline();
-  state.dpsA = makeSampleDps();
-  state.dpsB = makeSampleDps();
+  const fightA = (state.reportA?.fights || []).find(f => Number(f.id) === Number(state.selectedFightA));
+  const fightB = (state.reportB?.fights || []).find(f => Number(f.id) === Number(state.selectedFightB));
+
+  el.step2Message.textContent = '選択プレイヤーのTLを取得中...';
+  try {
+    state.timelineA = await fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id));
+    state.timelineB = await fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id));
+    state.dpsA = makeSampleDps();
+    state.dpsB = makeSampleDps();
+    el.step2Message.textContent = `TL取得成功: A=${state.timelineA.length}件 / B=${state.timelineB.length}件`;
+  } catch (e) {
+    // 失敗時もUI確認できるようサンプルでフォールバック
+    state.timelineA = makeSampleTimeline();
+    state.timelineB = makeSampleTimeline();
+    state.dpsA = makeSampleDps();
+    state.dpsB = makeSampleDps();
+    el.step2Message.textContent = `TL取得失敗(サンプル表示): ${e.message}`;
+  }
 
   el.step4.classList.remove('hidden');
   state.currentTab = 'all';

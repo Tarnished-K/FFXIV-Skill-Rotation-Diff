@@ -25,6 +25,7 @@ const state = {
 
 const el = {
   connectBtn: document.getElementById('connectBtn'),
+  disconnectBtn: document.getElementById('disconnectBtn'),
   authStatus: document.getElementById('authStatus'),
   urlA: document.getElementById('urlA'),
   urlB: document.getElementById('urlB'),
@@ -187,7 +188,7 @@ async function fetchReportDataV2(reportCode) {
         report(code: $code) {
           fights {
             id
-            boss
+            encounterID
             name
             kill
             startTime
@@ -255,7 +256,8 @@ function formatFightLabel(fight, index) {
 }
 
 function extractSelectableFights(reportJson) {
-  return (reportJson.fights || []).filter(f => f.boss && f.boss !== 0 && f.kill === true);
+  // V2では ReportFight に boss が無いので encounterID を使ってボス戦判定
+  return (reportJson.fights || []).filter(f => Number(f.encounterID || 0) > 0 && f.kill === true);
 }
 
 function getPlayersFromFight(reportJson, fightId) {
@@ -385,6 +387,15 @@ el.connectBtn.addEventListener('click', () => {
   startOAuthLogin().catch(e => {
     el.msg.textContent = `連携開始失敗: ${e.message}`;
   });
+});
+
+el.disconnectBtn.addEventListener('click', () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(AUTH_STATE_KEY);
+  localStorage.removeItem(AUTH_VERIFIER_KEY);
+  state.token = '';
+  el.authStatus.textContent = '未連携';
+  el.msg.textContent = 'FFLogs連携を解除しました。';
 });
 
 el.loadBtn.addEventListener('click', async () => {

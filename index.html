@@ -15,6 +15,9 @@
     <main>
       <section class="card" id="step1">
         <h2>1. ログURL入力</h2>
+        <label>FFLogs API Key（V1）
+          <input id="apiKey" type="password" placeholder="FFLogs V1 API Key" />
+        </label>
         <label>ログURL A <input id="urlA" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
         <label>ログURL B <input id="urlB" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
         <button id="loadBtn">読み込み開始</button>
@@ -49,7 +52,7 @@
     </main>
 
     <footer>
-      <small>注: 現在はUI/MVP。FFLogs本番取得はサーバー実装時に接続します。</small>
+      <small>注: プレイヤー一覧はFFLogs APIから取得。TL/DPSは現在サンプル描画です。</small>
     </footer>
 
     <script src="script.js"></script>

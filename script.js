@@ -221,7 +221,13 @@ async function fetchReportDataV2(reportCode) {
 }
 
 async function loadIconMap() {
-  const candidates = ['/job-icons/job_icon.json', '/public/job-icons/job_icon.json', './public/job-icons/job_icon.json'];
+  const candidates = [
+    '/job-icons/job_icon.json',
+    '/public/job-icons/job_icon.json',
+    './public/job-icons/job_icon.json',
+    '/public/job-icons/ffxiv_job_action_icon_map.json',
+    './public/job-icons/ffxiv_job_action_icon_map.json'
+  ];
   for (const path of candidates) {
     try {
       const res = await fetch(path);
@@ -401,6 +407,17 @@ function filterTimeline(records, tab) {
   return records;
 }
 
+function buildRuler(maxT, pxPerSec) {
+  const marks = [];
+  for (let sec = 0; sec <= Math.ceil(maxT); sec++) {
+    const x = 60 + sec * pxPerSec;
+    const level = sec % 10 === 0 ? 'ten' : sec % 5 === 0 ? 'five' : 'one';
+    const label = sec % 5 === 0 ? `<span>${sec}s</span>` : '';
+    marks.push(`<div class="tick ${level}" style="left:${x}px">${label}</div>`);
+  }
+  return `<div class="ruler">${marks.join('')}</div>`;
+}
+
 function renderTimeline() {
   const a = filterTimeline(state.timelineA, state.currentTab);
   const b = filterTimeline(state.timelineB, state.currentTab);
@@ -433,15 +450,15 @@ function renderTimeline() {
     }).join('');
   };
 
-  const countText = state.currentTab === 'all' ? ` / 件数 A:${state.timelineCountA} B:${state.timelineCountB}` : '';
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px">
+      ${buildRuler(maxT, pxPerSec)}
       <div class="track a"></div>
       <div class="track b"></div>
       ${buildEvents(a, 'a')}
       ${buildEvents(b, 'b')}
     </div>
-    <div class="legend">A上段:GCD A下段:oGCD / B上段:GCD B下段:oGCD${countText}</div>
+    <div class="legend">${state.selectedA?.name || 'A'} (上:GCD / 下:oGCD)  vs  ${state.selectedB?.name || 'B'} (上:GCD / 下:oGCD)</div>
   `;
 }
 
@@ -505,6 +522,9 @@ el.loadBtn.addEventListener('click', async () => {
     state.urlA = parsedA;
     state.urlB = parsedB;
     state.iconMap = await loadIconMap();
+    if (!state.iconMap.length) {
+      el.msg.textContent = '警告: アイコン対応表JSONが見つかりません。UN表示になります。';
+    }
     state.reportA = await fetchReportDataV2(parsedA.reportId);
     state.reportB = await fetchReportDataV2(parsedB.reportId);
 

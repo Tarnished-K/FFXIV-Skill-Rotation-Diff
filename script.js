@@ -3,6 +3,10 @@ const state = {
   apiKey: '',
   urlA: null,
   urlB: null,
+  reportA: null,
+  reportB: null,
+  selectedFightA: null,
+  selectedFightB: null,
   playersA: [],
   playersB: [],
   selectedA: null,
@@ -19,10 +23,14 @@ const el = {
   urlA: document.getElementById('urlA'),
   urlB: document.getElementById('urlB'),
   loadBtn: document.getElementById('loadBtn'),
+  loadPlayersBtn: document.getElementById('loadPlayersBtn'),
   compareBtn: document.getElementById('compareBtn'),
   step2: document.getElementById('step2'),
   step3: document.getElementById('step3'),
+  step4: document.getElementById('step4'),
   msg: document.getElementById('step1Message'),
+  fightA: document.getElementById('fightA'),
+  fightB: document.getElementById('fightB'),
   playerA: document.getElementById('playerA'),
   playerB: document.getElementById('playerB'),
   tabs: [...document.querySelectorAll('.tab')],
@@ -34,9 +42,8 @@ function parseFFLogsUrl(raw) {
   try {
     const u = new URL(raw);
     const match = u.pathname.match(/\/reports\/([A-Za-z0-9]+)/);
-    const fight = Number(u.searchParams.get('fight'));
-    if (!match || Number.isNaN(fight)) return null;
-    return { reportId: match[1], fightId: fight, original: raw };
+    if (!match) return null;
+    return { reportId: match[1], original: raw };
   } catch {
     return null;
   }
@@ -65,20 +72,41 @@ function normalizeJobCode(type) {
   return String(type).toUpperCase();
 }
 
-async function fetchReportPlayers(reportId, fightId, apiKey) {
+function formatDurationMs(ms) {
+  const sec = Math.floor(ms / 1000);
+  const m = Math.floor(sec / 60);
+  const s = String(sec % 60).padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function formatFightLabel(fight, index) {
+  const duration = formatDurationMs((fight.end_time || 0) - (fight.start_time || 0));
+  const status = fight.kill ? 'Kill' : 'Wipe';
+  const name = fight.name || `Fight ${fight.id}`;
+  return `#${index + 1} ${name} / ${duration} / ${status}`;
+}
+
+async function fetchReportData(reportId, apiKey) {
   const url = `https://www.fflogs.com/v1/report/fights/${reportId}?api_key=${encodeURIComponent(apiKey)}`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`FFLogs API error: ${res.status}`);
   }
-  const json = await res.json();
-  const fight = (json.fights || []).find(f => Number(f.id) === Number(fightId));
+  return res.json();
+}
+
+function extractSelectableFights(reportJson) {
+  return (reportJson.fights || []).filter(f => f.boss && f.boss !== 0);
+}
+
+function getPlayersFromFight(reportJson, fightId) {
+  const fight = (reportJson.fights || []).find(f => Number(f.id) === Number(fightId));
   if (!fight) {
     throw new Error(`fight=${fightId} が見つかりません`);
   }
 
   const allowedIds = new Set(fight.friendlyPlayers || []);
-  const players = (json.friendlies || [])
+  const players = (reportJson.friendlies || [])
     .filter(p => allowedIds.size === 0 || allowedIds.has(p.id))
     .filter(p => !p.petOwner)
     .map(p => ({
@@ -92,6 +120,18 @@ async function fetchReportPlayers(reportId, fightId, apiKey) {
     throw new Error('プレイヤー一覧を取得できませんでした');
   }
   return players;
+}
+
+function fillFightSelect(select, fights) {
+  select.innerHTML = fights
+    .map((f, i) => `<option value="${f.id}">${formatFightLabel(f, i)}</option>`)
+    .join('');
+}
+
+function fillPlayerSelect(select, players) {
+  select.innerHTML = players
+    .map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`)
+    .join('');
 }
 
 function makeSampleTimeline(baseName) {
@@ -109,12 +149,6 @@ function makeSampleDps() {
     x += (Math.random() - 0.5) * 1200;
     return { t: i * 5, v: Math.max(1000, Math.round(x)) };
   });
-}
-
-function fillPlayerSelect(select, players) {
-  select.innerHTML = players
-    .map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`)
-    .join('');
 }
 
 function filterTimeline(records, tab) {
@@ -177,33 +211,42 @@ function renderDps() {
 }
 
 el.loadBtn.addEventListener('click', async () => {
+  state.apiKey = el.apiKey.value.trim();
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
-  state.apiKey = el.apiKey.value.trim();
 
   if (!state.apiKey) {
     el.msg.textContent = 'FFLogs API Key（V1）を入力してください。';
     return;
   }
   if (!parsedA || !parsedB) {
-    el.msg.textContent = 'FFLogs URL形式を確認してください（fightパラメータ必須）。';
+    el.msg.textContent = 'FFLogs URL形式を確認してください。';
     return;
   }
 
   el.loadBtn.disabled = true;
-  el.msg.textContent = 'FFLogsからプレイヤー一覧を取得中...';
+  el.msg.textContent = 'レポートを読み込み中...';
 
   try {
     state.urlA = parsedA;
     state.urlB = parsedB;
     state.iconMap = await loadIconMap();
-    state.playersA = await fetchReportPlayers(parsedA.reportId, parsedA.fightId, state.apiKey);
-    state.playersB = await fetchReportPlayers(parsedB.reportId, parsedB.fightId, state.apiKey);
+    state.reportA = await fetchReportData(parsedA.reportId, state.apiKey);
+    state.reportB = await fetchReportData(parsedB.reportId, state.apiKey);
 
-    fillPlayerSelect(el.playerA, state.playersA);
-    fillPlayerSelect(el.playerB, state.playersB);
-    el.msg.textContent = `取得成功: A=${state.playersA.length}人 / B=${state.playersB.length}人`;
+    const fightsA = extractSelectableFights(state.reportA);
+    const fightsB = extractSelectableFights(state.reportB);
+
+    if (!fightsA.length || !fightsB.length) {
+      throw new Error('選択可能な戦闘データが見つかりませんでした。');
+    }
+
+    fillFightSelect(el.fightA, fightsA);
+    fillFightSelect(el.fightB, fightsB);
     el.step2.classList.remove('hidden');
+    el.step3.classList.add('hidden');
+    el.step4.classList.add('hidden');
+    el.msg.textContent = `戦闘一覧取得成功: A=${fightsA.length}件 / B=${fightsB.length}件`; 
   } catch (e) {
     el.msg.textContent = `取得失敗: ${e.message}`;
   } finally {
@@ -211,21 +254,35 @@ el.loadBtn.addEventListener('click', async () => {
   }
 });
 
+el.loadPlayersBtn.addEventListener('click', () => {
+  try {
+    state.selectedFightA = Number(el.fightA.value);
+    state.selectedFightB = Number(el.fightB.value);
+
+    state.playersA = getPlayersFromFight(state.reportA, state.selectedFightA);
+    state.playersB = getPlayersFromFight(state.reportB, state.selectedFightB);
+
+    fillPlayerSelect(el.playerA, state.playersA);
+    fillPlayerSelect(el.playerB, state.playersB);
+    el.step3.classList.remove('hidden');
+    el.step4.classList.add('hidden');
+    el.msg.textContent = `プレイヤー取得成功: A=${state.playersA.length}人 / B=${state.playersB.length}人`;
+  } catch (e) {
+    el.msg.textContent = `プレイヤー取得失敗: ${e.message}`;
+  }
+});
+
 el.compareBtn.addEventListener('click', () => {
   state.selectedA = state.playersA.find(p => p.id === el.playerA.value);
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
+  if (!state.selectedA || !state.selectedB) return;
 
-  if (!state.selectedA || !state.selectedB) {
-    return;
-  }
-
-  // TL/DPS本番取得は次フェーズ。ここでは選択した実プレイヤー名に紐づいたサンプルを描画。
   state.timelineA = makeSampleTimeline(state.selectedA.name);
   state.timelineB = makeSampleTimeline(state.selectedB.name);
   state.dpsA = makeSampleDps();
   state.dpsB = makeSampleDps();
 
-  el.step3.classList.remove('hidden');
+  el.step4.classList.remove('hidden');
   state.currentTab = 'all';
   el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
   el.dpsCanvas.classList.add('hidden');

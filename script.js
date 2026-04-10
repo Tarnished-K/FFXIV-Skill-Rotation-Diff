@@ -23,6 +23,7 @@ const state = {
   dpsB: [],
   timelineCountA: 0,
   timelineCountB: 0,
+  actionById: new Map(),
 };
 
 const el = {
@@ -226,24 +227,49 @@ async function loadIconMap() {
       const res = await fetch(path);
       if (!res.ok) continue;
       const data = await res.json();
-      return data.records || data;
+      const records = data.records || data;
+      state.actionById = new Map();
+      for (const r of records) {
+        if (r?.action_id) state.actionById.set(Number(r.action_id), r);
+      }
+      return records;
     } catch {
       // try next candidate
     }
   }
+  state.actionById = new Map();
   return [];
 }
 
-function findIcon(actionNameEn, actionId) {
-  const found = state.iconMap.find(
-    r => (actionId && Number(r.action_id) === Number(actionId)) ||
-      r.action_name_en === actionNameEn ||
-      (r.aliases || []).includes(actionNameEn),
-  );
+function normalizeActionKey(v) {
+  return String(v || '').toLowerCase().replace(/[^a-z0-9぀-ヿ一-龯]/g, '');
+}
+
+function getActionMeta(actionName, actionId) {
+  let found = null;
+  if (actionId && state.actionById.has(Number(actionId))) {
+    found = state.actionById.get(Number(actionId));
+  }
+  if (!found) {
+    const key = normalizeActionKey(actionName);
+    found = state.iconMap.find(r => {
+      const names = [r.action_name_en, r.action_name_ja, ...(r.aliases || [])].map(normalizeActionKey);
+      return names.includes(key);
+    });
+  }
+
   const raw = found?.icon_path || '';
-  if (!raw) return '';
-  if (raw.startsWith('/job-icons/')) return '/public' + raw;
-  return raw;
+  let icon = '';
+  if (raw) {
+    const normalized = raw.startsWith('/job-icons/') ? '/public' + raw : raw;
+    icon = encodeURI(normalized);
+  }
+
+  return {
+    icon,
+    category: String(found?.category || found?.action_type || '').toLowerCase(),
+    label: found?.action_name_ja || found?.action_name_en || actionName || 'Unknown',
+  };
 }
 
 function normalizeJobCode(type, subType) {
@@ -339,12 +365,13 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
     const rows = block?.data || [];
 
     for (const e of rows) {
-      const name = e?.ability?.name || e?.type || '';
-      const actionId = Number(e?.ability?.guid || 0);
+      const actionId = Number(e?.abilityGameID || e?.ability?.guid || 0);
+      const meta = getActionMeta(e?.ability?.name || e?.abilityName || '', actionId);
+      const name = meta.label || e?.ability?.name || e?.abilityName || '';
       const ts = Number(e?.timestamp || 0);
       if (!name || !ts) continue;
       const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
-      all.push({ t, action: String(name), actionId });
+      all.push({ t, action: String(name), actionId, category: meta.category });
     }
 
     if (!block?.nextPageTimestamp) break;
@@ -378,18 +405,31 @@ function renderTimeline() {
   const a = filterTimeline(state.timelineA, state.currentTab);
   const b = filterTimeline(state.timelineB, state.currentTab);
   const maxT = Math.max(1, ...a.map(x => x.t), ...b.map(x => x.t));
-  const pxPerSec = 12;
-  const width = Math.max(1600, maxT * pxPerSec + 180);
+  const pxPerSec = 16;
+  const width = Math.max(1800, maxT * pxPerSec + 220);
 
-  const buildEvents = (records, cls) => {
-    let lastX = -999;
+  const laneTop = {
+    a_gcd: 22,
+    a_ogcd: 54,
+    b_gcd: 118,
+    b_ogcd: 150,
+  };
+
+  const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
+
+  const buildEvents = (records, owner) => {
+    const lanesLastX = { gcd: -999, ogcd: -999 };
     return records.map(r => {
-      const x = 50 + r.t * pxPerSec;
-      if (x - lastX < 18) return '';
-      lastX = x;
-      const icon = findIcon(r.action, r.actionId);
-      const fallback = (r.action || '?').slice(0, 2).toUpperCase();
-      return `<div class="event ${cls}" style="left:${x}px; top:${cls === 'a' ? 30 : 110}px" title="${r.t.toFixed(1)}s ${r.action}">${icon ? `<img src="${icon}" alt="${r.action}" />` : `<span>${fallback}</span>`}</div>`;
+      const lane = isGcd(r) ? 'gcd' : 'ogcd';
+      const x = 60 + r.t * pxPerSec;
+      if (x - lanesLastX[lane] < 20) return '';
+      lanesLastX[lane] = x;
+
+      const meta = getActionMeta(r.action, r.actionId);
+      const icon = meta.icon;
+      const fallback = (meta.label || r.action || '?').slice(0, 2).toUpperCase();
+      const top = laneTop[`${owner}_${lane}`];
+      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${meta.label}">${icon ? `<img src="${icon}" alt="${meta.label}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');
   };
 
@@ -401,7 +441,7 @@ function renderTimeline() {
       ${buildEvents(a, 'a')}
       ${buildEvents(b, 'b')}
     </div>
-    <div class="legend">上段: ${state.selectedA?.name || '-'} / 下段: ${state.selectedB?.name || '-'}${countText}</div>
+    <div class="legend">A上段:GCD A下段:oGCD / B上段:GCD B下段:oGCD${countText}</div>
   `;
 }
 

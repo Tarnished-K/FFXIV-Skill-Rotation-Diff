@@ -21,6 +21,8 @@ const state = {
   timelineB: [],
   dpsA: [],
   dpsB: [],
+  timelineCountA: 0,
+  timelineCountB: 0,
 };
 
 const el = {
@@ -232,9 +234,11 @@ async function loadIconMap() {
   return [];
 }
 
-function findIcon(actionNameEn) {
+function findIcon(actionNameEn, actionId) {
   const found = state.iconMap.find(
-    r => r.action_name_en === actionNameEn || (r.aliases || []).includes(actionNameEn),
+    r => (actionId && Number(r.action_id) === Number(actionId)) ||
+      r.action_name_en === actionNameEn ||
+      (r.aliases || []).includes(actionNameEn),
   );
   const raw = found?.icon_path || '';
   if (!raw) return '';
@@ -335,11 +339,12 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
     const rows = block?.data || [];
 
     for (const e of rows) {
-      const name = e?.ability?.name || e?.ability?.guid || e?.type || '';
+      const name = e?.ability?.name || e?.type || '';
+      const actionId = Number(e?.ability?.guid || 0);
       const ts = Number(e?.timestamp || 0);
       if (!name || !ts) continue;
       const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
-      all.push({ t, action: String(name) });
+      all.push({ t, action: String(name), actionId });
     }
 
     if (!block?.nextPageTimestamp) break;
@@ -373,15 +378,22 @@ function renderTimeline() {
   const a = filterTimeline(state.timelineA, state.currentTab);
   const b = filterTimeline(state.timelineB, state.currentTab);
   const maxT = Math.max(1, ...a.map(x => x.t), ...b.map(x => x.t));
-  const pxPerSec = 6;
-  const width = Math.max(1200, maxT * pxPerSec + 120);
+  const pxPerSec = 12;
+  const width = Math.max(1600, maxT * pxPerSec + 180);
 
-  const buildEvents = (records, cls) => records.map(r => {
-    const x = 40 + r.t * pxPerSec;
-    const icon = findIcon(r.action);
-    return `<div class="event ${cls}" style="left:${x}px; top:${cls === 'a' ? 30 : 110}px" title="${r.t}s ${r.action}">${icon ? `<img src="${icon}" alt="${r.action}" />` : ''}</div>`;
-  }).join('');
+  const buildEvents = (records, cls) => {
+    let lastX = -999;
+    return records.map(r => {
+      const x = 50 + r.t * pxPerSec;
+      if (x - lastX < 18) return '';
+      lastX = x;
+      const icon = findIcon(r.action, r.actionId);
+      const fallback = (r.action || '?').slice(0, 2).toUpperCase();
+      return `<div class="event ${cls}" style="left:${x}px; top:${cls === 'a' ? 30 : 110}px" title="${r.t.toFixed(1)}s ${r.action}">${icon ? `<img src="${icon}" alt="${r.action}" />` : `<span>${fallback}</span>`}</div>`;
+    }).join('');
+  };
 
+  const countText = state.currentTab === 'all' ? ` / 件数 A:${state.timelineCountA} B:${state.timelineCountB}` : '';
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px">
       <div class="track a"></div>
@@ -389,7 +401,7 @@ function renderTimeline() {
       ${buildEvents(a, 'a')}
       ${buildEvents(b, 'b')}
     </div>
-    <div class="legend">上段: ${state.selectedA?.name || '-'} / 下段: ${state.selectedB?.name || '-'}</div>
+    <div class="legend">上段: ${state.selectedA?.name || '-'} / 下段: ${state.selectedB?.name || '-'}${countText}</div>
   `;
 }
 
@@ -505,6 +517,8 @@ el.compareBtn.addEventListener('click', async () => {
   try {
     state.timelineA = await fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id));
     state.timelineB = await fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id));
+    state.timelineCountA = state.timelineA.length;
+    state.timelineCountB = state.timelineB.length;
     state.dpsA = makeSampleDps();
     state.dpsB = makeSampleDps();
     el.step2Message.textContent = `TL取得成功: A=${state.timelineA.length}件 / B=${state.timelineB.length}件`;
@@ -512,6 +526,8 @@ el.compareBtn.addEventListener('click', async () => {
     // 失敗時もUI確認できるようサンプルでフォールバック
     state.timelineA = makeSampleTimeline();
     state.timelineB = makeSampleTimeline();
+    state.timelineCountA = state.timelineA.length;
+    state.timelineCountB = state.timelineB.length;
     state.dpsA = makeSampleDps();
     state.dpsB = makeSampleDps();
     el.step2Message.textContent = `TL取得失敗(サンプル表示): ${e.message}`;

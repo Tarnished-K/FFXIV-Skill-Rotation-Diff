@@ -23,6 +23,7 @@ const state = {
   timelineCountA: 0,
   timelineCountB: 0,
   actionById: new Map(),
+  abilityById: new Map(),
   zoom: 1,
 };
 const el = {
@@ -194,6 +195,10 @@ async function fetchReportDataV2(reportCode) {
               subType
               petOwner
             }
+            abilities {
+              gameID
+              name
+            }
           }
         }
       }
@@ -277,6 +282,14 @@ function formatFightLabel(fight, index) {
   const name = fight.name || `Fight ${fight.id}`;
   return `#${index + 1} ${name} / ${duration} / ${status}`;
 }
+function indexAbilities(report) {
+  for (const a of report?.masterData?.abilities || []) {
+    const id = Number(a?.gameID || 0);
+    const name = String(a?.name || '');
+    if (id && name && !state.abilityById.has(id)) state.abilityById.set(id, name);
+  }
+}
+
 function extractSelectableFights(reportJson) {
   // V2では ReportFight に boss が無いので encounterID を使ってボス戦判定
   return (reportJson.fights || []).filter(f => Number(f.encounterID || 0) > 0 && f.kill === true);
@@ -340,8 +353,9 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId) {
     if (rows.length && all.length === 0) logDebug("events sample", rows[0]);
     for (const e of rows) {
       const actionId = Number(e?.abilityGameID || e?.ability?.guid || 0);
-      const meta = getActionMeta(e?.ability?.name || e?.abilityName || '', actionId);
-      const name = meta.label || e?.ability?.name || e?.abilityName || '';
+      const resolvedName = e?.ability?.name || e?.abilityName || state.abilityById.get(actionId) || '';
+      const meta = getActionMeta(resolvedName, actionId);
+      const name = meta.label || resolvedName || '';
       const ts = Number(e?.timestamp || 0);
       if (!name || !ts) continue;
       const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
@@ -477,6 +491,10 @@ el.loadBtn.addEventListener('click', async () => {
     }
     state.reportA = await fetchReportDataV2(parsedA.reportId);
     state.reportB = await fetchReportDataV2(parsedB.reportId);
+    state.abilityById = new Map();
+    indexAbilities(state.reportA);
+    indexAbilities(state.reportB);
+    logDebug('ability map indexed', {count: state.abilityById.size});
     const fightsA = extractSelectableFights(state.reportA);
     const fightsB = extractSelectableFights(state.reportB);
     if (!fightsA.length || !fightsB.length) throw new Error('選択可能なKill戦闘が見つかりませんでした。');

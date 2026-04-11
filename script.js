@@ -278,7 +278,7 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
     return {
       icon: '',
       iconCandidates: [],
-      category: String(found?.category || found?.action_type || '').toLowerCase(),
+      category: String(found?.action_type || '').toLowerCase(),
       label: found?.action_name_ja || found?.action_name_en || actionName || 'Unknown',
     };
   }
@@ -314,7 +314,7 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
   return {
     icon: uniqueCandidates[0] || '',
     iconCandidates: uniqueCandidates,
-    category: String(found?.category || found?.action_type || '').toLowerCase(),
+    category: String(found?.action_type || '').toLowerCase(),
     label: found?.action_name_ja || found?.action_name_en || actionName || 'Unknown',
   };
 }
@@ -466,17 +466,30 @@ function buildRuler(maxT, pxPerSec) {
   }
   return `<div class="ruler">${marks.join('')}</div>`;
 }
+function classifyStats(records) {
+  let gcd = 0, ogcd = 0, unknown = 0;
+  for (const r of records) {
+    if (r.category === 'weaponskill' || r.category === 'spell') gcd++;
+    else if (r.category === 'ability') ogcd++;
+    else unknown++;
+  }
+  return { gcd, ogcd, unknown, total: records.length };
+}
 function renderTimeline() {
   const a = filterTimeline(state.timelineA, state.currentTab);
   const b = filterTimeline(state.timelineB, state.currentTab);
   const maxT = Math.max(1, ...a.map(x => x.t), ...b.map(x => x.t));
   const pxPerSec = 16 * state.zoom;
   const width = Math.max(1800, maxT * pxPerSec + 220);
+  const labelA = state.selectedA?.name || 'A';
+  const labelB = state.selectedB?.name || 'B';
+  const jobA = state.selectedA?.job || '';
+  const jobB = state.selectedB?.job || '';
   const laneTop = {
-    a_ogcd: 42,
-    a_gcd: 122,
-    b_ogcd: 262,
-    b_gcd: 342,
+    a_ogcd: 52,
+    a_gcd: 132,
+    b_ogcd: 282,
+    b_gcd: 362,
   };
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
   const buildEvents = (records, owner) => {
@@ -500,12 +513,18 @@ function renderTimeline() {
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px">
       ${buildRuler(maxT, pxPerSec)}
+      <div class="player-label" style="top:24px">${labelA}${jobA ? ' (' + jobA + ')' : ''}</div>
+      <div class="lane-label" style="top:${laneTop.a_ogcd + 12}px">アビリティ</div>
       <div class="track a"></div>
+      <div class="lane-label" style="top:${laneTop.a_gcd + 12}px">WS・魔法</div>
+      <div class="player-divider" style="top:220px"></div>
+      <div class="player-label" style="top:250px">${labelB}${jobB ? ' (' + jobB + ')' : ''}</div>
+      <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">アビリティ</div>
       <div class="track b"></div>
+      <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">WS・魔法</div>
       ${buildEvents(a, 'a')}
       ${buildEvents(b, 'b')}
     </div>
-    <div class="legend">上段プレイヤー: ${state.selectedA?.name || 'A'}（上:oGCD/アビリティ / 下:GCD・詠唱）<br/>下段プレイヤー: ${state.selectedB?.name || 'B'}（上:oGCD/アビリティ / 下:GCD・詠唱）</div>
   `;
   el.timelineWrap.querySelectorAll('img.event-icon').forEach(img => {
     const queue = (img.dataset.fallbacks || '').split('|').filter(Boolean);
@@ -635,15 +654,28 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     state.timelineCountB = state.timelineB.length;
     state.dpsA = makeSampleDps();
     state.dpsB = makeSampleDps();
+    const statsA = classifyStats(state.timelineA);
+    const statsB = classifyStats(state.timelineB);
+    logDebug(`[A] ${state.selectedA.name}: GCD=${statsA.gcd} oGCD=${statsA.ogcd} 未分類=${statsA.unknown} / 計${statsA.total}`);
+    logDebug(`[B] ${state.selectedB.name}: GCD=${statsB.gcd} oGCD=${statsB.ogcd} 未分類=${statsB.unknown} / 計${statsB.total}`);
+    const iconHitA = state.timelineA.filter(e => e.icon).length;
+    const iconHitB = state.timelineB.filter(e => e.icon).length;
+    logDebug(`アイコン解決率: A=${iconHitA}/${statsA.total} B=${iconHitB}/${statsB.total}`);
+    if (statsA.unknown > 0 || statsB.unknown > 0) {
+      const unknownsA = state.timelineA.filter(e => e.category !== 'weaponskill' && e.category !== 'spell' && e.category !== 'ability').slice(0, 5);
+      const unknownsB = state.timelineB.filter(e => e.category !== 'weaponskill' && e.category !== 'spell' && e.category !== 'ability').slice(0, 5);
+      if (unknownsA.length) logDebug('[A] 未分類サンプル', unknownsA.map(e => `${e.action}(id:${e.actionId})`));
+      if (unknownsB.length) logDebug('[B] 未分類サンプル', unknownsB.map(e => `${e.action}(id:${e.actionId})`));
+    }
     el.step2Message.textContent = `TL取得成功: A=${state.timelineA.length}件 / B=${state.timelineB.length}件`;
   } catch (e) {
-    // 失敗時もUI確認できるようサンプルでフォールバック
     state.timelineA = makeSampleTimeline();
     state.timelineB = makeSampleTimeline();
     state.timelineCountA = state.timelineA.length;
     state.timelineCountB = state.timelineB.length;
     state.dpsA = makeSampleDps();
     state.dpsB = makeSampleDps();
+    logDebug('TL取得失敗 - サンプルデータで表示', {error: e.message});
     el.step2Message.textContent = `TL取得失敗(サンプル表示): ${e.message}`;
   }
   el.step4.classList.remove('hidden');

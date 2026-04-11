@@ -2,6 +2,34 @@ const FFLOGS_V2_CLIENT_ID = 'a182a7d9-18bd-49d6-a5d3-26f40a3f3a7d';
 const AUTH_STATE_KEY = 'fflogs_v2_state';
 const AUTH_VERIFIER_KEY = 'fflogs_v2_verifier';
 const TOKEN_KEY = 'fflogs_v2_access_token';
+
+const JOB_CODE_MAP = {
+  PALADIN: 'PLD', WARRIOR: 'WAR', DARKKNIGHT: 'DRK', GUNBREAKER: 'GNB',
+  WHITEMAGE: 'WHM', SCHOLAR: 'SCH', ASTROLOGIAN: 'AST', SAGE: 'SGE',
+  MONK: 'MNK', DRAGOON: 'DRG', NINJA: 'NIN', SAMURAI: 'SAM', REAPER: 'RPR', VIPER: 'VPR',
+  BARD: 'BRD', MACHINIST: 'MCH', DANCER: 'DNC',
+  BLACKMAGE: 'BLM', SUMMONER: 'SMN', REDMAGE: 'RDM', PICTOMANCER: 'PCT',
+  // already-abbreviated pass-through
+  PLD: 'PLD', WAR: 'WAR', DRK: 'DRK', GNB: 'GNB',
+  WHM: 'WHM', SCH: 'SCH', AST: 'AST', SGE: 'SGE',
+  MNK: 'MNK', DRG: 'DRG', NIN: 'NIN', SAM: 'SAM', RPR: 'RPR', VPR: 'VPR',
+  BRD: 'BRD', MCH: 'MCH', DNC: 'DNC',
+  BLM: 'BLM', SMN: 'SMN', RDM: 'RDM', PCT: 'PCT',
+};
+
+const BURST_BUFFS = [
+  { ids: [7398],  nameEn: 'Battle Litany',    nameJa: 'バトルリタニー',      duration: 20, color: '#60a5fa' },
+  { ids: [7396],  nameEn: 'Brotherhood',       nameJa: '桃園結義',           duration: 20, color: '#f472b6' },
+  { ids: [16552], nameEn: 'Divination',        nameJa: 'ディヴィネーション',   duration: 20, color: '#fbbf24' },
+  { ids: [7436],  nameEn: 'Chain Stratagem',   nameJa: '連環計',             duration: 20, color: '#a78bfa' },
+  { ids: [7520],  nameEn: 'Embolden',          nameJa: 'エンボルデン',        duration: 20, color: '#f87171' },
+  { ids: [24405], nameEn: 'Arcane Circle',     nameJa: 'アルカナサークル',     duration: 20, color: '#c084fc' },
+  { ids: [15998], nameEn: 'Technical Finish',  nameJa: 'テクニカルフィニッシュ', duration: 20, color: '#34d399' },
+  { ids: [25801], nameEn: 'Searing Light',     nameJa: 'シアリングライト',     duration: 20, color: '#fcd34d' },
+  { ids: [25785], nameEn: 'Radiant Finale',    nameJa: 'ラジアントフィナーレ',  duration: 20, color: '#fb923c' },
+  { ids: [34681], nameEn: 'Starry Muse',       nameJa: 'スターリーミューズ',    duration: 20, color: '#38bdf8' },
+  { ids: [36871], nameEn: 'Dokumori',          nameJa: '毒盛り',             duration: 20, color: '#86efac' },
+];
 const state = {
   iconMap: [],
   token: '',
@@ -24,7 +52,9 @@ const state = {
   timelineCountB: 0,
   actionById: new Map(),
   abilityById: new Map(),
-  zoom: 1,
+  zoom: 2,
+  damageA: [],
+  damageB: [],
 };
 const el = {
   connectBtn: document.getElementById('connectBtn'),
@@ -319,8 +349,8 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
   };
 }
 function normalizeJobCode(type, subType) {
-  const c = (subType || type || '').toString().toUpperCase();
-  return c || 'UNK';
+  const raw = (subType || type || '').toString().toUpperCase().replace(/[\s-_]/g, '');
+  return JOB_CODE_MAP[raw] || raw || 'UNK';
 }
 function formatDurationMs(ms) {
   const sec = Math.floor(ms / 1000);
@@ -475,6 +505,90 @@ function classifyStats(records) {
   }
   return { gcd, ogcd, unknown, total: records.length };
 }
+function findBurstBuff(actionId, actionName) {
+  const id = Number(actionId);
+  for (const buff of BURST_BUFFS) {
+    if (buff.ids.includes(id)) return buff;
+  }
+  const n = String(actionName || '').toLowerCase();
+  for (const buff of BURST_BUFFS) {
+    if (n === buff.nameEn.toLowerCase() || n === buff.nameJa) return buff;
+  }
+  return null;
+}
+function formatHitType(hitType, multistrike) {
+  const isCrit = hitType === 2;
+  const isDH = !!multistrike;
+  if (isCrit && isDH) return 'CDH';
+  if (isCrit) return 'Crit';
+  if (isDH) return 'DH';
+  return '';
+}
+async function fetchPlayerDamageV2(reportCode, fight, sourceId) {
+  const all = [];
+  let startTime = null;
+  const query = `
+    query PlayerDamage($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: DamageDone, fightIDs: [$fightID], sourceID: $sourceID, startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), sourceID: Number(sourceId), startTime };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    for (const e of rows) {
+      const actionId = Number(e?.abilityGameID || e?.ability?.guid || 0);
+      const ts = Number(e?.timestamp || 0);
+      if (!actionId || !ts) continue;
+      const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      all.push({
+        t,
+        actionId,
+        amount: Number(e?.amount || 0),
+        hitType: Number(e?.hitType || 0),
+        multistrike: !!e?.multistrike,
+      });
+    }
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+  return all;
+}
+function correlateDamage(timeline, damageEvents) {
+  const dmgByAction = new Map();
+  for (const d of damageEvents) {
+    const key = d.actionId;
+    if (!dmgByAction.has(key)) dmgByAction.set(key, []);
+    dmgByAction.get(key).push(d);
+  }
+  for (const ev of timeline) {
+    const candidates = dmgByAction.get(ev.actionId) || [];
+    let best = null;
+    let bestDist = Infinity;
+    for (const d of candidates) {
+      const dist = Math.abs(d.t - ev.t);
+      if (dist < bestDist && dist < 3) {
+        bestDist = dist;
+        best = d;
+      }
+    }
+    if (best) {
+      ev.damage = best.amount;
+      ev.hitType = best.hitType;
+      ev.multistrike = best.multistrike;
+      const idx = candidates.indexOf(best);
+      if (idx !== -1) candidates.splice(idx, 1);
+    }
+  }
+}
 function renderTimeline() {
   const a = filterTimeline(state.timelineA, state.currentTab);
   const b = filterTimeline(state.timelineB, state.currentTab);
@@ -485,13 +599,35 @@ function renderTimeline() {
   const labelB = state.selectedB?.name || 'B';
   const jobA = state.selectedA?.job || '';
   const jobB = state.selectedB?.job || '';
+  // Reduced gap between oGCD and GCD lanes (was ~80px, now ~14px)
   const laneTop = {
-    a_ogcd: 52,
-    a_gcd: 132,
-    b_ogcd: 282,
-    b_gcd: 362,
+    a_ogcd: 42,
+    a_gcd: 96,
+    b_ogcd: 222,
+    b_gcd: 276,
   };
+  const trackATop = 32;
+  const trackAHeight = 120;
+  const dividerTop = 180;
+  const trackBTop = 212;
+  const trackBHeight = 120;
+  const totalHeight = 350;
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
+
+  const buildBurstOverlays = (records, owner) => {
+    const overlays = [];
+    const baseTop = owner === 'a' ? trackATop : trackBTop;
+    const h = owner === 'a' ? trackAHeight : trackBHeight;
+    for (const r of records) {
+      const buff = findBurstBuff(r.actionId, r.action);
+      if (!buff) continue;
+      const x = 60 + r.t * pxPerSec;
+      const w = buff.duration * pxPerSec;
+      overlays.push(`<div class="burst-overlay" style="left:${x}px; top:${baseTop}px; width:${w}px; height:${h}px; background:${buff.color}20; border-left:2px solid ${buff.color}60;"><span class="burst-label" style="color:${buff.color}">${buff.nameEn}</span></div>`);
+    }
+    return overlays.join('');
+  };
+
   const buildEvents = (records, owner) => {
     const lanesLastX = { gcd: -999, ogcd: -999 };
     const minGap = 24;
@@ -504,24 +640,30 @@ function renderTimeline() {
       const fallback = (r.label || r.action || '?').slice(0, 2).toUpperCase();
       const top = laneTop[`${owner}_${lane}`];
       const candidates = (r.iconCandidates || []).join('|');
-      const castBar = Number(r.castEndT) > Number(r.t)
-        ? `<div class="cast-bar" style="width:${Math.max(8, (r.castEndT - r.t) * pxPerSec)}px"></div>`
-        : '';
-      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${r.label || r.action}">${castBar}${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
+      // Enhanced tooltip with damage and crit/DH info
+      let tooltip = `${r.t.toFixed(1)}s ${r.label || r.action}`;
+      if (r.damage != null && r.damage > 0) {
+        tooltip += ` | ${r.damage.toLocaleString()}`;
+        const ht = formatHitType(r.hitType, r.multistrike);
+        if (ht) tooltip += ` (${ht})`;
+      }
+      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${tooltip}">${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');
   };
   el.timelineWrap.innerHTML = `
-    <div class="timeline" style="width:${width}px">
+    <div class="timeline" style="width:${width}px; height:${totalHeight}px">
       ${buildRuler(maxT, pxPerSec)}
       <div class="player-label" style="top:24px">${labelA}${jobA ? ' (' + jobA + ')' : ''}</div>
       <div class="lane-label" style="top:${laneTop.a_ogcd + 12}px">アビリティ</div>
-      <div class="track a"></div>
+      <div class="track a" style="top:${trackATop}px; height:${trackAHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.a_gcd + 12}px">WS・魔法</div>
-      <div class="player-divider" style="top:220px"></div>
-      <div class="player-label" style="top:250px">${labelB}${jobB ? ' (' + jobB + ')' : ''}</div>
+      ${buildBurstOverlays(a, 'a')}
+      <div class="player-divider" style="top:${dividerTop}px"></div>
+      <div class="player-label" style="top:${dividerTop + 10}px">${labelB}${jobB ? ' (' + jobB + ')' : ''}</div>
       <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">アビリティ</div>
-      <div class="track b"></div>
+      <div class="track b" style="top:${trackBTop}px; height:${trackBHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">WS・魔法</div>
+      ${buildBurstOverlays(b, 'b')}
       ${buildEvents(a, 'a')}
       ${buildEvents(b, 'b')}
     </div>
@@ -648,8 +790,19 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
   const fightB = (state.reportB?.fights || []).find(f => Number(f.id) === Number(state.selectedFightB));
   el.step2Message.textContent = '選択プレイヤーのTLを取得中...';
   try {
-    state.timelineA = await fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job);
-    state.timelineB = await fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job);
+    const [tlA, tlB, dmgA, dmgB] = await Promise.all([
+      fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job),
+      fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job),
+      fetchPlayerDamageV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
+      fetchPlayerDamageV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
+    ]);
+    state.timelineA = tlA;
+    state.timelineB = tlB;
+    state.damageA = dmgA;
+    state.damageB = dmgB;
+    correlateDamage(state.timelineA, state.damageA);
+    correlateDamage(state.timelineB, state.damageB);
+    logDebug(`ダメージイベント: A=${dmgA.length}件 B=${dmgB.length}件`);
     state.timelineCountA = state.timelineA.length;
     state.timelineCountB = state.timelineB.length;
     state.dpsA = makeSampleDps();

@@ -75,6 +75,13 @@ const el = {
   zoomLabel: document.getElementById('zoomLabel'),
   debugLog: document.getElementById('debugLog'),
 };
+function bindClick(node, name, handler) {
+  if (!node) {
+    console.error(`[bind] missing element: ${name}`);
+    return;
+  }
+  node.addEventListener('click', handler);
+}
 function logDebug(message, payload = null) {
   const t = new Date().toLocaleTimeString();
   const line = payload ? `[${t}] ${message} ${JSON.stringify(payload).slice(0, 500)}` : `[${t}] ${message}`;
@@ -268,6 +275,16 @@ function normalizeActionKey(v) {
 function uniq(values) {
   return [...new Set(values.filter(Boolean))];
 }
+function shouldSkipIconLookup(actionName = '') {
+  const n = String(actionName || '').toLowerCase();
+  return n.includes('sprint')
+    || n.includes('スプリント')
+    || n.includes('tincture')
+    || n.includes('potion')
+    || n.includes('薬')
+    || n.includes('limit break')
+    || n.includes('リミットブレイク');
+}
 function getActionMeta(actionName, actionId, preferredJobCode = '') {
   let found = null;
   if (actionId && state.actionById.has(Number(actionId))) {
@@ -279,6 +296,14 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
       const names = [r.action_name_en, r.action_name_ja, ...(r.aliases || [])].map(normalizeActionKey);
       return names.includes(key);
     });
+  }
+  if (shouldSkipIconLookup(actionName) || shouldSkipIconLookup(found?.action_name_en) || shouldSkipIconLookup(found?.action_name_ja)) {
+    return {
+      icon: '',
+      iconCandidates: [],
+      category: String(found?.category || found?.action_type || '').toLowerCase(),
+      label: found?.action_name_ja || found?.action_name_en || actionName || 'Unknown',
+    };
   }
   const raw = found?.icon_path || '';
   const iconCandidates = [];
@@ -302,12 +327,12 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
         iconCandidates.push(`/public/job-icons/${targetScope}/${tail}`);
       }
       if (JOB_ICON_SCOPE_MAP[rawJob]) iconCandidates.push(`/public/job-icons/${JOB_ICON_SCOPE_MAP[rawJob]}/${tail}`);
-      iconCandidates.push(`/public/job-icons/jobs/${rawJob}/${rawTail}`);
       if (found?.category === 'role_action') {
         iconCandidates.push(`/public/job-icons/jobs/${rawJob}/Role_Actions/${fileName}`);
         iconCandidates.push(`/public/job-icons/jobs/Role_Actions/${fileName}`);
         iconCandidates.push(`/public/job-icons/Role_Actions/${fileName}`);
       }
+      iconCandidates.push(`/public/job-icons/jobs/${rawJob}/${rawTail}`);
     }
     iconCandidates.push(raw.startsWith('/job-icons/') ? '/public' + raw : raw);
     iconCandidates.push(raw);
@@ -381,6 +406,7 @@ function fillPlayerSelect(select, players) {
 }
 async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode = '') {
   const all = [];
+  const pendingBegincast = new Map();
   let startTime = null;
   const query = `
     query PlayerCasts($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
@@ -413,6 +439,26 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode 
       const ts = Number(e?.timestamp || 0);
       if (!name || !ts) continue;
       const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      const type = String(e?.type || '').toLowerCase();
+      const key = `${actionId}:${name}`;
+      if (type === 'begincast') {
+        if (!pendingBegincast.has(key)) pendingBegincast.set(key, []);
+        pendingBegincast.get(key).push({
+          t,
+          action: String(name),
+          actionId,
+          category: meta.category,
+          icon: meta.icon,
+          iconCandidates: meta.iconCandidates || [],
+          label: meta.label,
+        });
+        continue;
+      }
+      if (type === 'cast' && pendingBegincast.has(key) && pendingBegincast.get(key).length) {
+        const startEvent = pendingBegincast.get(key).shift();
+        all.push({ ...startEvent, castEndT: t });
+        continue;
+      }
       all.push({ t, action: String(name), actionId, category: meta.category, icon: meta.icon, iconCandidates: meta.iconCandidates || [], label: meta.label });
     }
     if (!block?.nextPageTimestamp) break;
@@ -454,24 +500,28 @@ function renderTimeline() {
   const pxPerSec = 16 * state.zoom;
   const width = Math.max(1800, maxT * pxPerSec + 220);
   const laneTop = {
-    a_gcd: 22,
-    a_ogcd: 54,
-    b_gcd: 118,
-    b_ogcd: 150,
+    a_gcd: 26,
+    a_ogcd: 62,
+    b_gcd: 146,
+    b_ogcd: 182,
   };
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
   const buildEvents = (records, owner) => {
     const lanesLastX = { gcd: -999, ogcd: -999 };
+    const minGap = 8;
     return records.map(r => {
       const lane = isGcd(r) ? 'gcd' : 'ogcd';
-      const x = 60 + r.t * pxPerSec;
-      if (x - lanesLastX[lane] < 20) return '';
+      const baseX = 60 + r.t * pxPerSec;
+      const x = Math.max(baseX, lanesLastX[lane] + minGap);
       lanesLastX[lane] = x;
       const icon = r.icon || '';
       const fallback = (r.label || r.action || '?').slice(0, 2).toUpperCase();
       const top = laneTop[`${owner}_${lane}`];
       const candidates = (r.iconCandidates || []).join('|');
-      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${r.label || r.action}">${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
+      const castBar = Number(r.castEndT) > Number(r.t)
+        ? `<div class="cast-bar" style="width:${Math.max(8, (r.castEndT - r.t) * pxPerSec)}px"></div>`
+        : '';
+      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${r.label || r.action}">${castBar}${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');
   };
   el.timelineWrap.innerHTML = `
@@ -521,13 +571,13 @@ function renderDps() {
   drawLine(state.dpsA, '#38bdf8');
   drawLine(state.dpsB, '#f97316');
 }
-el.connectBtn.addEventListener('click', () => {
+bindClick(el.connectBtn, 'connectBtn', () => {
   logDebug('click: connect');
   startOAuthLogin().catch(e => {
     el.msg.textContent = `連携開始失敗: ${e.message}`;
   });
 });
-el.disconnectBtn.addEventListener('click', () => {
+bindClick(el.disconnectBtn, 'disconnectBtn', () => {
   logDebug('click: disconnect');
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(AUTH_STATE_KEY);
@@ -536,7 +586,7 @@ el.disconnectBtn.addEventListener('click', () => {
   el.authStatus.textContent = '未連携';
   el.msg.textContent = 'FFLogs連携を解除しました。';
 });
-el.loadBtn.addEventListener('click', async () => {
+bindClick(el.loadBtn, 'loadBtn', async () => {
   logDebug('click: load reports', {urlA: el.urlA.value, urlB: el.urlB.value});
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
@@ -581,7 +631,7 @@ el.loadBtn.addEventListener('click', async () => {
     el.loadBtn.disabled = false;
   }
 });
-el.loadPlayersBtn.addEventListener('click', () => {
+bindClick(el.loadPlayersBtn, 'loadPlayersBtn', () => {
   logDebug('click: load players', {fightA: el.fightA.value, fightB: el.fightB.value});
   try {
     state.selectedFightA = Number(el.fightA.value);
@@ -597,7 +647,7 @@ el.loadPlayersBtn.addEventListener('click', () => {
     el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
   }
 });
-el.compareBtn.addEventListener('click', async () => {
+bindClick(el.compareBtn, 'compareBtn', async () => {
   logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
   state.selectedA = state.playersA.find(p => p.id === el.playerA.value);
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
@@ -630,20 +680,20 @@ el.compareBtn.addEventListener('click', async () => {
   el.timelineWrap.classList.remove('hidden');
   renderTimeline();
 });
-el.zoomInBtn.addEventListener('click', () => {
+bindClick(el.zoomInBtn, 'zoomInBtn', () => {
   state.zoom = Math.min(3, +(state.zoom + 0.25).toFixed(2));
   el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
   if (!el.timelineWrap.classList.contains('hidden')) renderTimeline();
   logDebug('zoom in', {zoom: state.zoom});
 });
-el.zoomOutBtn.addEventListener('click', () => {
+bindClick(el.zoomOutBtn, 'zoomOutBtn', () => {
   state.zoom = Math.max(0.5, +(state.zoom - 0.25).toFixed(2));
   el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
   if (!el.timelineWrap.classList.contains('hidden')) renderTimeline();
   logDebug('zoom out', {zoom: state.zoom});
 });
-el.tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
+el.tabs.forEach((tab, i) => {
+  bindClick(tab, `tab-${i}`, () => {
     el.tabs.forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     state.currentTab = tab.dataset.tab;
@@ -658,6 +708,13 @@ el.tabs.forEach(tab => {
     }
   });
 });
-restoreOrAuthorize().catch(e => {
-  el.msg.textContent = `認証初期化失敗: ${e.message}`;
-});
+try {
+  logDebug('script initialized');
+  restoreOrAuthorize().catch(e => {
+    if (el.msg) el.msg.textContent = `認証初期化失敗: ${e.message}`;
+    logDebug('auth init failed', { message: e.message });
+  });
+} catch (e) {
+  if (el.msg) el.msg.textContent = `初期化失敗: ${e.message}`;
+  console.error(e);
+}

@@ -16807,9 +16807,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Enkindle Bahamut",
-    "action_name_ja": "バハムートエンキンドル",
+    "action_name_ja": "エンキンドル・バハムート",
     "aliases": [
-      "バハムートエンキンドル",
+      "エンキンドル・バハムート",
       "Enkindle Bahamut"
     ],
     "icon_path": "/job-icons/jobs/SMN/Enkindle_Bahamut.png"
@@ -16837,9 +16837,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Enkindle Solar Bahamut",
-    "action_name_ja": "ソーラーバハムートエンキンドル",
+    "action_name_ja": "エンキンドル・ソルバハムート",
     "aliases": [
-      "ソーラーバハムートエンキンドル",
+      "エンキンドル・ソルバハムート",
       "Enkindle Solar Bahamut"
     ],
     "icon_path": "/job-icons/jobs/SMN/Enkindle_Solar_Bahamut.png"

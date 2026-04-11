@@ -97,9 +97,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Celestial Intersection",
-    "action_name_ja": "セレスティアルインターセクション",
+    "action_name_ja": "星天交差",
     "aliases": [
-      "セレスティアルインターセクション",
+      "星天交差",
       "Celestial Intersection"
     ],
     "icon_path": "/job-icons/jobs/AST/Celestial_Intersection.png"
@@ -232,9 +232,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Exaltation",
-    "action_name_ja": "エグザルテーション",
+    "action_name_ja": "エクザルテーション",
     "aliases": [
-      "エグザルテーション",
+      "エクザルテーション",
       "Exaltation"
     ],
     "icon_path": "/job-icons/jobs/AST/Exaltation.png"
@@ -2302,9 +2302,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Nature's Minne",
-    "action_name_ja": "時神のピーアン",
+    "action_name_ja": "地神のミンネ",
     "aliases": [
-      "時神のピーアン",
+      "地神のミンネ",
       "Nature's Minne"
     ],
     "icon_path": "/job-icons/jobs/BRD/Nature's_Minne.png"
@@ -4145,11 +4145,11 @@
     "scope_code": "DRG",
     "job_code": "DRG",
     "category": "action",
-    "action_type": "ability",
+    "action_type": "weaponskill",
     "action_name_en": "Lance Barrage",
-    "action_name_ja": "ランスバラージ",
+    "action_name_ja": "スラストラッシュ",
     "aliases": [
-      "ランスバラージ",
+      "スラストラッシュ",
       "Lance Barrage"
     ],
     "icon_path": "/job-icons/jobs/DRG/Lance_Barrage.png"
@@ -9710,7 +9710,7 @@
     "scope_code": "PCT",
     "job_code": "PCT",
     "category": "action",
-    "action_type": "ability",
+    "action_type": "spell",
     "action_name_en": "Hammer Brush",
     "action_name_ja": "ハンマーブラッシュ",
     "aliases": [
@@ -9740,7 +9740,7 @@
     "scope_code": "PCT",
     "job_code": "PCT",
     "category": "action",
-    "action_type": null,
+    "action_type":"spell" ,
     "action_name_en": "Hammer Stamp",
     "action_name_ja": "ハンマースタンプ",
     "aliases": [
@@ -9830,7 +9830,7 @@
     "scope_code": "PCT",
     "job_code": "PCT",
     "category": "action",
-    "action_type": "ability",
+    "action_type": "spell",
     "action_name_en": "Polishing Hammer",
     "action_name_ja": "ハンマーポリッシュ",
     "aliases": [

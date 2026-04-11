@@ -2,29 +2,6 @@ const FFLOGS_V2_CLIENT_ID = 'a182a7d9-18bd-49d6-a5d3-26f40a3f3a7d';
 const AUTH_STATE_KEY = 'fflogs_v2_state';
 const AUTH_VERIFIER_KEY = 'fflogs_v2_verifier';
 const TOKEN_KEY = 'fflogs_v2_access_token';
-const JOB_ICON_SCOPE_MAP = {
-  PLD: '01_PLD',
-  WAR: '02_WAR',
-  DRK: '03_DRK',
-  GNB: '04_GNB',
-  MNK: '05_MNK',
-  SAM: '06_SAM',
-  DRG: '07_DRG',
-  RPR: '08_RPR',
-  NIN: '09_NIN',
-  VPR: '10_VPR',
-  BRD: '11_BRD',
-  MCH: '12_MCH',
-  DNC: '13_DNC',
-  BLM: '14_BLM',
-  SMN: '15_SMN',
-  RDM: '16_RDM',
-  PCT: '17_PCT',
-  WHM: '18_WHM',
-  SCH: '19_SCH',
-  AST: '20_AST',
-  SGE: '21_SGE',
-};
 const state = {
   iconMap: [],
   token: '',
@@ -308,10 +285,10 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
   const raw = found?.icon_path || '';
   const iconCandidates = [];
   if (raw) {
-    const mappedJob = JOB_ICON_SCOPE_MAP[String(preferredJobCode || '').toUpperCase()];
     const rawMatch = raw.match(/^\/job-icons\/jobs\/([A-Z]+)\/(.+)$/);
     if (rawMatch) {
       const rawJob = rawMatch[1];
+      const targetJob = String(preferredJobCode || rawJob).toUpperCase() || rawJob;
       const rawTail = rawMatch[2];
       const fileName = rawTail.split('/').pop();
       const categoryDir = found?.category === 'role_action'
@@ -322,17 +299,13 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
             ? 'Pet_Actions'
             : '';
       const tail = categoryDir ? `${categoryDir}/${fileName}` : rawTail;
-      const targetScope = mappedJob || JOB_ICON_SCOPE_MAP[rawJob] || '';
-      if (targetScope) {
-        iconCandidates.push(`/public/job-icons/${targetScope}/${tail}`);
-      }
-      if (JOB_ICON_SCOPE_MAP[rawJob]) iconCandidates.push(`/public/job-icons/${JOB_ICON_SCOPE_MAP[rawJob]}/${tail}`);
       if (found?.category === 'role_action') {
+        iconCandidates.push(`/public/job-icons/jobs/${targetJob}/Role_Actions/${fileName}`);
         iconCandidates.push(`/public/job-icons/jobs/${rawJob}/Role_Actions/${fileName}`);
-        iconCandidates.push(`/public/job-icons/jobs/Role_Actions/${fileName}`);
-        iconCandidates.push(`/public/job-icons/Role_Actions/${fileName}`);
       }
+      iconCandidates.push(`/public/job-icons/jobs/${targetJob}/${tail}`);
       iconCandidates.push(`/public/job-icons/jobs/${rawJob}/${rawTail}`);
+      iconCandidates.push(`/public/job-icons/jobs/${rawJob}/${tail}`);
     }
     iconCandidates.push(raw.startsWith('/job-icons/') ? '/public' + raw : raw);
     iconCandidates.push(raw);
@@ -440,7 +413,7 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode 
       if (!name || !ts) continue;
       const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
       const type = String(e?.type || '').toLowerCase();
-      const key = `${actionId}:${name}`;
+      const key = String(actionId || name);
       if (type === 'begincast') {
         if (!pendingBegincast.has(key)) pendingBegincast.set(key, []);
         pendingBegincast.get(key).push({
@@ -500,15 +473,15 @@ function renderTimeline() {
   const pxPerSec = 16 * state.zoom;
   const width = Math.max(1800, maxT * pxPerSec + 220);
   const laneTop = {
-    a_gcd: 26,
-    a_ogcd: 62,
-    b_gcd: 146,
-    b_ogcd: 182,
+    a_ogcd: 42,
+    a_gcd: 122,
+    b_ogcd: 262,
+    b_gcd: 342,
   };
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
   const buildEvents = (records, owner) => {
     const lanesLastX = { gcd: -999, ogcd: -999 };
-    const minGap = 8;
+    const minGap = 24;
     return records.map(r => {
       const lane = isGcd(r) ? 'gcd' : 'ogcd';
       const baseX = 60 + r.t * pxPerSec;
@@ -532,7 +505,7 @@ function renderTimeline() {
       ${buildEvents(a, 'a')}
       ${buildEvents(b, 'b')}
     </div>
-    <div class="legend">上段プレイヤー: ${state.selectedA?.name || 'A'}（上:GCD / 下:oGCD）<br/>下段プレイヤー: ${state.selectedB?.name || 'B'}（上:GCD / 下:oGCD）</div>
+    <div class="legend">上段プレイヤー: ${state.selectedA?.name || 'A'}（上:oGCD/アビリティ / 下:GCD・詠唱）<br/>下段プレイヤー: ${state.selectedB?.name || 'B'}（上:oGCD/アビリティ / 下:GCD・詠唱）</div>
   `;
   el.timelineWrap.querySelectorAll('img.event-icon').forEach(img => {
     const queue = (img.dataset.fallbacks || '').split('|').filter(Boolean);

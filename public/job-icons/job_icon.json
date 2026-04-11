@@ -10762,9 +10762,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Guardian",
-    "action_name_ja": "ガーディアン",
+    "action_name_ja": "エクストリームガード",
     "aliases": [
-      "ガーディアン",
+      "エクストリームガード",
       "Guardian"
     ],
     "icon_path": "/job-icons/jobs/PLD/Guardian.png"

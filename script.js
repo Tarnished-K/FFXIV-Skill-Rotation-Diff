@@ -30,9 +30,146 @@ const BURST_BUFFS = [
   { ids: [34681], nameEn: 'Starry Muse',       nameJa: 'スターリーミューズ',    duration: 20, color: '#38bdf8' },
   { ids: [36871], nameEn: 'Dokumori',          nameJa: '毒盛り',             duration: 20, color: '#86efac' },
 ];
+
+const SELF_BUFFS = [
+  { nameEn: 'Fight or Flight',  nameJa: 'ファイト・オア・フライト', duration: 20, color: '#fbbf24' },
+  { nameEn: 'Inner Release',    nameJa: '原初の解放',             duration: 15, color: '#ef4444' },
+  { nameEn: 'Blood Weapon',     nameJa: 'ブラッドウェポン',       duration: 15, color: '#dc2626' },
+  { nameEn: 'Delirium',         nameJa: 'ブラッドデリリアム',      duration: 15, color: '#b91c1c' },
+  { nameEn: 'No Mercy',         nameJa: 'ノー・マーシー',         duration: 20, color: '#f59e0b' },
+  { nameEn: 'Riddle of Fire',   nameJa: '紅蓮の極意',            duration: 20, color: '#ea580c' },
+  { nameEn: 'Lance Charge',     nameJa: 'ランスチャージ',         duration: 20, color: '#3b82f6' },
+  { nameEn: 'Raging Strikes',   nameJa: '猛者の撃',             duration: 20, color: '#f97316' },
+  { nameEn: 'Wildfire',         nameJa: 'ワイルドファイア',       duration: 10, color: '#ef4444' },
+  { nameEn: 'Devilment',        nameJa: '攻めのタンゴ',          duration: 20, color: '#ec4899' },
+  { nameEn: 'Ley Lines',        nameJa: '黒魔紋',               duration: 30, color: '#8b5cf6' },
+  { nameEn: 'Manafication',     nameJa: 'マナフィケーション',     duration: 15, color: '#6366f1' },
+  { nameEn: 'Meikyo Shisui',    nameJa: '明鏡止水',             duration: 15, color: '#06b6d4' },
+];
+
+const JOB_NAME_JA = {
+  PLD:'ナイト', WAR:'戦士', DRK:'暗黒騎士', GNB:'ガンブレイカー',
+  WHM:'白魔道士', SCH:'学者', AST:'占星術師', SGE:'賢者',
+  MNK:'モンク', DRG:'竜騎士', NIN:'忍者', SAM:'侍', RPR:'リーパー', VPR:'ヴァイパー',
+  BRD:'吟遊詩人', MCH:'機工士', DNC:'踊り子',
+  BLM:'黒魔道士', SMN:'召喚士', RDM:'赤魔道士', PCT:'ピクトマンサー',
+};
+
+const JOB_ROLE = {
+  PLD:'T', WAR:'T', DRK:'T', GNB:'T',
+  WHM:'H', SCH:'H', AST:'H', SGE:'H',
+  MNK:'D', DRG:'D', NIN:'D', SAM:'D', RPR:'D', VPR:'D',
+  BRD:'D', MCH:'D', DNC:'D',
+  BLM:'D', SMN:'D', RDM:'D', PCT:'D',
+};
+
+const JOB_SHORT_JA = {
+  PLD:'ナ', WAR:'戦', DRK:'暗', GNB:'ガ',
+  WHM:'白', SCH:'学', AST:'占', SGE:'賢',
+  MNK:'モ', DRG:'竜', NIN:'忍', SAM:'侍', RPR:'リ', VPR:'ヴ',
+  BRD:'詩', MCH:'機', DNC:'踊',
+  BLM:'黒', SMN:'召', RDM:'赤', PCT:'ピ',
+};
+
+const ROLE_ORDER = ['T','H','D'];
+
+const DEBUFF_IDS = {
+  damageDown: { nameEn: 'Damage Down', nameJa: '与ダメージ低下', color: '#ef4444' },
+  weakness:   { nameEn: 'Weakness',    nameJa: '衰弱',         color: '#f59e0b' },
+  brink:      { nameEn: 'Brink of Death', nameJa: '衰弱[強]',  color: '#dc2626' },
+};
+
+const I18N = {
+  en: {
+    siteTitle: 'FFXIV Skill Rotation Diff',
+    siteDesc: 'Compare skill rotations from 2 FFLogs URLs',
+    step1Title: '1. FFLogs Auth & Log URL Input',
+    connectBtn: 'Connect to FFLogs (V2)',
+    disconnectBtn: 'Disconnect',
+    authConnected: 'Connected',
+    authDisconnected: 'Not connected',
+    logUrlA: 'Log URL A',
+    logUrlB: 'Log URL B',
+    loadBtn: 'Load Reports',
+    step2Title: '2. Select Fight Data (Kill only)',
+    logAFight: 'Log A Fight',
+    logBFight: 'Log B Fight',
+    loadPlayersBtn: 'Get Players for This Fight',
+    step3Title: '3. Select Players to Compare',
+    logAPlayer: 'Log A Player',
+    logBPlayer: 'Log B Player',
+    compareBtn: 'Start Comparison',
+    step4Title: '4. Comparison Results',
+    tabAll: 'Full TL',
+    tabOdd: 'Odd Min TL',
+    tabEven: 'Even Min TL',
+    tabDps: 'DPS Trend',
+    laneAbility: 'Ability',
+    laneGcd: 'WS / Spell',
+    laneDebuff: 'Debuff',
+    laneBoss: 'Boss Cast',
+    debugTitle: 'Debug Log',
+    footerNote: 'Note: Connects via FFLogs V2 (PKCE). Select a fight first, then select players.',
+    needAuth: 'Please connect to FFLogs (V2) first.',
+    badUrl: 'Please check FFLogs URL format.',
+    loading: 'Loading reports via V2...',
+    killFightsLoaded: (a,b) => `Kill fights loaded: A=${a} / B=${b}`,
+    playersLoaded: (a,b) => `Players loaded: A=${a} / B=${b}`,
+    tlLoading: 'Loading player timeline...',
+    tlLoaded: (a,b) => `TL loaded: A=${a} / B=${b}`,
+    disconnected: 'FFLogs disconnected.',
+    kill: 'Kill',
+    wipe: 'Wipe',
+  },
+  ja: {
+    siteTitle: 'FFXIV スキル回し比較',
+    siteDesc: 'FFLogs URL 2件からスキル回しを比較するMVP',
+    step1Title: '1. FFLogs連携 & ログURL入力',
+    connectBtn: 'FFLogsと連携（V2）',
+    disconnectBtn: '連携解除',
+    authConnected: '連携済み',
+    authDisconnected: '未連携',
+    logUrlA: 'ログURL A',
+    logUrlB: 'ログURL B',
+    loadBtn: '読み込み開始',
+    step2Title: '2. 戦闘データ選択（Killのみ）',
+    logAFight: 'ログA 戦闘',
+    logBFight: 'ログB 戦闘',
+    loadPlayersBtn: 'この戦闘でプレイヤー一覧を取得',
+    step3Title: '3. 比較プレイヤー選択',
+    logAPlayer: 'ログAプレイヤー',
+    logBPlayer: 'ログBプレイヤー',
+    compareBtn: '比較開始',
+    step4Title: '4. 比較結果',
+    tabAll: '全体TL',
+    tabOdd: '奇数分TL',
+    tabEven: '偶数分TL',
+    tabDps: 'DPS推移',
+    laneAbility: 'アビリティ',
+    laneGcd: 'WS・魔法',
+    laneDebuff: 'デバフ',
+    laneBoss: 'ボス詠唱',
+    debugTitle: 'Debug Log',
+    footerNote: '注: FFLogs V2(PKCE)で連携。まず戦闘を選んでからプレイヤーを選択します。',
+    needAuth: '先に「FFLogsと連携（V2）」を実行してください。',
+    badUrl: 'FFLogs URL形式を確認してください。',
+    loading: 'V2でレポートを読み込み中...',
+    killFightsLoaded: (a,b) => `Kill戦闘一覧取得成功: A=${a}件 / B=${b}件`,
+    playersLoaded: (a,b) => `プレイヤー取得成功: A=${a}人 / B=${b}人`,
+    tlLoading: '選択プレイヤーのTLを取得中...',
+    tlLoaded: (a,b) => `TL取得成功: A=${a}件 / B=${b}件`,
+    disconnected: 'FFLogs連携を解除しました。',
+    kill: 'Kill',
+    wipe: 'Wipe',
+  },
+};
+
+function t(key) { return I18N[state.lang]?.[key] ?? I18N.en[key] ?? key; }
+
 const state = {
   iconMap: [],
   token: '',
+  lang: 'ja',
   urlA: null,
   urlB: null,
   reportA: null,
@@ -55,6 +192,14 @@ const state = {
   zoom: 2,
   damageA: [],
   damageB: [],
+  bossCastsA: [],
+  bossCastsB: [],
+  debuffsA: [],
+  debuffsB: [],
+  dpsDataA: null,
+  dpsDataB: null,
+  fightA: null,
+  fightB: null,
 };
 const el = {
   connectBtn: document.getElementById('connectBtn'),
@@ -81,6 +226,21 @@ const el = {
   zoomOutBtn: document.getElementById('zoomOutBtn'),
   zoomLabel: document.getElementById('zoomLabel'),
   debugLog: document.getElementById('debugLog'),
+  langToggle: document.getElementById('langToggle'),
+  siteTitle: document.getElementById('siteTitle'),
+  siteDesc: document.getElementById('siteDesc'),
+  step1Title: document.getElementById('step1Title'),
+  step2Title: document.getElementById('step2Title'),
+  step3Title: document.getElementById('step3Title'),
+  step4Title: document.getElementById('step4Title'),
+  debugTitle: document.getElementById('debugTitle'),
+  footerNote: document.getElementById('footerNote'),
+  logUrlALabel: document.getElementById('logUrlALabel'),
+  logUrlBLabel: document.getElementById('logUrlBLabel'),
+  logAFightLabel: document.getElementById('logAFightLabel'),
+  logBFightLabel: document.getElementById('logBFightLabel'),
+  logAPlayerLabel: document.getElementById('logAPlayerLabel'),
+  logBPlayerLabel: document.getElementById('logBPlayerLabel'),
 };
 function bindClick(node, name, handler) {
   if (!node) {
@@ -401,11 +561,42 @@ function getPlayersFromFight(reportJson, fightId) {
   if (!players.length) throw new Error('選択戦闘に紐づくプレイヤー一覧を取得できませんでした');
   return players;
 }
-function fillFightSelect(select, fights) {
-  select.innerHTML = fights.map((f, i) => `<option value="${f.id}">${formatFightLabel(f, i)}</option>`).join('');
+function formatPartyComp(reportJson, fightId) {
+  try {
+    const players = getPlayersFromFight(reportJson, fightId);
+    const sorted = [...players].sort((a, b) => {
+      const ra = ROLE_ORDER.indexOf(JOB_ROLE[a.job] || 'D');
+      const rb = ROLE_ORDER.indexOf(JOB_ROLE[b.job] || 'D');
+      return ra - rb;
+    });
+    if (state.lang === 'ja') {
+      return sorted.map(p => JOB_SHORT_JA[p.job] || p.job).join('');
+    }
+    return sorted.map(p => p.job).join(',');
+  } catch { return ''; }
 }
-function fillPlayerSelect(select, players) {
-  select.innerHTML = players.map(p => `<option value="${p.id}">${p.name} (${p.job})</option>`).join('');
+function fillFightSelect(select, fights, reportJson) {
+  select.innerHTML = fights.map((f, i) => {
+    const comp = formatPartyComp(reportJson, f.id);
+    const duration = formatDurationMs((f.endTime || 0) - (f.startTime || 0));
+    const status = f.kill ? t('kill') : t('wipe');
+    const name = f.name || `Fight ${f.id}`;
+    const compStr = comp ? ` [${comp}]` : '';
+    return `<option value="${f.id}">#${i + 1} ${name} / ${duration} / ${status}${compStr}</option>`;
+  }).join('');
+}
+function fillPlayerSelect(select, players, dpsEntries) {
+  const dpsMap = new Map();
+  for (const e of (dpsEntries || [])) {
+    const id = String(e.id);
+    dpsMap.set(id, { rDps: Math.round(e.rDPS || e.total / ((e.activeTime || 1) / 1000) || 0), aDps: Math.round(e.aDPS || 0) });
+  }
+  select.innerHTML = players.map(p => {
+    const jobLabel = formatJobName(p.job);
+    const dps = dpsMap.get(p.id);
+    const dpsStr = dps ? ` rDPS:${dps.rDps} aDPS:${dps.aDps}` : '';
+    return `<option value="${p.id}">${p.name} (${jobLabel})${dpsStr}</option>`;
+  }).join('');
 }
 async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode = '') {
   const all = [];
@@ -505,6 +696,142 @@ function classifyStats(records) {
   }
   return { gcd, ogcd, unknown, total: records.length };
 }
+function deduplicateTimeline(records) {
+  const out = [];
+  for (let i = 0; i < records.length; i++) {
+    const r = records[i];
+    const prev = out[out.length - 1];
+    if (prev && prev.actionId === r.actionId && Math.abs(prev.t - r.t) < 0.5) continue;
+    out.push(r);
+  }
+  return out;
+}
+function findSelfBuff(actionName) {
+  const n = String(actionName || '').toLowerCase();
+  for (const buff of SELF_BUFFS) {
+    if (n === buff.nameEn.toLowerCase() || n === buff.nameJa) return buff;
+  }
+  return null;
+}
+function getActiveSynergies(t, allRecords) {
+  const active = [];
+  for (const r of allRecords) {
+    const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action);
+    if (!buff) continue;
+    if (t >= r.t && t <= r.t + buff.duration) {
+      active.push(state.lang === 'ja' ? buff.nameJa : buff.nameEn);
+    }
+  }
+  return active;
+}
+async function fetchBossCastsV2(reportCode, fight) {
+  const all = [];
+  const pendingBegincast = new Map();
+  let startTime = null;
+  const query = `
+    query BossCasts($code: String!, $fightID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: Casts, fightIDs: [$fightID], hostilityType: Enemies, startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), startTime };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    for (const e of rows) {
+      const name = e?.ability?.name || '';
+      const ts = Number(e?.timestamp || 0);
+      if (!name || !ts) continue;
+      const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      const type = String(e?.type || '').toLowerCase();
+      const key = name;
+      if (type === 'begincast') {
+        if (!pendingBegincast.has(key)) pendingBegincast.set(key, []);
+        pendingBegincast.get(key).push({ t: tSec, name });
+        continue;
+      }
+      if (type === 'cast' && pendingBegincast.has(key) && pendingBegincast.get(key).length) {
+        const start = pendingBegincast.get(key).shift();
+        const castDuration = tSec - start.t;
+        if (castDuration > 0.5) {
+          all.push({ t: start.t, endT: tSec, name, duration: castDuration });
+        }
+        continue;
+      }
+    }
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+  return all.sort((a, b) => a.t - b.t);
+}
+async function fetchPlayerDebuffsV2(reportCode, fight, sourceId) {
+  const all = [];
+  let startTime = null;
+  const query = `
+    query PlayerDebuffs($code: String!, $fightID: Int!, $targetID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: Debuffs, fightIDs: [$fightID], targetID: $targetID, startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  const debuffNames = [
+    'damage down', 'weakness', 'brink of death',
+    '与ダメージ低下', '衰弱',
+  ];
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), targetID: Number(sourceId), startTime };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    for (const e of rows) {
+      const name = String(e?.ability?.name || '').toLowerCase();
+      if (!debuffNames.some(d => name.includes(d))) continue;
+      const ts = Number(e?.timestamp || 0);
+      const type = String(e?.type || '').toLowerCase();
+      const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      const dur = Number(e?.duration || 0) / 1000;
+      if (type === 'applydebuff' || type === 'applybuff') {
+        let kind = 'damageDown';
+        if (name.includes('weakness') || name.includes('衰弱')) kind = name.includes('brink') || name.includes('強') ? 'brink' : 'weakness';
+        all.push({ t: tSec, duration: dur > 0 ? dur : 10, kind, name: e?.ability?.name || '' });
+      }
+    }
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+  return all;
+}
+async function fetchFightDpsV2(reportCode, fightId) {
+  const query = `
+    query FightDps($code: String!, $fightID: [Int!]!) {
+      reportData {
+        report(code: $code) {
+          table(dataType: DamageDone, fightIDs: $fightID)
+        }
+      }
+    }
+  `;
+  try {
+    const data = await graphqlRequest(query, { code: reportCode, fightID: [Number(fightId)] });
+    return data?.reportData?.report?.table?.data?.entries || [];
+  } catch { return []; }
+}
+function formatJobName(jobCode) {
+  if (state.lang === 'ja') return JOB_NAME_JA[jobCode] || jobCode;
+  return jobCode;
+}
 function findBurstBuff(actionId, actionName) {
   const id = Number(actionId);
   for (const buff of BURST_BUFFS) {
@@ -592,6 +919,7 @@ function correlateDamage(timeline, damageEvents) {
 function renderTimeline() {
   const a = filterTimeline(state.timelineA, state.currentTab);
   const b = filterTimeline(state.timelineB, state.currentTab);
+  const bossCasts = state.bossCastsA || [];
   const maxT = Math.max(1, ...a.map(x => x.t), ...b.map(x => x.t));
   const pxPerSec = 16 * state.zoom;
   const width = Math.max(1800, maxT * pxPerSec + 220);
@@ -599,36 +927,71 @@ function renderTimeline() {
   const labelB = state.selectedB?.name || 'B';
   const jobA = state.selectedA?.job || '';
   const jobB = state.selectedB?.job || '';
-  // Reduced gap between oGCD and GCD lanes (was ~80px, now ~14px)
+
+  // Layout: boss track → player A (ogcd, gcd, debuff) → divider → player B (ogcd, gcd, debuff)
+  const bossTrackTop = 18;
+  const bossTrackH = 24;
+  const playerAStart = bossTrackTop + bossTrackH + 12;
   const laneTop = {
-    a_ogcd: 42,
-    a_gcd: 96,
-    b_ogcd: 222,
-    b_gcd: 276,
+    a_ogcd: playerAStart + 10,
+    a_gcd: playerAStart + 64,
+    a_debuff: playerAStart + 120,
+    b_ogcd: 0,
+    b_gcd: 0,
+    b_debuff: 0,
   };
-  const trackATop = 32;
-  const trackAHeight = 120;
-  const dividerTop = 180;
-  const trackBTop = 212;
-  const trackBHeight = 120;
-  const totalHeight = 350;
+  const trackATop = playerAStart;
+  const trackAHeight = 110;
+  const debuffATop = laneTop.a_debuff;
+  const debuffAHeight = 22;
+  const dividerTop = debuffATop + debuffAHeight + 16;
+  const trackBTop = dividerTop + 30;
+  const trackBHeight = 110;
+  laneTop.b_ogcd = trackBTop + 10;
+  laneTop.b_gcd = trackBTop + 64;
+  laneTop.b_debuff = trackBTop + 120;
+  const debuffBTop = laneTop.b_debuff;
+  const debuffBHeight = 22;
+  const totalHeight = debuffBTop + debuffBHeight + 20;
+
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
 
-  const buildBurstOverlays = (records, owner) => {
+  const buildBossTrack = () => {
+    if (!bossCasts.length) return '';
+    return bossCasts.map(c => {
+      const x = 60 + c.t * pxPerSec;
+      const w = Math.max(4, c.duration * pxPerSec);
+      return `<div class="boss-cast" style="left:${x}px; top:${bossTrackTop}px; width:${w}px;" title="${c.t.toFixed(1)}s - ${c.endT.toFixed(1)}s ${c.name}"><span class="boss-cast-name">${c.name}</span></div>`;
+    }).join('');
+  };
+
+  const buildBuffOverlays = (records, owner) => {
     const overlays = [];
     const baseTop = owner === 'a' ? trackATop : trackBTop;
     const h = owner === 'a' ? trackAHeight : trackBHeight;
     for (const r of records) {
-      const buff = findBurstBuff(r.actionId, r.action);
+      const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action);
       if (!buff) continue;
       const x = 60 + r.t * pxPerSec;
       const w = buff.duration * pxPerSec;
-      overlays.push(`<div class="burst-overlay" style="left:${x}px; top:${baseTop}px; width:${w}px; height:${h}px; background:${buff.color}20; border-left:2px solid ${buff.color}60;"><span class="burst-label" style="color:${buff.color}">${buff.nameEn}</span></div>`);
+      const label = state.lang === 'ja' ? buff.nameJa : buff.nameEn;
+      overlays.push(`<div class="burst-overlay" style="left:${x}px; top:${baseTop}px; width:${w}px; height:${h}px; background:${buff.color}20; border-left:2px solid ${buff.color}60;"><span class="burst-label" style="color:${buff.color}">${label}</span></div>`);
     }
     return overlays.join('');
   };
 
-  const buildEvents = (records, owner) => {
+  const buildDebuffTrack = (debuffs, top) => {
+    if (!debuffs || !debuffs.length) return '';
+    return debuffs.map(d => {
+      const x = 60 + d.t * pxPerSec;
+      const w = Math.max(6, d.duration * pxPerSec);
+      const info = DEBUFF_IDS[d.kind] || DEBUFF_IDS.damageDown;
+      const label = state.lang === 'ja' ? info.nameJa : info.nameEn;
+      return `<div class="debuff-bar" style="left:${x}px; top:${top}px; width:${w}px; background:${info.color}40; border-left:2px solid ${info.color};" title="${d.t.toFixed(1)}s ${label} (${d.duration.toFixed(1)}s)"><span class="debuff-label">${label}</span></div>`;
+    }).join('');
+  };
+
+  const buildEvents = (records, owner, allRecords) => {
     const lanesLastX = { gcd: -999, ogcd: -999 };
     const minGap = 24;
     return records.map(r => {
@@ -640,32 +1003,42 @@ function renderTimeline() {
       const fallback = (r.label || r.action || '?').slice(0, 2).toUpperCase();
       const top = laneTop[`${owner}_${lane}`];
       const candidates = (r.iconCandidates || []).join('|');
-      // Enhanced tooltip with damage and crit/DH info
       let tooltip = `${r.t.toFixed(1)}s ${r.label || r.action}`;
       if (r.damage != null && r.damage > 0) {
-        tooltip += ` | ${r.damage.toLocaleString()}`;
+        tooltip += `\n${state.lang === 'ja' ? 'ダメージ' : 'Damage'}: ${r.damage.toLocaleString()}`;
         const ht = formatHitType(r.hitType, r.multistrike);
         if (ht) tooltip += ` (${ht})`;
+      }
+      const synergies = getActiveSynergies(r.t, allRecords);
+      if (synergies.length) {
+        tooltip += `\n${state.lang === 'ja' ? 'シナジー' : 'Buffs'}: ${synergies.join(', ')}`;
       }
       return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${tooltip}">${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');
   };
+
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px; height:${totalHeight}px">
       ${buildRuler(maxT, pxPerSec)}
-      <div class="player-label" style="top:24px">${labelA}${jobA ? ' (' + jobA + ')' : ''}</div>
-      <div class="lane-label" style="top:${laneTop.a_ogcd + 12}px">アビリティ</div>
+      <div class="lane-label" style="top:${bossTrackTop - 2}px; font-weight:bold; color:#f87171">${t('laneBoss')}</div>
+      ${buildBossTrack()}
+      <div class="player-label" style="top:${playerAStart - 4}px">${labelA}${jobA ? ' (' + formatJobName(jobA) + ')' : ''}</div>
+      <div class="lane-label" style="top:${laneTop.a_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track a" style="top:${trackATop}px; height:${trackAHeight}px"></div>
-      <div class="lane-label" style="top:${laneTop.a_gcd + 12}px">WS・魔法</div>
-      ${buildBurstOverlays(a, 'a')}
+      <div class="lane-label" style="top:${laneTop.a_gcd + 12}px">${t('laneGcd')}</div>
+      ${buildBuffOverlays(a, 'a')}
+      <div class="lane-label" style="top:${debuffATop + 4}px; color:#ef4444">${t('laneDebuff')}</div>
+      ${buildDebuffTrack(state.debuffsA, debuffATop)}
       <div class="player-divider" style="top:${dividerTop}px"></div>
-      <div class="player-label" style="top:${dividerTop + 10}px">${labelB}${jobB ? ' (' + jobB + ')' : ''}</div>
-      <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">アビリティ</div>
+      <div class="player-label" style="top:${dividerTop + 10}px">${labelB}${jobB ? ' (' + formatJobName(jobB) + ')' : ''}</div>
+      <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track b" style="top:${trackBTop}px; height:${trackBHeight}px"></div>
-      <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">WS・魔法</div>
-      ${buildBurstOverlays(b, 'b')}
-      ${buildEvents(a, 'a')}
-      ${buildEvents(b, 'b')}
+      <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">${t('laneGcd')}</div>
+      ${buildBuffOverlays(b, 'b')}
+      <div class="lane-label" style="top:${debuffBTop + 4}px; color:#ef4444">${t('laneDebuff')}</div>
+      ${buildDebuffTrack(state.debuffsB, debuffBTop)}
+      ${buildEvents(a, 'a', a)}
+      ${buildEvents(b, 'b', b)}
     </div>
   `;
   el.timelineWrap.querySelectorAll('img.event-icon').forEach(img => {
@@ -717,23 +1090,23 @@ bindClick(el.disconnectBtn, 'disconnectBtn', () => {
   localStorage.removeItem(AUTH_STATE_KEY);
   localStorage.removeItem(AUTH_VERIFIER_KEY);
   state.token = '';
-  el.authStatus.textContent = '未連携';
-  el.msg.textContent = 'FFLogs連携を解除しました。';
+  el.authStatus.textContent = t('authDisconnected');
+  el.msg.textContent = t('disconnected');
 });
 bindClick(el.loadBtn, 'loadBtn', async () => {
   logDebug('click: load reports', {urlA: el.urlA.value, urlB: el.urlB.value});
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
   if (!state.token) {
-    el.msg.textContent = '先に「FFLogsと連携（V2）」を実行してください。';
+    el.msg.textContent = t('needAuth');
     return;
   }
   if (!parsedA || !parsedB) {
-    el.msg.textContent = 'FFLogs URL形式を確認してください。';
+    el.msg.textContent = t('badUrl');
     return;
   }
   el.loadBtn.disabled = true;
-  el.msg.textContent = 'V2でレポートを読み込み中...';
+  el.msg.textContent = t('loading');
   el.step2Message.textContent = '';
   try {
     state.urlA = parsedA;
@@ -751,32 +1124,38 @@ bindClick(el.loadBtn, 'loadBtn', async () => {
     const fightsA = extractSelectableFights(state.reportA);
     const fightsB = extractSelectableFights(state.reportB);
     if (!fightsA.length || !fightsB.length) throw new Error('選択可能なKill戦闘が見つかりませんでした。');
-    fillFightSelect(el.fightA, fightsA);
-    fillFightSelect(el.fightB, fightsB);
+    fillFightSelect(el.fightA, fightsA, state.reportA);
+    fillFightSelect(el.fightB, fightsB, state.reportB);
     el.playerA.innerHTML = '';
     el.playerB.innerHTML = '';
     el.step2.classList.remove('hidden');
     el.step3.classList.add('hidden');
     el.step4.classList.add('hidden');
-    el.msg.textContent = `Kill戦闘一覧取得成功: A=${fightsA.length}件 / B=${fightsB.length}件`;
+    el.msg.textContent = t('killFightsLoaded')(fightsA.length, fightsB.length);
   } catch (e) {
     el.msg.textContent = `取得失敗: ${e.message}`;
   } finally {
     el.loadBtn.disabled = false;
   }
 });
-bindClick(el.loadPlayersBtn, 'loadPlayersBtn', () => {
+bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
   logDebug('click: load players', {fightA: el.fightA.value, fightB: el.fightB.value});
   try {
     state.selectedFightA = Number(el.fightA.value);
     state.selectedFightB = Number(el.fightB.value);
     state.playersA = getPlayersFromFight(state.reportA, state.selectedFightA);
     state.playersB = getPlayersFromFight(state.reportB, state.selectedFightB);
-    fillPlayerSelect(el.playerA, state.playersA);
-    fillPlayerSelect(el.playerB, state.playersB);
+    const [dpsA, dpsB] = await Promise.all([
+      fetchFightDpsV2(state.urlA.reportId, state.selectedFightA),
+      fetchFightDpsV2(state.urlB.reportId, state.selectedFightB),
+    ]);
+    state.dpsDataA = dpsA;
+    state.dpsDataB = dpsB;
+    fillPlayerSelect(el.playerA, state.playersA, dpsA);
+    fillPlayerSelect(el.playerB, state.playersB, dpsB);
     el.step3.classList.remove('hidden');
     el.step4.classList.add('hidden');
-    el.step2Message.textContent = `プレイヤー取得成功: A=${state.playersA.length}人 / B=${state.playersB.length}人`;
+    el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
   } catch (e) {
     el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
   }
@@ -788,21 +1167,28 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
   if (!state.selectedA || !state.selectedB) return;
   const fightA = (state.reportA?.fights || []).find(f => Number(f.id) === Number(state.selectedFightA));
   const fightB = (state.reportB?.fights || []).find(f => Number(f.id) === Number(state.selectedFightB));
-  el.step2Message.textContent = '選択プレイヤーのTLを取得中...';
+  el.step2Message.textContent = t('tlLoading');
   try {
-    const [tlA, tlB, dmgA, dmgB] = await Promise.all([
+    const [tlA, tlB, dmgA, dmgB, bossA, debA, debB] = await Promise.all([
       fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job),
       fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job),
       fetchPlayerDamageV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
       fetchPlayerDamageV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
+      fetchBossCastsV2(state.urlA.reportId, fightA),
+      fetchPlayerDebuffsV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
+      fetchPlayerDebuffsV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
     ]);
-    state.timelineA = tlA;
-    state.timelineB = tlB;
+    state.timelineA = deduplicateTimeline(tlA);
+    state.timelineB = deduplicateTimeline(tlB);
     state.damageA = dmgA;
     state.damageB = dmgB;
+    state.bossCastsA = bossA;
+    state.debuffsA = debA;
+    state.debuffsB = debB;
     correlateDamage(state.timelineA, state.damageA);
     correlateDamage(state.timelineB, state.damageB);
     logDebug(`ダメージイベント: A=${dmgA.length}件 B=${dmgB.length}件`);
+    logDebug(`ボス詠唱: ${bossA.length}件 / デバフ: A=${debA.length} B=${debB.length}`);
     state.timelineCountA = state.timelineA.length;
     state.timelineCountB = state.timelineB.length;
     state.dpsA = makeSampleDps();
@@ -820,7 +1206,7 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
       if (unknownsA.length) logDebug('[A] 未分類サンプル', unknownsA.map(e => `${e.action}(id:${e.actionId})`));
       if (unknownsB.length) logDebug('[B] 未分類サンプル', unknownsB.map(e => `${e.action}(id:${e.actionId})`));
     }
-    el.step2Message.textContent = `TL取得成功: A=${state.timelineA.length}件 / B=${state.timelineB.length}件`;
+    el.step2Message.textContent = t('tlLoaded')(state.timelineA.length, state.timelineB.length);
   } catch (e) {
     state.timelineA = makeSampleTimeline();
     state.timelineB = makeSampleTimeline();
@@ -866,8 +1252,54 @@ el.tabs.forEach((tab, i) => {
     }
   });
 });
+function applyLang() {
+  const s = I18N[state.lang];
+  if (el.siteTitle) el.siteTitle.textContent = s.siteTitle;
+  if (el.siteDesc) el.siteDesc.textContent = s.siteDesc;
+  if (el.step1Title) el.step1Title.textContent = s.step1Title;
+  if (el.connectBtn) el.connectBtn.textContent = s.connectBtn;
+  if (el.disconnectBtn) el.disconnectBtn.textContent = s.disconnectBtn;
+  if (el.loadBtn) el.loadBtn.textContent = s.loadBtn;
+  if (el.step2Title) el.step2Title.textContent = s.step2Title;
+  if (el.loadPlayersBtn) el.loadPlayersBtn.textContent = s.loadPlayersBtn;
+  if (el.step3Title) el.step3Title.textContent = s.step3Title;
+  if (el.compareBtn) el.compareBtn.textContent = s.compareBtn;
+  if (el.step4Title) el.step4Title.textContent = s.step4Title;
+  if (el.debugTitle) el.debugTitle.textContent = s.debugTitle;
+  if (el.footerNote) el.footerNote.textContent = s.footerNote;
+  if (el.logUrlALabel) el.logUrlALabel.firstChild.textContent = s.logUrlA + ' ';
+  if (el.logUrlBLabel) el.logUrlBLabel.firstChild.textContent = s.logUrlB + ' ';
+  if (el.logAFightLabel) el.logAFightLabel.firstChild.textContent = s.logAFight + '\n            ';
+  if (el.logBFightLabel) el.logBFightLabel.firstChild.textContent = s.logBFight + '\n            ';
+  if (el.logAPlayerLabel) el.logAPlayerLabel.firstChild.textContent = s.logAPlayer + '\n            ';
+  if (el.logBPlayerLabel) el.logBPlayerLabel.firstChild.textContent = s.logBPlayer + '\n            ';
+  el.tabs.forEach(tb => {
+    const key = { all: 'tabAll', odd: 'tabOdd', even: 'tabEven', dps: 'tabDps' }[tb.dataset.tab];
+    if (key) tb.textContent = s[key];
+  });
+  if (el.authStatus) el.authStatus.textContent = state.token ? s.authConnected : s.authDisconnected;
+  if (el.langToggle) el.langToggle.textContent = state.lang === 'ja' ? 'EN' : 'JA';
+  // Re-render fight selects if data exists
+  if (state.reportA) {
+    const fightsA = extractSelectableFights(state.reportA);
+    if (fightsA.length) fillFightSelect(el.fightA, fightsA, state.reportA);
+  }
+  if (state.reportB) {
+    const fightsB = extractSelectableFights(state.reportB);
+    if (fightsB.length) fillFightSelect(el.fightB, fightsB, state.reportB);
+  }
+  if (state.playersA.length) fillPlayerSelect(el.playerA, state.playersA, state.dpsDataA);
+  if (state.playersB.length) fillPlayerSelect(el.playerB, state.playersB, state.dpsDataB);
+  if (!el.timelineWrap.classList.contains('hidden') && state.timelineA.length) renderTimeline();
+}
+bindClick(el.langToggle, 'langToggle', () => {
+  state.lang = state.lang === 'ja' ? 'en' : 'ja';
+  applyLang();
+  logDebug('lang toggled', { lang: state.lang });
+});
 try {
   logDebug('script initialized');
+  applyLang();
   restoreOrAuthorize().catch(e => {
     if (el.msg) el.msg.textContent = `認証初期化失敗: ${e.message}`;
     logDebug('auth init failed', { message: e.message });

@@ -491,7 +491,10 @@ function renderTimeline() {
       const fallback = (r.label || r.action || '?').slice(0, 2).toUpperCase();
       const top = laneTop[`${owner}_${lane}`];
       const candidates = (r.iconCandidates || []).join('|');
-      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${r.label || r.action}">${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
+      const castBar = Number(r.castEndT) > Number(r.t)
+        ? `<div class="cast-bar" style="width:${Math.max(8, (r.castEndT - r.t) * pxPerSec)}px"></div>`
+        : '';
+      return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${r.t.toFixed(1)}s ${r.label || r.action}">${castBar}${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');
   };
   el.timelineWrap.innerHTML = `

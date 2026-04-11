@@ -112,9 +112,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Celestial Opposition",
-    "action_name_ja": "セレスティアルオポジション",
+    "action_name_ja": "星天対抗",
     "aliases": [
-      "セレスティアルオポジション",
+      "星天対抗",
       "Celestial Opposition"
     ],
     "icon_path": "/job-icons/jobs/AST/Celestial_Opposition.png"
@@ -127,9 +127,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Collective Unconscious",
-    "action_name_ja": "コレクティブアンコンシャス",
+    "action_name_ja": "運命の輪",
     "aliases": [
-      "コレクティブアンコンシャス",
+      "運命の輪",
       "Collective Unconscious"
     ],
     "icon_path": "/job-icons/jobs/AST/Collective_Unconscious.png"
@@ -9712,9 +9712,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Hammer Brush",
-    "action_name_ja": "ハンマーブラシ",
+    "action_name_ja": "ハンマーブラッシュ",
     "aliases": [
-      "ハンマーブラシ",
+      "ハンマーブラッシュ",
       "Hammer Brush"
     ],
     "icon_path": "/job-icons/jobs/PCT/Hammer_Brush.png"
@@ -9832,9 +9832,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Polishing Hammer",
-    "action_name_ja": "ポリシングハンマー",
+    "action_name_ja": "ハンマーポリッシュ",
     "aliases": [
-      "ポリシングハンマー",
+      "ハンマーポリッシュ",
       "Polishing Hammer"
     ],
     "icon_path": "/job-icons/jobs/PCT/Polishing_Hammer.png"
@@ -16824,7 +16824,7 @@
     "action_name_en": "Enkindle Phoenix",
     "action_name_ja": "エンキンドル・フェニックス",
     "aliases": [
-      "フェニックスエンキンドル",
+      "エンキンドル・フェニックス",
       "Enkindle Phoenix"
     ],
     "icon_path": "/job-icons/jobs/SMN/Enkindle_Phoenix.png"
@@ -17287,9 +17287,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Searing Flash",
-    "action_name_ja": "シアリングスパーク",
+    "action_name_ja": "シアリングフラッシュ",
     "aliases": [
-      "シアリングスパーク",
+      "シアリングフラッシュ",
       "Searing Flash"
     ],
     "icon_path": "/job-icons/jobs/SMN/Searing_Flash.png"

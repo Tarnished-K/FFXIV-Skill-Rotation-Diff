@@ -97,7 +97,7 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Celestial Intersection",
-    "action_name_ja": "セレスティアルインターセクション",
+    "action_name_ja": "星天交差",
     "aliases": [
       "セレスティアルインターセクション",
       "星天交差",
@@ -113,9 +113,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Celestial Opposition",
-    "action_name_ja": "セレスティアルオポジション",
+    "action_name_ja": "星天対抗",
     "aliases": [
-      "セレスティアルオポジション",
+      "星天対抗",
       "Celestial Opposition"
     ],
     "icon_path": "/job-icons/jobs/AST/Celestial_Opposition.png"
@@ -128,9 +128,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Collective Unconscious",
-    "action_name_ja": "コレクティブアンコンシャス",
+    "action_name_ja": "運命の輪",
     "aliases": [
-      "コレクティブアンコンシャス",
+      "運命の輪",
       "Collective Unconscious"
     ],
     "icon_path": "/job-icons/jobs/AST/Collective_Unconscious.png"
@@ -233,7 +233,7 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Exaltation",
-    "action_name_ja": "エグザルテーション",
+    "action_name_ja": "エクザルテーション",
     "aliases": [
       "エグザルテーション",
       "エクザルテーション",
@@ -2307,9 +2307,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Nature's Minne",
-    "action_name_ja": "時神のピーアン",
+    "action_name_ja": "地神のミンネ",
     "aliases": [
-      "時神のピーアン",
+      "地神のミンネ",
       "Nature's Minne"
     ],
     "icon_path": "/job-icons/jobs/BRD/Nature's_Minne.png"
@@ -4152,7 +4152,7 @@
     "category": "action",
     "action_type": "weaponskill",
     "action_name_en": "Lance Barrage",
-    "action_name_ja": "ランスバラージ",
+    "action_name_ja": "スラストラッシュ",
     "aliases": [
       "ランスバラージ",
       "スラストラッシュ",
@@ -9785,7 +9785,7 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Hammer Brush",
-    "action_name_ja": "ハンマーブラシ",
+    "action_name_ja": "ハンマーブラッシュ",
     "aliases": [
       "ハンマーブラシ",
       "ハンマーブラッシュ",
@@ -9906,7 +9906,7 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Polishing Hammer",
-    "action_name_ja": "ポリシングハンマー",
+    "action_name_ja": "ハンマーポリッシュ",
     "aliases": [
       "ポリシングハンマー",
       "ハンマーポリッシュ",
@@ -10838,9 +10838,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Guardian",
-    "action_name_ja": "ガーディアン",
+    "action_name_ja": "エクストリームガード",
     "aliases": [
-      "ガーディアン",
+      "エクストリームガード",
       "Guardian"
     ],
     "icon_path": "/job-icons/jobs/PLD/Guardian.png"
@@ -16748,9 +16748,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Emerald Catastrophe",
-    "action_name_ja": "エメラルドカタストロフ",
+    "action_name_ja": "エメラルド・カタストロフ",
     "aliases": [
-      "エメラルドカタストロフ",
+      "エメラルド・カタストロフ",
       "Emerald Catastrophe"
     ],
     "icon_path": "/job-icons/jobs/SMN/Emerald_Catastrophe.png"
@@ -16763,9 +16763,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Emerald Disaster",
-    "action_name_ja": "エメラルドディザスター",
+    "action_name_ja": "エメラルド・ディザスター",
     "aliases": [
-      "エメラルドディザスター",
+      "エメラルド・ディザスター",
       "Emerald Disaster"
     ],
     "icon_path": "/job-icons/jobs/SMN/Emerald_Disaster.png"
@@ -16778,9 +16778,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Emerald Outburst",
-    "action_name_ja": "エメラルドアウトバースト",
+    "action_name_ja": "エメラルド・アウトバースト",
     "aliases": [
-      "エメラルドアウトバースト",
+      "エメラルド・アウトバースト",
       "Emerald Outburst"
     ],
     "icon_path": "/job-icons/jobs/SMN/Emerald_Outburst.png"
@@ -16793,9 +16793,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Emerald Rite",
-    "action_name_ja": "エメラルドリチュアル",
+    "action_name_ja": "エメラルド・リチュアル",
     "aliases": [
-      "エメラルドリチュアル",
+      "エメラルド・リチュアル",
       "Emerald Rite"
     ],
     "icon_path": "/job-icons/jobs/SMN/Emerald_Rite.png"
@@ -16808,9 +16808,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Emerald Ruin",
-    "action_name_ja": "エメラルドルイン",
+    "action_name_ja": "エメラル・ドルイン",
     "aliases": [
-      "エメラルドルイン",
+      "エメラル・ドルイン",
       "Emerald Ruin"
     ],
     "icon_path": "/job-icons/jobs/SMN/Emerald_Ruin.png"
@@ -16823,9 +16823,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Emerald Ruin II",
-    "action_name_ja": "エメラルドルインラ",
+    "action_name_ja": "エメラルド・ルインラ",
     "aliases": [
-      "エメラルドルインラ",
+      "エメラルド・ルインラ",
       "Emerald Ruin II"
     ],
     "icon_path": "/job-icons/jobs/SMN/Emerald_Ruin_II.png"
@@ -16838,9 +16838,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Emerald Ruin III",
-    "action_name_ja": "エメラルドルインガ",
+    "action_name_ja": "エメラルド・ルインガ",
     "aliases": [
-      "エメラルドルインガ",
+      "エメラルド・ルインガ",
       "Emerald Ruin III"
     ],
     "icon_path": "/job-icons/jobs/SMN/Emerald_Ruin_III.png"
@@ -16883,9 +16883,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Enkindle Bahamut",
-    "action_name_ja": "バハムートエンキンドル",
+    "action_name_ja": "エンキンドル・バハムート",
     "aliases": [
-      "バハムートエンキンドル",
+      "エンキンドル・バハムート",
       "Enkindle Bahamut"
     ],
     "icon_path": "/job-icons/jobs/SMN/Enkindle_Bahamut.png"
@@ -16898,9 +16898,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Enkindle Phoenix",
-    "action_name_ja": "フェニックスエンキンドル",
+    "action_name_ja": "エンキンドル・フェニックス",
     "aliases": [
-      "フェニックスエンキンドル",
+      "エンキンドル・フェニックス",
       "Enkindle Phoenix"
     ],
     "icon_path": "/job-icons/jobs/SMN/Enkindle_Phoenix.png"
@@ -16913,9 +16913,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Enkindle Solar Bahamut",
-    "action_name_ja": "ソーラーバハムートエンキンドル",
+    "action_name_ja": "エンキンドル・ソルバハムート",
     "aliases": [
-      "ソーラーバハムートエンキンドル",
+      "エンキンドル・ソルバハムート",
       "Enkindle Solar Bahamut"
     ],
     "icon_path": "/job-icons/jobs/SMN/Enkindle_Solar_Bahamut.png"
@@ -16958,9 +16958,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Fester",
-    "action_name_ja": "フェスター",
+    "action_name_ja": "ミアズマバースト",
     "aliases": [
-      "フェスター",
+      "ミアズマバースト",
       "Fester"
     ],
     "icon_path": "/job-icons/jobs/SMN/Fester.png"
@@ -17048,9 +17048,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Necrotize",
-    "action_name_ja": "ネクロタイズ",
+    "action_name_ja": "ミアズマノヴァ",
     "aliases": [
-      "ネクロタイズ",
+      "ミアズマノヴァ",
       "Necrotize"
     ],
     "icon_path": "/job-icons/jobs/SMN/Necrotize.png"
@@ -17183,9 +17183,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Ruby Catastrophe",
-    "action_name_ja": "ルビーカタストロフ",
+    "action_name_ja": "ルビー・カタストロフ",
     "aliases": [
-      "ルビーカタストロフ",
+      "ルビー・カタストロフ",
       "Ruby Catastrophe"
     ],
     "icon_path": "/job-icons/jobs/SMN/Ruby_Catastrophe.png"
@@ -17198,9 +17198,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Ruby Disaster",
-    "action_name_ja": "ルビーディザスター",
+    "action_name_ja": "ルビー・ディザスター",
     "aliases": [
-      "ルビーディザスター",
+      "ルビー・ディザスター",
       "Ruby Disaster"
     ],
     "icon_path": "/job-icons/jobs/SMN/Ruby_Disaster.png"
@@ -17213,9 +17213,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Ruby Outburst",
-    "action_name_ja": "ルビーアウトバースト",
+    "action_name_ja": "ルビー・アウトバースト",
     "aliases": [
-      "ルビーアウトバースト",
+      "ルビー・アウトバースト",
       "Ruby Outburst"
     ],
     "icon_path": "/job-icons/jobs/SMN/Ruby_Outburst.png"
@@ -17228,9 +17228,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Ruby Rite",
-    "action_name_ja": "ルビーリチュアル",
+    "action_name_ja": "ルビー・リチュアル",
     "aliases": [
-      "ルビーリチュアル",
+      "ルビー・リチュアル",
       "Ruby Rite"
     ],
     "icon_path": "/job-icons/jobs/SMN/Ruby_Rite.png"
@@ -17243,9 +17243,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Ruby Ruin",
-    "action_name_ja": "ルビールイン",
+    "action_name_ja": "ルビー・ルイン",
     "aliases": [
-      "ルビールイン",
+      "ルビー・ルイン",
       "Ruby Ruin"
     ],
     "icon_path": "/job-icons/jobs/SMN/Ruby_Ruin.png"
@@ -17258,9 +17258,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Ruby Ruin II",
-    "action_name_ja": "ルビールインラ",
+    "action_name_ja": "ルビー・ルインラ",
     "aliases": [
-      "ルビールインラ",
+      "ルビー・ルインラ",
       "Ruby Ruin II"
     ],
     "icon_path": "/job-icons/jobs/SMN/Ruby_Ruin_II.png"
@@ -17273,9 +17273,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Ruby Ruin III",
-    "action_name_ja": "ルビールインガ",
+    "action_name_ja": "ルビー・ルインガ",
     "aliases": [
-      "ルビールインガ",
+      "ルビー・ルインガ",
       "Ruby Ruin III"
     ],
     "icon_path": "/job-icons/jobs/SMN/Ruby_Ruin_III.png"
@@ -17408,9 +17408,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Bahamut",
-    "action_name_ja": "バハムート召喚",
+    "action_name_ja": "サモン・バハムート",
     "aliases": [
-      "バハムート召喚",
+      "サモン・バハムート",
       "Summon Bahamut"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Bahamut.png"
@@ -17438,9 +17438,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Emerald",
-    "action_name_ja": "エメラルド召喚",
+    "action_name_ja": "サモン・エメラルド",
     "aliases": [
-      "エメラルド召喚",
+      "サモン・エメラルド",
       "Summon Emerald"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Emerald.png"
@@ -17453,9 +17453,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Garuda",
-    "action_name_ja": "ガルーダ召喚",
+    "action_name_ja": "サモン・ガルーダ",
     "aliases": [
-      "ガルーダ召喚",
+      "サモン・ガルーダ",
       "Summon Garuda"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Garuda.png"
@@ -17468,9 +17468,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Garuda II",
-    "action_name_ja": "ガルーダ召喚II",
+    "action_name_ja": "サモン・ガルーダII",
     "aliases": [
-      "ガルーダ召喚II",
+      "ガサモン・ガルーダII",
       "Summon Garuda II"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Garuda_II.png"
@@ -17483,9 +17483,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Ifrit",
-    "action_name_ja": "イフリート召喚",
+    "action_name_ja": "サモン・イフリート",
     "aliases": [
-      "イフリート召喚",
+      "サモン・イフリート",
       "Summon Ifrit"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Ifrit.png"
@@ -17498,9 +17498,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Ifrit II",
-    "action_name_ja": "イフリート召喚II",
+    "action_name_ja": "サモン・イフリートII",
     "aliases": [
-      "イフリート召喚II",
+      "サモン・イフリートII",
       "Summon Ifrit II"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Ifrit_II.png"
@@ -17513,9 +17513,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Phoenix",
-    "action_name_ja": "フェニックス召喚",
+    "action_name_ja": "サモン・フェニックス",
     "aliases": [
-      "フェニックス召喚",
+      "サモン・フェニックス",
       "Summon Phoenix"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Phoenix.png"
@@ -17528,9 +17528,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Ruby",
-    "action_name_ja": "ルビー召喚",
+    "action_name_ja": "サモン・ルビー",
     "aliases": [
-      "ルビー召喚",
+      "サモン・ルビー",
       "Summon Ruby"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Ruby.png"
@@ -17543,9 +17543,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Solar Bahamut",
-    "action_name_ja": "ソーラーバハムート召喚",
+    "action_name_ja": "サモン・ソルバハムート",
     "aliases": [
-      "ソーラーバハムート召喚",
+      "サモン・ソルバハムート",
       "Summon Solar Bahamut"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Solar_Bahamut.png"
@@ -17558,9 +17558,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Titan",
-    "action_name_ja": "タイタン召喚",
+    "action_name_ja": "サモン・タイタン",
     "aliases": [
-      "タイタン召喚",
+      "サモン・タイタン",
       "Summon Titan"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Titan.png"
@@ -17573,9 +17573,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Titan II",
-    "action_name_ja": "タイタン召喚II",
+    "action_name_ja": "サモン・タイタンII",
     "aliases": [
-      "タイタン召喚II",
+      "サモン・タイタンII",
       "Summon Titan II"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Titan_II.png"
@@ -17588,9 +17588,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Summon Topaz",
-    "action_name_ja": "トパーズ召喚",
+    "action_name_ja": "サモン・トパーズ",
     "aliases": [
-      "トパーズ召喚",
+      "サモン・トパーズ",
       "Summon Topaz"
     ],
     "icon_path": "/job-icons/jobs/SMN/Summon_Topaz.png"
@@ -17603,9 +17603,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Sunflare",
-    "action_name_ja": "サンフレア",
+    "action_name_ja": "ソルフレア",
     "aliases": [
-      "サンフレア",
+      "ソルフレア",
       "Sunflare"
     ],
     "icon_path": "/job-icons/jobs/SMN/Sunflare.png"
@@ -17618,9 +17618,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Topaz Catastrophe",
-    "action_name_ja": "トパーズカタストロフ",
+    "action_name_ja": "トパーズ・カタストロフ",
     "aliases": [
-      "トパーズカタストロフ",
+      "トパーズ・カタストロフ",
       "Topaz Catastrophe"
     ],
     "icon_path": "/job-icons/jobs/SMN/Topaz_Catastrophe.png"
@@ -17633,9 +17633,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Topaz Disaster",
-    "action_name_ja": "トパーズディザスター",
+    "action_name_ja": "トパーズ・ディザスター",
     "aliases": [
-      "トパーズディザスター",
+      "トパーズ・ディザスター",
       "Topaz Disaster"
     ],
     "icon_path": "/job-icons/jobs/SMN/Topaz_Disaster.png"
@@ -17648,9 +17648,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Topaz Outburst",
-    "action_name_ja": "トパーズアウトバースト",
+    "action_name_ja": "トパーズ・アウトバースト",
     "aliases": [
-      "トパーズアウトバースト",
+      "トパーズ・アウトバースト",
       "Topaz Outburst"
     ],
     "icon_path": "/job-icons/jobs/SMN/Topaz_Outburst.png"
@@ -17663,9 +17663,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Topaz Rite",
-    "action_name_ja": "トパーズリチュアル",
+    "action_name_ja": "トパーズ・リチュアル",
     "aliases": [
-      "トパーズリチュアル",
+      "トパーズ・リチュアル",
       "Topaz Rite"
     ],
     "icon_path": "/job-icons/jobs/SMN/Topaz_Rite.png"
@@ -17678,9 +17678,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Topaz Ruin",
-    "action_name_ja": "トパーズルイン",
+    "action_name_ja": "トパーズ・ルイン",
     "aliases": [
-      "トパーズルイン",
+      "トパーズ・ルイン",
       "Topaz Ruin"
     ],
     "icon_path": "/job-icons/jobs/SMN/Topaz_Ruin.png"
@@ -17693,9 +17693,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Topaz Ruin II",
-    "action_name_ja": "トパーズルインラ",
+    "action_name_ja": "トパーズ・ルインラ",
     "aliases": [
-      "トパーズルインラ",
+      "トパーズ・ルインラ",
       "Topaz Ruin II"
     ],
     "icon_path": "/job-icons/jobs/SMN/Topaz_Ruin_II.png"
@@ -17708,9 +17708,9 @@
     "category": "action",
     "action_type": "spell",
     "action_name_en": "Topaz Ruin III",
-    "action_name_ja": "トパーズルインガ",
+    "action_name_ja": "トパーズ・ルインガ",
     "aliases": [
-      "トパーズルインガ",
+      "トパーズ・ルインガ",
       "Topaz Ruin III"
     ],
     "icon_path": "/job-icons/jobs/SMN/Topaz_Ruin_III.png"

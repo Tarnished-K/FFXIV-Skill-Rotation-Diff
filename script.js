@@ -304,6 +304,7 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
       if (JOB_ICON_SCOPE_MAP[rawJob]) iconCandidates.push(`/public/job-icons/${JOB_ICON_SCOPE_MAP[rawJob]}/${tail}`);
       iconCandidates.push(`/public/job-icons/jobs/${rawJob}/${rawTail}`);
       if (found?.category === 'role_action') {
+        iconCandidates.push(`/public/job-icons/jobs/${rawJob}/Role_Actions/${fileName}`);
         iconCandidates.push(`/public/job-icons/jobs/Role_Actions/${fileName}`);
         iconCandidates.push(`/public/job-icons/Role_Actions/${fileName}`);
       }

@@ -99,6 +99,7 @@
     "action_name_en": "Celestial Intersection",
     "action_name_ja": "星天交差",
     "aliases": [
+      "セレスティアルインターセクション",
       "星天交差",
       "Celestial Intersection"
     ],
@@ -234,6 +235,7 @@
     "action_name_en": "Exaltation",
     "action_name_ja": "エクザルテーション",
     "aliases": [
+      "エグザルテーション",
       "エクザルテーション",
       "Exaltation"
     ],
@@ -310,7 +312,10 @@
     "action_name_ja": "ヘリオスコンジャンクション",
     "aliases": [
       "ヘリオスコンジャンクション",
-      "Helios Conjunction"
+      "コンジャンクション・ヘリオス",
+      "コンジャンクションヘリオス",
+      "Helios Conjunction",
+      "Conjunction Helios"
     ],
     "icon_path": "/job-icons/jobs/AST/Helios_Conjunction.png"
   },
@@ -4149,8 +4154,11 @@
     "action_name_en": "Lance Barrage",
     "action_name_ja": "スラストラッシュ",
     "aliases": [
+      "ランスバラージ",
       "スラストラッシュ",
-      "Lance Barrage"
+      "ボーパルスラスト",
+      "Lance Barrage",
+      "Vorpal Thrust"
     ],
     "icon_path": "/job-icons/jobs/DRG/Lance_Barrage.png"
   },
@@ -6535,9 +6543,72 @@
     "action_name_ja": "オートマトンクイーン",
     "aliases": [
       "オートマトンクイーン",
+      "オートマトン・クイーン",
       "Automaton Queen"
     ],
     "icon_path": "/job-icons/jobs/MCH/Automaton_Queen.png"
+  },
+  {
+    "action_id": null,
+    "scope": "job",
+    "scope_code": "MCH",
+    "job_code": "MCH",
+    "category": "action",
+    "action_type": "ability",
+    "action_name_en": "Barrel Heater",
+    "action_name_ja": "バレルヒーター",
+    "aliases": [
+      "バレルヒーター",
+      "Barrel Heater"
+    ],
+    "icon_path": "/job-icons/jobs/MCH/Barrel_Stabilizer.png"
+  },
+  {
+    "action_id": null,
+    "scope": "job",
+    "scope_code": "MCH",
+    "job_code": "MCH",
+    "category": "action",
+    "action_type": "weaponskill",
+    "action_name_en": "Weapon Break",
+    "action_name_ja": "ウェポンブレイク",
+    "aliases": [
+      "ウェポンブレイク",
+      "Weapon Break"
+    ],
+    "icon_path": "/job-icons/jobs/MCH/Blazing_Shot.png"
+  },
+  {
+    "action_id": null,
+    "scope": "job",
+    "scope_code": "MCH",
+    "job_code": "MCH",
+    "category": "pet_actions",
+    "action_type": "weaponskill",
+    "action_name_en": "Pile Bunker",
+    "action_name_ja": "パイルバンカー",
+    "aliases": [
+      "パイルバンカー",
+      "Pile Bunker",
+      "回転のこぎり",
+      "Circular Saw"
+    ],
+    "icon_path": "/job-icons/jobs/MCH/Pile_Bunker.png"
+  },
+  {
+    "action_id": null,
+    "scope": "job",
+    "scope_code": "MCH",
+    "job_code": "MCH",
+    "category": "action",
+    "action_type": "weaponskill",
+    "action_name_en": "Full Metal Burst",
+    "action_name_ja": "フルメタルバースト",
+    "aliases": [
+      "フルメタルバースト",
+      "Full Metal Burst"
+    ],
+    "icon_path": "/job-icons/jobs/MCH/Full_Metal_Field.png"
   },
   {
     "action_id": null,
@@ -6580,7 +6651,9 @@
     "action_name_ja": "ブレイジングショット",
     "aliases": [
       "ブレイジングショット",
-      "Blazing Shot"
+      "ブレイズショット",
+      "Blazing Shot",
+      "Blaze Shot"
     ],
     "icon_path": "/job-icons/jobs/MCH/Blazing_Shot.png"
   },
@@ -9714,6 +9787,7 @@
     "action_name_en": "Hammer Brush",
     "action_name_ja": "ハンマーブラッシュ",
     "aliases": [
+      "ハンマーブラシ",
       "ハンマーブラッシュ",
       "Hammer Brush"
     ],
@@ -9740,7 +9814,7 @@
     "scope_code": "PCT",
     "job_code": "PCT",
     "category": "action",
-    "action_type":"spell" ,
+    "action_type": "spell",
     "action_name_en": "Hammer Stamp",
     "action_name_ja": "ハンマースタンプ",
     "aliases": [
@@ -9834,8 +9908,10 @@
     "action_name_en": "Polishing Hammer",
     "action_name_ja": "ハンマーポリッシュ",
     "aliases": [
+      "ポリシングハンマー",
       "ハンマーポリッシュ",
-      "Polishing Hammer"
+      "Polishing Hammer",
+      "Hammer Polish"
     ],
     "icon_path": "/job-icons/jobs/PCT/Polishing_Hammer.png"
   },

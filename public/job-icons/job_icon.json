@@ -17287,9 +17287,9 @@
     "category": "action",
     "action_type": "ability",
     "action_name_en": "Searing Flash",
-    "action_name_ja": "シアリングフラッシュ",
+    "action_name_ja": "シアリングスパーク",
     "aliases": [
-      "シアリングフラッシュ",
+      "シアリングスパーク",
       "Searing Flash"
     ],
     "icon_path": "/job-icons/jobs/SMN/Searing_Flash.png"

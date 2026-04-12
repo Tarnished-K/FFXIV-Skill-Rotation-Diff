@@ -53,4 +53,15 @@ button { cursor:pointer; }
 .debuff-bar { position:absolute; height:18px; border-radius:3px; overflow:hidden; z-index:1; }
 .debuff-label { position:absolute; left:4px; top:1px; font-size:8px; color:#fef2f2; white-space:nowrap; pointer-events:none; }
 
+.step4-header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.step4-header h2 { margin:0; white-space:nowrap; }
+.step4-header .tabs { margin-bottom:0; }
+.step4-header .zoom-controls { margin-bottom:0; margin-left:auto; }
+
+.phase-btns { display:flex; gap:4px; }
+.phase-btn { width:auto; padding:4px 10px; font-size:12px; border-radius:6px; border:1px solid #475569; background:#1e293b; color:#cbd5e1; cursor:pointer; margin-top:0; }
+.phase-btn.active { background:#7c3aed; border-color:#7c3aed; color:#fff; }
+
+.dps-graph-svg text { font-family:system-ui, sans-serif; }
+
 .event[title] { cursor:pointer; }

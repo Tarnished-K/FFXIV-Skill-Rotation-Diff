@@ -59,21 +59,21 @@
       </section>
 
       <section class="card hidden" id="step4">
-        <h2 id="step4Title">4. 比較結果</h2>
-        <div class="tabs">
-          <button class="tab active" data-tab="all">全体TL</button>
-          <button class="tab" data-tab="odd">奇数分TL</button>
-          <button class="tab" data-tab="even">偶数分TL</button>
-          <button class="tab" data-tab="dps">DPS推移</button>
+        <div class="step4-header">
+          <h2 id="step4Title">4. 比較結果</h2>
+          <div class="tabs">
+            <button class="tab active" data-tab="all">全体TL</button>
+            <button class="tab" data-tab="odd">奇数分TL</button>
+            <button class="tab" data-tab="even">偶数分TL</button>
+          </div>
+          <div id="phaseContainer" class="phase-btns"></div>
+          <div class="zoom-controls">
+            <button id="zoomOutBtn" type="button">−</button>
+            <span id="zoomLabel">200%</span>
+            <button id="zoomInBtn" type="button">＋</button>
+          </div>
         </div>
-        <div class="zoom-controls">
-          <button id="zoomOutBtn" type="button">−</button>
-          <span id="zoomLabel">200%</span>
-          <button id="zoomInBtn" type="button">＋</button>
-        </div>
-
         <div id="timelineWrap" class="timeline-wrap"></div>
-        <canvas id="dpsCanvas" class="hidden" width="1200" height="280"></canvas>
       </section>
 
       <section class="card" id="debug">

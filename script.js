@@ -103,7 +103,6 @@ const I18N = {
     tabAll: 'Full TL',
     tabOdd: 'Odd Min TL',
     tabEven: 'Even Min TL',
-    tabDps: 'DPS Trend',
     laneAbility: 'Ability',
     laneGcd: 'WS / Spell',
     laneDebuff: 'Debuff',
@@ -120,6 +119,8 @@ const I18N = {
     disconnected: 'FFLogs disconnected.',
     kill: 'Kill',
     wipe: 'Wipe',
+    encounterMismatch: 'Cannot compare different bosses. Please select the same encounter.',
+    phaseAll: 'All Phases',
   },
   ja: {
     siteTitle: 'FFXIV スキル回し比較',
@@ -144,7 +145,6 @@ const I18N = {
     tabAll: '全体TL',
     tabOdd: '奇数分TL',
     tabEven: '偶数分TL',
-    tabDps: 'DPS推移',
     laneAbility: 'アビリティ',
     laneGcd: 'WS・魔法',
     laneDebuff: 'デバフ',
@@ -161,6 +161,8 @@ const I18N = {
     disconnected: 'FFLogs連携を解除しました。',
     kill: 'Kill',
     wipe: 'Wipe',
+    encounterMismatch: '異なるボスの戦闘は比較できません。同じ敵を選択してください。',
+    phaseAll: '全フェーズ',
   },
 };
 
@@ -183,8 +185,6 @@ const state = {
   currentTab: 'all',
   timelineA: [],
   timelineB: [],
-  dpsA: [],
-  dpsB: [],
   timelineCountA: 0,
   timelineCountB: 0,
   actionById: new Map(),
@@ -196,6 +196,12 @@ const state = {
   bossCastsB: [],
   debuffsA: [],
   debuffsB: [],
+  partyBuffsA: [],
+  partyBuffsB: [],
+  rollingDpsA: [],
+  rollingDpsB: [],
+  phases: [],
+  currentPhase: null,
   dpsDataA: null,
   dpsDataB: null,
   fightA: null,
@@ -221,10 +227,10 @@ const el = {
   playerB: document.getElementById('playerB'),
   tabs: [...document.querySelectorAll('.tab')],
   timelineWrap: document.getElementById('timelineWrap'),
-  dpsCanvas: document.getElementById('dpsCanvas'),
   zoomInBtn: document.getElementById('zoomInBtn'),
   zoomOutBtn: document.getElementById('zoomOutBtn'),
   zoomLabel: document.getElementById('zoomLabel'),
+  phaseContainer: document.getElementById('phaseContainer'),
   debugLog: document.getElementById('debugLog'),
   langToggle: document.getElementById('langToggle'),
   siteTitle: document.getElementById('siteTitle'),
@@ -664,13 +670,6 @@ function makeSampleTimeline() {
   const actions = ['Fast Blade', 'Riot Blade', 'Royal Authority', 'Fight or Flight', 'Requiescat'];
   return Array.from({ length: 45 }, (_, i) => ({ t: i * 6, action: actions[i % actions.length] }));
 }
-function makeSampleDps() {
-  let x = 20000;
-  return Array.from({ length: 120 }, (_, i) => {
-    x += (Math.random() - 0.5) * 1200;
-    return { t: i * 5, v: Math.max(1000, Math.round(x)) };
-  });
-}
 function filterTimeline(records, tab) {
   if (tab === 'all') return records;
   if (tab === 'odd') return records.filter(r => Math.floor(r.t / 60) % 2 === 1);
@@ -713,18 +712,40 @@ function findSelfBuff(actionName) {
   }
   return null;
 }
-function getActiveSynergies(t, allRecords) {
-  const active = [];
+function getActiveSynergies(t, allRecords, partyBuffRecords) {
+  const active = new Set();
+  // 自分のキャスト記録からバフ検出
   for (const r of allRecords) {
     const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action);
     if (!buff) continue;
     if (t >= r.t && t <= r.t + buff.duration) {
-      active.push(state.lang === 'ja' ? buff.nameJa : buff.nameEn);
+      active.add(state.lang === 'ja' ? buff.nameJa : buff.nameEn);
     }
   }
-  return active;
+  // パーティメンバーからのバフ記録（Buffs APIから取得）
+  for (const r of (partyBuffRecords || [])) {
+    const dur = r.duration || 20;
+    if (t >= r.t && t <= r.t + dur) {
+      const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action);
+      const label = buff
+        ? (state.lang === 'ja' ? buff.nameJa : buff.nameEn)
+        : r.action;
+      active.add(label);
+    }
+  }
+  return [...active];
 }
-async function fetchBossCastsV2(reportCode, fight) {
+async function fetchBossCastsV2(reportCode, fight, reportJson) {
+  // friendlyPlayers + ペットを除外し、敵の詠唱のみ取得
+  const friendlyIds = new Set(fight.friendlyPlayers || []);
+  const petIds = new Set(
+    (reportJson?.masterData?.actors || [])
+      .filter(a => a.petOwner)
+      .map(a => a.id)
+  );
+  const excludeIds = new Set([...friendlyIds, ...petIds]);
+  logDebug('ボス詠唱取得: 除外ID数=' + excludeIds.size, { friendly: friendlyIds.size, pets: petIds.size });
+
   const all = [];
   const pendingBegincast = new Map();
   let startTime = null;
@@ -732,7 +753,7 @@ async function fetchBossCastsV2(reportCode, fight) {
     query BossCasts($code: String!, $fightID: Int!, $startTime: Float) {
       reportData {
         report(code: $code) {
-          events(dataType: Casts, fightIDs: [$fightID], hostilityType: Enemies, startTime: $startTime) {
+          events(dataType: Casts, fightIDs: [$fightID], startTime: $startTime) {
             data
             nextPageTimestamp
           }
@@ -746,6 +767,8 @@ async function fetchBossCastsV2(reportCode, fight) {
     const block = data?.reportData?.report?.events;
     const rows = block?.data || [];
     for (const e of rows) {
+      const sourceID = Number(e?.sourceID || 0);
+      if (excludeIds.has(sourceID)) continue;
       const name = e?.ability?.name || '';
       const ts = Number(e?.timestamp || 0);
       if (!name || !ts) continue;
@@ -769,16 +792,19 @@ async function fetchBossCastsV2(reportCode, fight) {
     if (!block?.nextPageTimestamp) break;
     startTime = block.nextPageTimestamp;
   }
+  logDebug('ボス詠唱結果: ' + all.length + '件');
   return all.sort((a, b) => a.t - b.t);
 }
-async function fetchPlayerDebuffsV2(reportCode, fight, sourceId) {
-  const all = [];
+async function fetchPlayerAurasV2(reportCode, fight, targetId) {
+  // プレイヤーに適用された全オーラ（バフ+デバフ）を取得し、デバフとPTバフに分離
+  const debuffs = [];
+  const partyBuffs = [];
   let startTime = null;
   const query = `
-    query PlayerDebuffs($code: String!, $fightID: Int!, $targetID: Int!, $startTime: Float) {
+    query PlayerAuras($code: String!, $fightID: Int!, $targetID: Int!, $startTime: Float) {
       reportData {
         report(code: $code) {
-          events(dataType: Debuffs, fightIDs: [$fightID], targetID: $targetID, startTime: $startTime) {
+          events(dataType: Buffs, fightIDs: [$fightID], targetID: $targetID, startTime: $startTime) {
             data
             nextPageTimestamp
           }
@@ -791,27 +817,47 @@ async function fetchPlayerDebuffsV2(reportCode, fight, sourceId) {
     '与ダメージ低下', '衰弱',
   ];
   while (true) {
-    const vars = { code: reportCode, fightID: Number(fight.id), targetID: Number(sourceId), startTime };
+    const vars = { code: reportCode, fightID: Number(fight.id), targetID: Number(targetId), startTime };
     const data = await graphqlRequest(query, vars);
     const block = data?.reportData?.report?.events;
     const rows = block?.data || [];
     for (const e of rows) {
-      const name = String(e?.ability?.name || '').toLowerCase();
-      if (!debuffNames.some(d => name.includes(d))) continue;
-      const ts = Number(e?.timestamp || 0);
       const type = String(e?.type || '').toLowerCase();
+      if (type !== 'applybuff' && type !== 'applydebuff') continue;
+      const abilityName = String(e?.ability?.name || '');
+      const nameLower = abilityName.toLowerCase();
+      const abilityId = Number(e?.abilityGameID || e?.ability?.guid || 0);
+      const ts = Number(e?.timestamp || 0);
       const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
       const dur = Number(e?.duration || 0) / 1000;
-      if (type === 'applydebuff' || type === 'applybuff') {
+
+      // デバフ判定（衰弱・与ダメージ低下）
+      if (debuffNames.some(d => nameLower.includes(d))) {
         let kind = 'damageDown';
-        if (name.includes('weakness') || name.includes('衰弱')) kind = name.includes('brink') || name.includes('強') ? 'brink' : 'weakness';
-        all.push({ t: tSec, duration: dur > 0 ? dur : 10, kind, name: e?.ability?.name || '' });
+        if (nameLower.includes('weakness') || nameLower.includes('衰弱')) {
+          kind = (nameLower.includes('brink') || nameLower.includes('強')) ? 'brink' : 'weakness';
+        }
+        debuffs.push({ t: tSec, duration: dur > 0 ? dur : 10, kind, name: abilityName });
+        continue;
+      }
+
+      // レイドバフ判定（パーティメンバーからのシナジー）
+      const buff = findBurstBuff(abilityId, abilityName);
+      if (buff) {
+        partyBuffs.push({ t: tSec, actionId: abilityId, action: abilityName, duration: buff.duration });
+        continue;
+      }
+      // 自己バフ判定
+      const selfBuff = findSelfBuff(abilityName);
+      if (selfBuff) {
+        partyBuffs.push({ t: tSec, actionId: abilityId, action: abilityName, duration: selfBuff.duration });
       }
     }
     if (!block?.nextPageTimestamp) break;
     startTime = block.nextPageTimestamp;
   }
-  return all;
+  logDebug(`オーラ取得(target=${targetId}): デバフ=${debuffs.length}件 PTバフ=${partyBuffs.length}件`);
+  return { debuffs, partyBuffs };
 }
 async function fetchFightDpsV2(reportCode, fightId) {
   const query = `
@@ -843,6 +889,38 @@ function findBurstBuff(actionId, actionName) {
   }
   return null;
 }
+function computeRollingDps(damageEvents, maxT, windowSec = 15) {
+  if (!damageEvents || !damageEvents.length) return [];
+  const points = [];
+  for (let t = 0; t <= maxT; t += 1) {
+    const windowStart = Math.max(0, t - windowSec);
+    let totalDamage = 0;
+    for (const d of damageEvents) {
+      if (d.t >= windowStart && d.t < t) totalDamage += d.amount;
+    }
+    const elapsed = Math.min(t, windowSec);
+    points.push({ t, dps: elapsed > 0 ? totalDamage / elapsed : 0 });
+  }
+  return points;
+}
+
+function detectPhases(bossCasts, fightDurationSec) {
+  if (!bossCasts || bossCasts.length < 2) return [];
+  const minGap = 8; // 8秒以上の空白でフェーズ区切り
+  const phases = [{ id: 1, startT: 0, label: 'P1' }];
+  let lastEndT = 0;
+  for (const c of bossCasts) {
+    if (c.t - lastEndT > minGap && lastEndT > 5) {
+      phases.push({ id: phases.length + 1, startT: c.t, label: `P${phases.length + 1}` });
+    }
+    lastEndT = Math.max(lastEndT, c.endT || c.t);
+  }
+  for (let i = 0; i < phases.length; i++) {
+    phases[i].endT = i < phases.length - 1 ? phases[i + 1].startT : fightDurationSec;
+  }
+  return phases.length > 1 ? phases : [];
+}
+
 function formatHitType(hitType, multistrike) {
   const isCrit = hitType === 2;
   const isDH = !!multistrike;
@@ -916,10 +994,22 @@ function correlateDamage(timeline, damageEvents) {
     }
   }
 }
+function filterTimelineByPhase(records) {
+  if (!state.currentPhase) return records;
+  const p = state.currentPhase;
+  return records.filter(r => r.t >= p.startT && r.t < p.endT);
+}
+
 function renderTimeline() {
-  const a = filterTimeline(state.timelineA, state.currentTab);
-  const b = filterTimeline(state.timelineB, state.currentTab);
-  const bossCasts = state.bossCastsA || [];
+  let a = filterTimeline(state.timelineA, state.currentTab);
+  let b = filterTimeline(state.timelineB, state.currentTab);
+  a = filterTimelineByPhase(a);
+  b = filterTimelineByPhase(b);
+  let bossCasts = state.bossCastsA || [];
+  if (state.currentPhase) {
+    const p = state.currentPhase;
+    bossCasts = bossCasts.filter(c => c.t >= p.startT && c.endT <= p.endT + 5);
+  }
   const maxT = Math.max(1, ...a.map(x => x.t), ...b.map(x => x.t));
   const pxPerSec = 16 * state.zoom;
   const width = Math.max(1800, maxT * pxPerSec + 220);
@@ -928,8 +1018,14 @@ function renderTimeline() {
   const jobA = state.selectedA?.job || '';
   const jobB = state.selectedB?.job || '';
 
-  // Layout: boss track → player A (ogcd, gcd, debuff) → divider → player B (ogcd, gcd, debuff)
-  const bossTrackTop = 18;
+  // DPSグラフの有無
+  const hasDps = state.rollingDpsA.length > 0 || state.rollingDpsB.length > 0;
+  const dpsGraphHeight = hasDps ? 80 : 0;
+  const dpsGraphTop = hasDps ? 4 : 0;
+
+  // Layout: DPS graph → ruler → boss track → player A → divider → player B
+  const rulerTop = dpsGraphTop + dpsGraphHeight;
+  const bossTrackTop = rulerTop + 18;
   const bossTrackH = 24;
   const playerAStart = bossTrackTop + bossTrackH + 12;
   const laneTop = {
@@ -955,6 +1051,62 @@ function renderTimeline() {
   const totalHeight = debuffBTop + debuffBHeight + 20;
 
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
+
+  const buildDpsGraph = () => {
+    if (!hasDps) return '';
+    let dpsA = state.rollingDpsA;
+    let dpsB = state.rollingDpsB;
+    if (state.currentPhase) {
+      const p = state.currentPhase;
+      dpsA = dpsA.filter(d => d.t >= p.startT && d.t <= p.endT);
+      dpsB = dpsB.filter(d => d.t >= p.startT && d.t <= p.endT);
+    }
+    if (state.currentTab === 'odd') {
+      dpsA = dpsA.filter(d => Math.floor(d.t / 60) % 2 === 1);
+      dpsB = dpsB.filter(d => Math.floor(d.t / 60) % 2 === 1);
+    } else if (state.currentTab === 'even') {
+      dpsA = dpsA.filter(d => Math.floor(d.t / 60) % 2 === 0 && d.t >= 60);
+      dpsB = dpsB.filter(d => Math.floor(d.t / 60) % 2 === 0 && d.t >= 60);
+    }
+    const maxDps = Math.max(...dpsA.map(p => p.dps), ...dpsB.map(p => p.dps), 1);
+    const gH = dpsGraphHeight - 10;
+    const toPoints = (pts, color) => {
+      if (!pts.length) return '';
+      const coords = pts.map(p => {
+        const x = 60 + p.t * pxPerSec;
+        const y = dpsGraphTop + gH - (p.dps / maxDps) * (gH - 5);
+        return `${x},${y}`;
+      }).join(' ');
+      return `<polyline points="${coords}" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.8" />`;
+    };
+    // Y軸ラベル
+    const labels = [];
+    for (let i = 0; i <= 2; i++) {
+      const dps = maxDps * i / 2;
+      const y = dpsGraphTop + gH - (dps / maxDps) * (gH - 5);
+      const label = dps >= 1000 ? `${(dps / 1000).toFixed(0)}k` : dps.toFixed(0);
+      labels.push(`<text x="55" y="${y + 3}" text-anchor="end" fill="#64748b" font-size="9">${label}</text>`);
+    }
+    return `<svg class="dps-graph-svg" style="position:absolute; left:0; top:0; width:${width}px; height:${dpsGraphTop + dpsGraphHeight}px; pointer-events:none; overflow:visible;">
+      <rect x="60" y="${dpsGraphTop}" width="${maxT * pxPerSec}" height="${gH}" fill="#0f172a" rx="4" opacity="0.5" />
+      ${labels.join('')}
+      <text x="62" y="${dpsGraphTop + 10}" fill="#38bdf8" font-size="9">${labelA}</text>
+      <text x="${62 + labelA.length * 7 + 10}" y="${dpsGraphTop + 10}" fill="#f97316" font-size="9">${labelB}</text>
+      ${toPoints(dpsA, '#38bdf8')}
+      ${toPoints(dpsB, '#f97316')}
+    </svg>`;
+  };
+
+  const buildRulerAtTop = () => {
+    const marks = [];
+    for (let sec = 0; sec <= Math.ceil(maxT); sec++) {
+      const x = 60 + sec * pxPerSec;
+      const level = sec % 10 === 0 ? 'ten' : sec % 5 === 0 ? 'five' : 'one';
+      const label = sec % 5 === 0 ? `<span>${sec}s</span>` : '';
+      marks.push(`<div class="tick ${level}" style="left:${x}px; top:${rulerTop}px">${label}</div>`);
+    }
+    return marks.join('');
+  };
 
   const buildBossTrack = () => {
     if (!bossCasts.length) return '';
@@ -982,7 +1134,12 @@ function renderTimeline() {
 
   const buildDebuffTrack = (debuffs, top) => {
     if (!debuffs || !debuffs.length) return '';
-    return debuffs.map(d => {
+    let filtered = debuffs;
+    if (state.currentPhase) {
+      const p = state.currentPhase;
+      filtered = debuffs.filter(d => d.t >= p.startT && d.t < p.endT);
+    }
+    return filtered.map(d => {
       const x = 60 + d.t * pxPerSec;
       const w = Math.max(6, d.duration * pxPerSec);
       const info = DEBUFF_IDS[d.kind] || DEBUFF_IDS.damageDown;
@@ -991,7 +1148,7 @@ function renderTimeline() {
     }).join('');
   };
 
-  const buildEvents = (records, owner, allRecords) => {
+  const buildEvents = (records, owner, partyBuffs) => {
     const lanesLastX = { gcd: -999, ogcd: -999 };
     const minGap = 24;
     return records.map(r => {
@@ -1009,7 +1166,7 @@ function renderTimeline() {
         const ht = formatHitType(r.hitType, r.multistrike);
         if (ht) tooltip += ` (${ht})`;
       }
-      const synergies = getActiveSynergies(r.t, allRecords);
+      const synergies = getActiveSynergies(r.t, records, partyBuffs);
       if (synergies.length) {
         tooltip += `\n${state.lang === 'ja' ? 'シナジー' : 'Buffs'}: ${synergies.join(', ')}`;
       }
@@ -1019,7 +1176,8 @@ function renderTimeline() {
 
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px; height:${totalHeight}px">
-      ${buildRuler(maxT, pxPerSec)}
+      ${buildDpsGraph()}
+      ${buildRulerAtTop()}
       <div class="lane-label" style="top:${bossTrackTop - 2}px; font-weight:bold; color:#f87171">${t('laneBoss')}</div>
       ${buildBossTrack()}
       <div class="player-label" style="top:${playerAStart - 4}px">${labelA}${jobA ? ' (' + formatJobName(jobA) + ')' : ''}</div>
@@ -1037,8 +1195,8 @@ function renderTimeline() {
       ${buildBuffOverlays(b, 'b')}
       <div class="lane-label" style="top:${debuffBTop + 4}px; color:#ef4444">${t('laneDebuff')}</div>
       ${buildDebuffTrack(state.debuffsB, debuffBTop)}
-      ${buildEvents(a, 'a', a)}
-      ${buildEvents(b, 'b', b)}
+      ${buildEvents(a, 'a', state.partyBuffsA)}
+      ${buildEvents(b, 'b', state.partyBuffsB)}
     </div>
   `;
   el.timelineWrap.querySelectorAll('img.event-icon').forEach(img => {
@@ -1057,26 +1215,35 @@ function renderTimeline() {
     });
   });
 }
-function renderDps() {
-  const cvs = el.dpsCanvas;
-  const ctx = cvs.getContext('2d');
-  ctx.clearRect(0, 0, cvs.width, cvs.height);
-  ctx.fillStyle = '#020617';
-  ctx.fillRect(0, 0, cvs.width, cvs.height);
-  const maxV = Math.max(...state.dpsA.map(p => p.v), ...state.dpsB.map(p => p.v), 1);
-  const drawLine = (arr, color) => {
-    ctx.beginPath();
-    arr.forEach((p, i) => {
-      const x = (p.t / 600) * (cvs.width - 40) + 20;
-      const y = cvs.height - 20 - (p.v / maxV) * (cvs.height - 40);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+function renderPhaseButtons() {
+  const container = el.phaseContainer;
+  if (!container) return;
+  container.innerHTML = '';
+  if (!state.phases.length) return;
+  // 「全フェーズ」ボタン
+  const allBtn = document.createElement('button');
+  allBtn.className = 'phase-btn' + (state.currentPhase === null ? ' active' : '');
+  allBtn.textContent = t('phaseAll');
+  allBtn.addEventListener('click', () => {
+    state.currentPhase = null;
+    renderPhaseButtons();
+    renderTimeline();
+  });
+  container.appendChild(allBtn);
+  // 各フェーズボタン
+  for (const phase of state.phases) {
+    const btn = document.createElement('button');
+    const isActive = state.currentPhase && state.currentPhase.id === phase.id;
+    btn.className = 'phase-btn' + (isActive ? ' active' : '');
+    btn.textContent = phase.label;
+    btn.title = `${phase.startT.toFixed(0)}s - ${phase.endT.toFixed(0)}s`;
+    btn.addEventListener('click', () => {
+      state.currentPhase = phase;
+      renderPhaseButtons();
+      renderTimeline();
     });
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  };
-  drawLine(state.dpsA, '#38bdf8');
-  drawLine(state.dpsB, '#f97316');
+    container.appendChild(btn);
+  }
 }
 bindClick(el.connectBtn, 'connectBtn', () => {
   logDebug('click: connect');
@@ -1167,32 +1334,57 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
   if (!state.selectedA || !state.selectedB) return;
   const fightA = (state.reportA?.fights || []).find(f => Number(f.id) === Number(state.selectedFightA));
   const fightB = (state.reportB?.fights || []).find(f => Number(f.id) === Number(state.selectedFightB));
+  state.fightA = fightA;
+  state.fightB = fightB;
+
+  // encounterIDチェック: 異なるボスの比較を防止
+  if (fightA && fightB && Number(fightA.encounterID) !== Number(fightB.encounterID)) {
+    el.step2Message.textContent = t('encounterMismatch');
+    logDebug('encounterID不一致', { a: fightA.encounterID, b: fightB.encounterID });
+    return;
+  }
+
   el.step2Message.textContent = t('tlLoading');
   try {
-    const [tlA, tlB, dmgA, dmgB, bossA, debA, debB] = await Promise.all([
+    const [tlA, tlB, dmgA, dmgB, bossA, aurasA, aurasB] = await Promise.all([
       fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job),
       fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job),
       fetchPlayerDamageV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
       fetchPlayerDamageV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
-      fetchBossCastsV2(state.urlA.reportId, fightA),
-      fetchPlayerDebuffsV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
-      fetchPlayerDebuffsV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
+      fetchBossCastsV2(state.urlA.reportId, fightA, state.reportA),
+      fetchPlayerAurasV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
+      fetchPlayerAurasV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
     ]);
     state.timelineA = deduplicateTimeline(tlA);
     state.timelineB = deduplicateTimeline(tlB);
     state.damageA = dmgA;
     state.damageB = dmgB;
     state.bossCastsA = bossA;
-    state.debuffsA = debA;
-    state.debuffsB = debB;
+    state.debuffsA = aurasA.debuffs;
+    state.debuffsB = aurasB.debuffs;
+    state.partyBuffsA = aurasA.partyBuffs;
+    state.partyBuffsB = aurasB.partyBuffs;
     correlateDamage(state.timelineA, state.damageA);
     correlateDamage(state.timelineB, state.damageB);
     logDebug(`ダメージイベント: A=${dmgA.length}件 B=${dmgB.length}件`);
-    logDebug(`ボス詠唱: ${bossA.length}件 / デバフ: A=${debA.length} B=${debB.length}`);
+    logDebug(`ボス詠唱: ${bossA.length}件 / デバフ: A=${aurasA.debuffs.length} B=${aurasB.debuffs.length} / PTバフ: A=${aurasA.partyBuffs.length} B=${aurasB.partyBuffs.length}`);
+
+    // リアルDPS推移計算
+    const maxT = Math.max(1, ...state.timelineA.map(x => x.t), ...state.timelineB.map(x => x.t));
+    state.rollingDpsA = computeRollingDps(dmgA, maxT);
+    state.rollingDpsB = computeRollingDps(dmgB, maxT);
+    logDebug(`DPS推移計算完了: A=${state.rollingDpsA.length}点 B=${state.rollingDpsB.length}点`);
+
+    // フェーズ検出（ボス詠唱ギャップから）
+    const fightDuration = ((fightA.endTime || 0) - (fightA.startTime || 0)) / 1000;
+    state.phases = detectPhases(bossA, fightDuration);
+    state.currentPhase = null;
+    if (state.phases.length) {
+      logDebug(`フェーズ検出: ${state.phases.length}フェーズ`, state.phases.map(p => `${p.label}: ${p.startT.toFixed(0)}s-${p.endT.toFixed(0)}s`));
+    }
+
     state.timelineCountA = state.timelineA.length;
     state.timelineCountB = state.timelineB.length;
-    state.dpsA = makeSampleDps();
-    state.dpsB = makeSampleDps();
     const statsA = classifyStats(state.timelineA);
     const statsB = classifyStats(state.timelineB);
     logDebug(`[A] ${state.selectedA.name}: GCD=${statsA.gcd} oGCD=${statsA.ogcd} 未分類=${statsA.unknown} / 計${statsA.total}`);
@@ -1212,28 +1404,30 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     state.timelineB = makeSampleTimeline();
     state.timelineCountA = state.timelineA.length;
     state.timelineCountB = state.timelineB.length;
-    state.dpsA = makeSampleDps();
-    state.dpsB = makeSampleDps();
+    state.rollingDpsA = [];
+    state.rollingDpsB = [];
+    state.phases = [];
+    state.currentPhase = null;
     logDebug('TL取得失敗 - サンプルデータで表示', {error: e.message});
     el.step2Message.textContent = `TL取得失敗(サンプル表示): ${e.message}`;
   }
   el.step4.classList.remove('hidden');
   state.currentTab = 'all';
   el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
-  el.dpsCanvas.classList.add('hidden');
+  renderPhaseButtons();
   el.timelineWrap.classList.remove('hidden');
   renderTimeline();
 });
 bindClick(el.zoomInBtn, 'zoomInBtn', () => {
   state.zoom = Math.min(3, +(state.zoom + 0.25).toFixed(2));
   el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
-  if (!el.timelineWrap.classList.contains('hidden')) renderTimeline();
+  renderTimeline();
   logDebug('zoom in', {zoom: state.zoom});
 });
 bindClick(el.zoomOutBtn, 'zoomOutBtn', () => {
   state.zoom = Math.max(0.5, +(state.zoom - 0.25).toFixed(2));
   el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
-  if (!el.timelineWrap.classList.contains('hidden')) renderTimeline();
+  renderTimeline();
   logDebug('zoom out', {zoom: state.zoom});
 });
 el.tabs.forEach((tab, i) => {
@@ -1241,15 +1435,8 @@ el.tabs.forEach((tab, i) => {
     el.tabs.forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     state.currentTab = tab.dataset.tab;
-    if (state.currentTab === 'dps') {
-      el.timelineWrap.classList.add('hidden');
-      el.dpsCanvas.classList.remove('hidden');
-      renderDps();
-    } else {
-      el.dpsCanvas.classList.add('hidden');
-      el.timelineWrap.classList.remove('hidden');
-      renderTimeline();
-    }
+    el.timelineWrap.classList.remove('hidden');
+    renderTimeline();
   });
 });
 function applyLang() {
@@ -1274,7 +1461,7 @@ function applyLang() {
   if (el.logAPlayerLabel) el.logAPlayerLabel.firstChild.textContent = s.logAPlayer + '\n            ';
   if (el.logBPlayerLabel) el.logBPlayerLabel.firstChild.textContent = s.logBPlayer + '\n            ';
   el.tabs.forEach(tb => {
-    const key = { all: 'tabAll', odd: 'tabOdd', even: 'tabEven', dps: 'tabDps' }[tb.dataset.tab];
+    const key = { all: 'tabAll', odd: 'tabOdd', even: 'tabEven' }[tb.dataset.tab];
     if (key) tb.textContent = s[key];
   });
   if (el.authStatus) el.authStatus.textContent = state.token ? s.authConnected : s.authDisconnected;

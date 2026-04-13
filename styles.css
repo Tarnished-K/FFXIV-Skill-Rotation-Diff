@@ -43,6 +43,7 @@ button { cursor:pointer; }
 .zoom-controls { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
 .zoom-controls button { width:auto; padding:4px 10px; }
 .debug-log { max-height:180px; overflow:auto; background:#020617; border:1px solid #334155; padding:8px; border-radius:8px; font-size:12px; white-space:pre-wrap; }
+.error-log { border-color: #ef4444; color: #fca5a5; }
 
 .header-row { display:flex; justify-content:space-between; align-items:center; }
 .lang-btn { width:auto; padding:6px 16px; font-size:14px; font-weight:bold; background:#2563eb; border:none; border-radius:8px; color:#fff; margin-top:0; }

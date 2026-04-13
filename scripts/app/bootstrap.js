@@ -98,7 +98,7 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
 
   // encounterIDチェック: 異なるボスの比較は警告のみ（ブロックしない）
   if (fightA && fightB && Number(fightA.encounterID) !== Number(fightB.encounterID)) {
-    logDebug('encounterID不一致（警告）', { a: fightA.encounterID, b: fightB.encounterID });
+    logError('encounterID不一致（警告）', { a: fightA.encounterID, b: fightB.encounterID });
   }
 
   el.step2Message.textContent = t('tlLoading');
@@ -165,7 +165,7 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     state.rollingDpsB = [];
     state.phases = [];
     state.currentPhase = null;
-    logDebug('TL取得失敗 - サンプルデータで表示', {error: e.message});
+    logError('TL取得失敗 - サンプルデータで表示', {error: e.message});
     el.step2Message.textContent = `TL取得失敗(サンプル表示): ${e.message}`;
   }
   el.step4.classList.remove('hidden');
@@ -176,7 +176,7 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
   try {
     renderTimeline();
   } catch (renderErr) {
-    logDebug('renderTimeline エラー', { error: renderErr.message, stack: renderErr.stack?.split('\n').slice(0, 3).join(' | ') });
+    logError('renderTimeline エラー', { error: renderErr.message, stack: renderErr.stack?.split('\n').slice(0, 3).join(' | ') });
     el.timelineWrap.innerHTML = `<p class="message">タイムライン描画エラー: ${renderErr.message}</p>`;
   }
 });
@@ -214,7 +214,8 @@ function applyLang() {
   if (el.step3Title) el.step3Title.textContent = s.step3Title;
   if (el.compareBtn) el.compareBtn.textContent = s.compareBtn;
   if (el.step4Title) el.step4Title.textContent = s.step4Title;
-  if (el.debugTitle) el.debugTitle.textContent = s.debugTitle;
+  if (el.debugNormalTitle) el.debugNormalTitle.textContent = s.debugNormalTitle;
+  if (el.debugErrorTitle) el.debugErrorTitle.textContent = s.debugErrorTitle;
   if (el.footerNote) el.footerNote.textContent = s.footerNote;
   if (el.logUrlALabel) el.logUrlALabel.firstChild.textContent = s.logUrlA + ' ';
   if (el.logUrlBLabel) el.logUrlBLabel.firstChild.textContent = s.logUrlB + ' ';
@@ -257,7 +258,7 @@ try {
   applyLang();
   restoreOrAuthorize().catch(e => {
     if (el.msg) el.msg.textContent = `認証初期化失敗: ${e.message}`;
-    logDebug('auth init failed', { message: e.message });
+    logError('auth init failed', { message: e.message });
   });
 } catch (e) {
   if (el.msg) el.msg.textContent = `初期化失敗: ${e.message}`;

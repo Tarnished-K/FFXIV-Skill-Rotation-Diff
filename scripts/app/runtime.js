@@ -109,7 +109,8 @@ const I18N = {
     laneGcd: 'WS / Spell',
     laneDebuff: 'Debuff',
     laneBoss: 'Boss Cast',
-    debugTitle: 'Debug Log',
+    debugNormalTitle: 'Log',
+    debugErrorTitle: 'Error Log',
     footerNote: 'Note: Connects via FFLogs V2 (PKCE). Select a fight first, then select players.',
     needAuth: 'Please connect to FFLogs (V2) first.',
     badUrl: 'Please check FFLogs URL format.',
@@ -151,7 +152,8 @@ const I18N = {
     laneGcd: 'WS・魔法',
     laneDebuff: 'デバフ',
     laneBoss: 'ボス詠唱',
-    debugTitle: 'Debug Log',
+    debugNormalTitle: 'ログ',
+    debugErrorTitle: 'エラーログ',
     footerNote: '注: FFLogs V2(PKCE)で連携。まず戦闘を選んでからプレイヤーを選択します。',
     needAuth: '先に「FFLogsと連携（V2）」を実行してください。',
     badUrl: 'FFLogs URL形式を確認してください。',
@@ -234,6 +236,7 @@ const el = {
   zoomLabel: document.getElementById('zoomLabel'),
   phaseContainer: document.getElementById('phaseContainer'),
   debugLog: document.getElementById('debugLog'),
+  errorLog: document.getElementById('errorLog'),
   langToggle: document.getElementById('langToggle'),
   siteTitle: document.getElementById('siteTitle'),
   siteDesc: document.getElementById('siteDesc'),
@@ -241,7 +244,8 @@ const el = {
   step2Title: document.getElementById('step2Title'),
   step3Title: document.getElementById('step3Title'),
   step4Title: document.getElementById('step4Title'),
-  debugTitle: document.getElementById('debugTitle'),
+  debugNormalTitle: document.getElementById('debugNormalTitle'),
+  debugErrorTitle: document.getElementById('debugErrorTitle'),
   footerNote: document.getElementById('footerNote'),
   logUrlALabel: document.getElementById('logUrlALabel'),
   logUrlBLabel: document.getElementById('logUrlBLabel'),
@@ -262,4 +266,12 @@ function logDebug(message, payload = null) {
   const line = payload ? `[${t}] ${message} ${JSON.stringify(payload).slice(0, 500)}` : `[${t}] ${message}`;
   el.debugLog.textContent += line + "\n";
   el.debugLog.scrollTop = el.debugLog.scrollHeight;
+}
+function logError(message, payload = null) {
+  const time = new Date().toLocaleTimeString();
+  const line = payload
+    ? `[${time}] ${message} ${JSON.stringify(payload).slice(0, 500)}`
+    : `[${time}] ${message}`;
+  el.errorLog.textContent += line + "\n";
+  el.errorLog.scrollTop = el.errorLog.scrollHeight;
 }

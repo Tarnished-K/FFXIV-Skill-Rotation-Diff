@@ -331,7 +331,7 @@ async function fetchFightDpsV2(reportCode, fightId) {
     }
     return entries;
   } catch (e) {
-    logDebug('DPS table取得失敗', { error: e.message });
+    logError('DPS table取得失敗', { error: e.message });
     return [];
   }
 }

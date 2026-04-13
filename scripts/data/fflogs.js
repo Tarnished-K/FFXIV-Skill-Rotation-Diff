@@ -158,7 +158,7 @@ async function fetchReportDataV2(reportCode) {
     return report;
   } catch (e) {
     // zone/lastPhase等がスキーマにない場合フォールバック
-    logDebug('レポート取得リトライ（拡張フィールドなし）', { error: e.message });
+    logError('レポート取得リトライ（拡張フィールドなし）', { error: e.message });
     const fallbackQuery = `
       query ReportCore($code: String!) {
         reportData {
@@ -211,7 +211,7 @@ async function loadIconMap() {
     }
   }
   state.actionById = new Map();
-  logDebug("icon map not found on all candidate paths");
+  logError("icon map not found on all candidate paths");
   return [];
 }
 function normalizeActionKey(v) {

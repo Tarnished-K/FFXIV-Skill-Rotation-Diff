@@ -1575,11 +1575,9 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
   state.fightA = fightA;
   state.fightB = fightB;
 
-  // encounterIDチェック: 異なるボスの比較を防止
+  // encounterIDチェック: 異なるボスの比較は警告のみ（ブロックしない）
   if (fightA && fightB && Number(fightA.encounterID) !== Number(fightB.encounterID)) {
-    el.step2Message.textContent = t('encounterMismatch');
-    logDebug('encounterID不一致', { a: fightA.encounterID, b: fightB.encounterID });
-    return;
+    logDebug('encounterID不一致（警告）', { a: fightA.encounterID, b: fightB.encounterID });
   }
 
   el.step2Message.textContent = t('tlLoading');

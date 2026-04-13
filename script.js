@@ -381,6 +381,8 @@ async function fetchReportDataV2(reportCode) {
     query ReportCore($code: String!) {
       reportData {
         report(code: $code) {
+          title
+          zone { id name }
           fights {
             id
             encounterID
@@ -389,6 +391,8 @@ async function fetchReportDataV2(reportCode) {
             startTime
             endTime
             friendlyPlayers
+            lastPhase
+            lastPhaseIsIntermission
           }
           masterData {
             actors {
@@ -407,12 +411,41 @@ async function fetchReportDataV2(reportCode) {
       }
     }
   `;
-  const data = await graphqlRequest(query, { code: reportCode });
-  const report = data?.reportData?.report;
-  if (!report) {
-    throw new Error('レポートデータ取得に失敗しました');
+  try {
+    const data = await graphqlRequest(query, { code: reportCode });
+    const report = data?.reportData?.report;
+    if (!report) throw new Error('レポートデータ取得に失敗しました');
+    if (report.zone) logDebug(`レポート zone: ${report.zone.name || report.zone.id}`);
+    return report;
+  } catch (e) {
+    // zone/lastPhase等がスキーマにない場合フォールバック
+    logDebug('レポート取得リトライ（拡張フィールドなし）', { error: e.message });
+    const fallbackQuery = `
+      query ReportCore($code: String!) {
+        reportData {
+          report(code: $code) {
+            fights {
+              id
+              encounterID
+              name
+              kill
+              startTime
+              endTime
+              friendlyPlayers
+            }
+            masterData {
+              actors { id name type subType petOwner }
+              abilities { gameID name }
+            }
+          }
+        }
+      }
+    `;
+    const data = await graphqlRequest(fallbackQuery, { code: reportCode });
+    const report = data?.reportData?.report;
+    if (!report) throw new Error('レポートデータ取得に失敗しました');
+    return report;
   }
-  return report;
 }
 async function loadIconMap() {
   const candidates = [
@@ -548,10 +581,18 @@ function getPlayersFromFight(reportJson, fightId) {
   const allowedIds = new Set(fight.friendlyPlayers || []);
   const base = (reportJson.masterData?.actors || [])
     .filter(a => !a.petOwner)
-    .filter(a => (a.type || '').toLowerCase() !== 'pet')
+    .filter(a => {
+      const tl = (a.type || '').toLowerCase();
+      return tl !== 'pet' && tl !== 'npc' && tl !== 'boss' && tl !== 'environment';
+    })
     .filter(a => {
       const n = String(a.name || '').toLowerCase();
       return !n.includes('limit break') && !n.includes('リミットブレイク');
+    })
+    .filter(a => {
+      // ジョブコードに変換できるactorのみ（NPC等を除外）
+      const typeUpper = (a.type || '').toUpperCase().replace(/[\s-_]/g, '');
+      return !!JOB_CODE_MAP[typeUpper];
     });
   // V2では actor.fights が取得できないため、fight.friendlyPlayers を主軸に絞る
   let filtered = base.filter(a => (allowedIds.size > 0 ? allowedIds.has(a.id) : true));
@@ -582,20 +623,27 @@ function formatPartyComp(reportJson, fightId) {
   } catch { return ''; }
 }
 function fillFightSelect(select, fights, reportJson) {
+  const zoneName = reportJson?.zone?.name || '';
   select.innerHTML = fights.map((f, i) => {
     const comp = formatPartyComp(reportJson, f.id);
     const duration = formatDurationMs((f.endTime || 0) - (f.startTime || 0));
     const status = f.kill ? t('kill') : t('wipe');
-    const name = f.name || `Fight ${f.id}`;
+    // zone名（コンテンツ名）があればそちらを優先、なければfight.name（ボス名）
+    const name = zoneName || f.name || `Fight ${f.id}`;
+    const phaseInfo = f.lastPhase > 1 ? ` P${f.lastPhase}` : '';
     const compStr = comp ? ` [${comp}]` : '';
-    return `<option value="${f.id}">#${i + 1} ${name} / ${duration} / ${status}${compStr}</option>`;
+    return `<option value="${f.id}">#${i + 1} ${name}${phaseInfo} / ${duration} / ${status}${compStr}</option>`;
   }).join('');
 }
-function fillPlayerSelect(select, players, dpsEntries) {
+function fillPlayerSelect(select, players, dpsEntries, fightDurationMs) {
   const dpsMap = new Map();
+  const fightSec = (fightDurationMs || 1) / 1000;
   for (const e of (dpsEntries || [])) {
     const id = String(e.id);
-    dpsMap.set(id, { rDps: Math.round(e.rDPS || e.total / ((e.activeTime || 1) / 1000) || 0), aDps: Math.round(e.aDPS || 0) });
+    const activeSec = (e.activeTime || 1) / 1000;
+    const rDps = Math.round(e.rDPS || e.total / activeSec || 0);
+    const aDps = Math.round(e.aDPS || e.total / fightSec || 0);
+    dpsMap.set(id, { rDps, aDps });
   }
   select.innerHTML = players.map(p => {
     const jobLabel = formatJobName(p.job);
@@ -735,25 +783,35 @@ function getActiveSynergies(t, allRecords, partyBuffRecords) {
   }
   return [...active];
 }
-async function fetchBossCastsV2(reportCode, fight, reportJson) {
-  // friendlyPlayers + ペットを除外し、敵の詠唱のみ取得
+function findEnemyActors(reportJson, fight) {
   const friendlyIds = new Set(fight.friendlyPlayers || []);
-  const petIds = new Set(
-    (reportJson?.masterData?.actors || [])
-      .filter(a => a.petOwner)
-      .map(a => a.id)
-  );
-  const excludeIds = new Set([...friendlyIds, ...petIds]);
-  logDebug('ボス詠唱取得: 除外ID数=' + excludeIds.size, { friendly: friendlyIds.size, pets: petIds.size });
+  return (reportJson?.masterData?.actors || []).filter(a => {
+    if (a.petOwner) return false;
+    if (friendlyIds.has(a.id)) return false;
+    const typeUpper = (a.type || '').toUpperCase().replace(/[\s-_]/g, '');
+    if (JOB_CODE_MAP[typeUpper]) return false;
+    const n = String(a.name || '').toLowerCase();
+    if (n.includes('limit break') || n.includes('リミットブレイク')) return false;
+    return true;
+  });
+}
+
+async function fetchBossCastsV2(reportCode, fight, reportJson) {
+  // masterData.actorsから敵NPCを特定し、sourceID指定で詠唱を取得
+  const enemyActors = findEnemyActors(reportJson, fight);
+  logDebug('ボス詠唱: 敵NPC候補', enemyActors.slice(0, 10).map(a => `${a.name}(id=${a.id},type=${a.type})`));
+  if (!enemyActors.length) {
+    logDebug('ボス詠唱: 敵NPCが見つかりません');
+    return [];
+  }
 
   const all = [];
   const pendingBegincast = new Map();
-  let startTime = null;
   const query = `
-    query BossCasts($code: String!, $fightID: Int!, $startTime: Float) {
+    query BossCasts($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
       reportData {
         report(code: $code) {
-          events(dataType: Casts, fightIDs: [$fightID], startTime: $startTime) {
+          events(dataType: Casts, fightIDs: [$fightID], sourceID: $sourceID, startTime: $startTime) {
             data
             nextPageTimestamp
           }
@@ -761,38 +819,43 @@ async function fetchBossCastsV2(reportCode, fight, reportJson) {
       }
     }
   `;
-  while (true) {
-    const vars = { code: reportCode, fightID: Number(fight.id), startTime };
-    const data = await graphqlRequest(query, vars);
-    const block = data?.reportData?.report?.events;
-    const rows = block?.data || [];
-    for (const e of rows) {
-      const sourceID = Number(e?.sourceID || 0);
-      if (excludeIds.has(sourceID)) continue;
-      const name = e?.ability?.name || '';
-      const ts = Number(e?.timestamp || 0);
-      if (!name || !ts) continue;
-      const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
-      const type = String(e?.type || '').toLowerCase();
-      const key = name;
-      if (type === 'begincast') {
-        if (!pendingBegincast.has(key)) pendingBegincast.set(key, []);
-        pendingBegincast.get(key).push({ t: tSec, name });
-        continue;
-      }
-      if (type === 'cast' && pendingBegincast.has(key) && pendingBegincast.get(key).length) {
-        const start = pendingBegincast.get(key).shift();
-        const castDuration = tSec - start.t;
-        if (castDuration > 0.5) {
-          all.push({ t: start.t, endT: tSec, name, duration: castDuration });
+
+  for (const enemy of enemyActors) {
+    let startTime = null;
+    let enemyCastCount = 0;
+    while (true) {
+      const vars = { code: reportCode, fightID: Number(fight.id), sourceID: Number(enemy.id), startTime };
+      const data = await graphqlRequest(query, vars);
+      const block = data?.reportData?.report?.events;
+      const rows = block?.data || [];
+      for (const e of rows) {
+        const name = e?.ability?.name || '';
+        const ts = Number(e?.timestamp || 0);
+        if (!name || !ts) continue;
+        const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+        const type = String(e?.type || '').toLowerCase();
+        const key = `${enemy.id}_${name}`;
+        if (type === 'begincast') {
+          if (!pendingBegincast.has(key)) pendingBegincast.set(key, []);
+          pendingBegincast.get(key).push({ t: tSec, name });
+          enemyCastCount++;
+          continue;
         }
-        continue;
+        if (type === 'cast' && pendingBegincast.has(key) && pendingBegincast.get(key).length) {
+          const start = pendingBegincast.get(key).shift();
+          const castDuration = tSec - start.t;
+          if (castDuration > 0.5) {
+            all.push({ t: start.t, endT: tSec, name, duration: castDuration });
+          }
+          continue;
+        }
       }
+      if (!block?.nextPageTimestamp) break;
+      startTime = block.nextPageTimestamp;
     }
-    if (!block?.nextPageTimestamp) break;
-    startTime = block.nextPageTimestamp;
+    if (enemyCastCount > 0) logDebug(`  ${enemy.name}: rawイベント${enemyCastCount}件`);
   }
-  logDebug('ボス詠唱結果: ' + all.length + '件');
+  logDebug(`ボス詠唱結果: ${all.length}件（詠唱バー付き）`);
   return all.sort((a, b) => a.t - b.t);
 }
 async function fetchPlayerAurasV2(reportCode, fight, targetId) {
@@ -816,11 +879,22 @@ async function fetchPlayerAurasV2(reportCode, fight, targetId) {
     'damage down', 'weakness', 'brink of death',
     '与ダメージ低下', '衰弱',
   ];
+  let rawTotal = 0;
+  let pageCount = 0;
   while (true) {
     const vars = { code: reportCode, fightID: Number(fight.id), targetID: Number(targetId), startTime };
     const data = await graphqlRequest(query, vars);
     const block = data?.reportData?.report?.events;
     const rows = block?.data || [];
+    rawTotal += rows.length;
+    pageCount++;
+    // 最初のページの詳細デバッグ
+    if (pageCount === 1) {
+      logDebug(`オーラ raw(target=${targetId}): page1=${rows.length}件`, rows.length > 0 ? {
+        types: [...new Set(rows.slice(0, 50).map(e => e.type))],
+        sample: rows.slice(0, 3).map(e => ({ type: e.type, name: e.ability?.name, id: e.abilityGameID, dur: e.duration }))
+      } : 'empty');
+    }
     for (const e of rows) {
       const type = String(e?.type || '').toLowerCase();
       if (type !== 'applybuff' && type !== 'applydebuff') continue;
@@ -856,7 +930,7 @@ async function fetchPlayerAurasV2(reportCode, fight, targetId) {
     if (!block?.nextPageTimestamp) break;
     startTime = block.nextPageTimestamp;
   }
-  logDebug(`オーラ取得(target=${targetId}): デバフ=${debuffs.length}件 PTバフ=${partyBuffs.length}件`);
+  logDebug(`オーラ取得(target=${targetId}): raw=${rawTotal}件 pages=${pageCount} デバフ=${debuffs.length}件 PTバフ=${partyBuffs.length}件`);
   return { debuffs, partyBuffs };
 }
 async function fetchFightDpsV2(reportCode, fightId) {
@@ -871,8 +945,16 @@ async function fetchFightDpsV2(reportCode, fightId) {
   `;
   try {
     const data = await graphqlRequest(query, { code: reportCode, fightID: [Number(fightId)] });
-    return data?.reportData?.report?.table?.data?.entries || [];
-  } catch { return []; }
+    const entries = data?.reportData?.report?.table?.data?.entries || [];
+    if (entries.length) {
+      const sample = entries[0];
+      logDebug('DPS table sample', { keys: Object.keys(sample), name: sample.name, total: sample.total, activeTime: sample.activeTime, rDPS: sample.rDPS, aDPS: sample.aDPS });
+    }
+    return entries;
+  } catch (e) {
+    logDebug('DPS table取得失敗', { error: e.message });
+    return [];
+  }
 }
 function formatJobName(jobCode) {
   if (state.lang === 'ja') return JOB_NAME_JA[jobCode] || jobCode;
@@ -904,13 +986,32 @@ function computeRollingDps(damageEvents, maxT, windowSec = 15) {
   return points;
 }
 
-function detectPhases(bossCasts, fightDurationSec) {
-  if (!bossCasts || bossCasts.length < 2) return [];
-  const minGap = 8; // 8秒以上の空白でフェーズ区切り
+function detectPhases(bossCasts, fightDurationSec, lastPhase) {
+  // lastPhaseが2以上ならフェーズ有りが確定
+  const hasMultiPhase = lastPhase && lastPhase > 1;
+
+  if (!bossCasts || bossCasts.length < 2) {
+    if (!hasMultiPhase) return [];
+    // ボス詠唱がなくてもlastPhaseから均等分割で仮フェーズ生成
+    const phases = [];
+    for (let i = 1; i <= lastPhase; i++) {
+      phases.push({
+        id: i,
+        startT: (i - 1) * fightDurationSec / lastPhase,
+        endT: i * fightDurationSec / lastPhase,
+        label: `P${i}`,
+      });
+    }
+    logDebug(`フェーズ: lastPhase=${lastPhase}から均等分割`, phases.map(p => p.label));
+    return phases;
+  }
+
+  // ボス詠唱ギャップから検出（3秒以上で区切り）
+  const minGap = 3;
   const phases = [{ id: 1, startT: 0, label: 'P1' }];
   let lastEndT = 0;
   for (const c of bossCasts) {
-    if (c.t - lastEndT > minGap && lastEndT > 5) {
+    if (c.t - lastEndT > minGap && lastEndT > 3) {
       phases.push({ id: phases.length + 1, startT: c.t, label: `P${phases.length + 1}` });
     }
     lastEndT = Math.max(lastEndT, c.endT || c.t);
@@ -918,6 +1019,12 @@ function detectPhases(bossCasts, fightDurationSec) {
   for (let i = 0; i < phases.length; i++) {
     phases[i].endT = i < phases.length - 1 ? phases[i + 1].startT : fightDurationSec;
   }
+
+  // lastPhaseがあってフェーズ数が合わない場合、lastPhaseを信頼
+  if (hasMultiPhase && phases.length < lastPhase) {
+    logDebug(`フェーズ: ギャップ検出=${phases.length}個 < lastPhase=${lastPhase} → ギャップ検出結果を使用`);
+  }
+
   return phases.length > 1 ? phases : [];
 }
 
@@ -1148,6 +1255,16 @@ function renderTimeline() {
     }).join('');
   };
 
+  const buildPhaseLines = () => {
+    if (!state.phases || state.phases.length < 2) return '';
+    return state.phases.slice(1).map(phase => {
+      const x = 60 + phase.startT * pxPerSec;
+      return `<div class="phase-divider" style="left:${x}px; top:${rulerTop}px; height:${totalHeight - rulerTop}px">
+        <span class="phase-divider-label">${phase.label}</span>
+      </div>`;
+    }).join('');
+  };
+
   const buildEvents = (records, owner, partyBuffs) => {
     const lanesLastX = { gcd: -999, ogcd: -999 };
     const minGap = 24;
@@ -1168,7 +1285,7 @@ function renderTimeline() {
       }
       const synergies = getActiveSynergies(r.t, records, partyBuffs);
       if (synergies.length) {
-        tooltip += `\n${state.lang === 'ja' ? 'シナジー' : 'Buffs'}: ${synergies.join(', ')}`;
+        tooltip += `\n${state.lang === 'ja' ? 'バフ' : 'Buffs'}: ${synergies.join(', ')}`;
       }
       return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${tooltip}">${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');
@@ -1197,6 +1314,7 @@ function renderTimeline() {
       ${buildDebuffTrack(state.debuffsB, debuffBTop)}
       ${buildEvents(a, 'a', state.partyBuffsA)}
       ${buildEvents(b, 'b', state.partyBuffsB)}
+      ${buildPhaseLines()}
     </div>
   `;
   el.timelineWrap.querySelectorAll('img.event-icon').forEach(img => {
@@ -1318,8 +1436,12 @@ bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
     ]);
     state.dpsDataA = dpsA;
     state.dpsDataB = dpsB;
-    fillPlayerSelect(el.playerA, state.playersA, dpsA);
-    fillPlayerSelect(el.playerB, state.playersB, dpsB);
+    const fightAObj = (state.reportA?.fights || []).find(f => Number(f.id) === state.selectedFightA);
+    const fightBObj = (state.reportB?.fights || []).find(f => Number(f.id) === state.selectedFightB);
+    const durA = fightAObj ? (fightAObj.endTime - fightAObj.startTime) : 1;
+    const durB = fightBObj ? (fightBObj.endTime - fightBObj.startTime) : 1;
+    fillPlayerSelect(el.playerA, state.playersA, dpsA, durA);
+    fillPlayerSelect(el.playerB, state.playersB, dpsB, durB);
     el.step3.classList.remove('hidden');
     el.step4.classList.add('hidden');
     el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
@@ -1377,7 +1499,7 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
 
     // フェーズ検出（ボス詠唱ギャップから）
     const fightDuration = ((fightA.endTime || 0) - (fightA.startTime || 0)) / 1000;
-    state.phases = detectPhases(bossA, fightDuration);
+    state.phases = detectPhases(bossA, fightDuration, fightA.lastPhase);
     state.currentPhase = null;
     if (state.phases.length) {
       logDebug(`フェーズ検出: ${state.phases.length}フェーズ`, state.phases.map(p => `${p.label}: ${p.startT.toFixed(0)}s-${p.endT.toFixed(0)}s`));
@@ -1475,8 +1597,14 @@ function applyLang() {
     const fightsB = extractSelectableFights(state.reportB);
     if (fightsB.length) fillFightSelect(el.fightB, fightsB, state.reportB);
   }
-  if (state.playersA.length) fillPlayerSelect(el.playerA, state.playersA, state.dpsDataA);
-  if (state.playersB.length) fillPlayerSelect(el.playerB, state.playersB, state.dpsDataB);
+  if (state.playersA.length) {
+    const fA = state.fightA || (state.reportA?.fights || []).find(f => Number(f.id) === state.selectedFightA);
+    fillPlayerSelect(el.playerA, state.playersA, state.dpsDataA, fA ? (fA.endTime - fA.startTime) : 1);
+  }
+  if (state.playersB.length) {
+    const fB = state.fightB || (state.reportB?.fights || []).find(f => Number(f.id) === state.selectedFightB);
+    fillPlayerSelect(el.playerB, state.playersB, state.dpsDataB, fB ? (fB.endTime - fB.startTime) : 1);
+  }
   if (!el.timelineWrap.classList.contains('hidden') && state.timelineA.length) renderTimeline();
 }
 bindClick(el.langToggle, 'langToggle', () => {

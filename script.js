@@ -1,8 +1,8 @@
-const SCRIPT_PARTS = [
-  './scripts/core.js',
-  './scripts/fflogs-data.js',
-  './scripts/timeline.js',
-  './scripts/app-init.js',
+const SCRIPT_LOAD_ORDER = [
+  './scripts/app/runtime.js',
+  './scripts/data/fflogs.js',
+  './scripts/ui/timeline.js',
+  './scripts/app/bootstrap.js',
 ];
 
 function loadScript(path) {
@@ -17,7 +17,7 @@ function loadScript(path) {
 }
 
 (async () => {
-  for (const path of SCRIPT_PARTS) {
+  for (const path of SCRIPT_LOAD_ORDER) {
     await loadScript(path);
   }
 })().catch((error) => {

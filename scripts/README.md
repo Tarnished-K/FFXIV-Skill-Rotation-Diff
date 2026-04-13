@@ -1,12 +1,23 @@
 # Script Layout
 
-- `core.js`
-  Holds shared constants, app state, DOM element lookups, and debug helpers.
-- `fflogs-data.js`
-  Holds FFLogs auth/API access, icon lookup, and report or player data helpers.
-- `timeline.js`
-  Holds timeline shaping, damage correlation, phase detection, and rendering.
-- `app-init.js`
-  Holds UI event wiring, language application, and bootstrap logic.
+## Directories
 
-`../script.js` is now only a lightweight loader that preserves script order.
+- `app/`
+  Holds app runtime state and startup wiring.
+- `data/`
+  Holds FFLogs auth and data-fetch helpers.
+- `ui/`
+  Holds timeline shaping and rendering.
+
+## Load Order
+
+- `app/runtime.js`
+  Shared constants, app state, DOM lookups, and debug helpers.
+- `data/fflogs.js`
+  FFLogs auth, API access, icon lookup, and report or player data helpers.
+- `ui/timeline.js`
+  Timeline shaping, damage correlation, phase detection, and rendering.
+- `app/bootstrap.js`
+  UI event wiring, language application, and bootstrap logic.
+
+`../script.js` remains a lightweight loader and preserves this order.

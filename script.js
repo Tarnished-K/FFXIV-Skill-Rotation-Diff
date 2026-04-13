@@ -591,8 +591,8 @@ function getPlayersFromFight(reportJson, fightId) {
     })
     .filter(a => {
       // ジョブコードに変換できるactorのみ（NPC等を除外）
-      const typeUpper = (a.type || '').toUpperCase().replace(/[\s-_]/g, '');
-      return !!JOB_CODE_MAP[typeUpper];
+      const job = normalizeJobCode(a.type, a.subType);
+      return job !== 'UNK' && !!JOB_ROLE[job];
     });
   // V2では actor.fights が取得できないため、fight.friendlyPlayers を主軸に絞る
   let filtered = base.filter(a => (allowedIds.size > 0 ? allowedIds.has(a.id) : true));
@@ -622,6 +622,27 @@ function formatPartyComp(reportJson, fightId) {
     return sorted.map(p => p.job).join(',');
   } catch { return ''; }
 }
+function detectSavageFloor(zoneName, fightName) {
+  // 零式/Savageコンテンツの何層目かを検出する
+  const zn = (zoneName || '').toLowerCase();
+  const fn = (fightName || '').toLowerCase();
+  const isSavage = zn.includes('savage') || zn.includes('零式');
+  if (!isSavage) return '';
+  // zone名からフロア番号を抽出 (例: "M1 (Savage)", "P3S", "E8S" 等)
+  // パターン: [A-Z]\d+S? or [A-Z]\d+ (Savage)
+  const zoneFloorMatch = zoneName.match(/[MEPOmepoa](\d+)/i);
+  if (zoneFloorMatch) {
+    const floor = zoneFloorMatch[1];
+    return state.lang === 'ja' ? `${floor}層` : `F${floor}`;
+  }
+  // fight名からフロア番号を推定 (例: "1層", "Floor 1")
+  const jaFloorMatch = fightName.match(/(\d+)層/);
+  if (jaFloorMatch) return state.lang === 'ja' ? `${jaFloorMatch[1]}層` : `F${jaFloorMatch[1]}`;
+  const enFloorMatch = fightName.match(/floor\s*(\d+)/i);
+  if (enFloorMatch) return state.lang === 'ja' ? `${enFloorMatch[1]}層` : `F${enFloorMatch[1]}`;
+  // ゾーン名に "Savage" があるが層番号が取れない場合は零式とだけ表示
+  return state.lang === 'ja' ? '零式' : 'Savage';
+}
 function fillFightSelect(select, fights, reportJson) {
   const zoneName = reportJson?.zone?.name || '';
   select.innerHTML = fights.map((f, i) => {
@@ -629,7 +650,9 @@ function fillFightSelect(select, fights, reportJson) {
     const duration = formatDurationMs((f.endTime || 0) - (f.startTime || 0));
     const status = f.kill ? t('kill') : t('wipe');
     // zone名（コンテンツ名）があればそちらを優先、なければfight.name（ボス名）
-    const name = zoneName || f.name || `Fight ${f.id}`;
+    const baseName = zoneName || f.name || `Fight ${f.id}`;
+    const floorTag = detectSavageFloor(zoneName, f.name);
+    const name = floorTag ? `${baseName} (${floorTag})` : baseName;
     const phaseInfo = f.lastPhase > 1 ? ` P${f.lastPhase}` : '';
     const compStr = comp ? ` [${comp}]` : '';
     return `<option value="${f.id}">#${i + 1} ${name}${phaseInfo} / ${duration} / ${status}${compStr}</option>`;
@@ -788,8 +811,9 @@ function findEnemyActors(reportJson, fight) {
   return (reportJson?.masterData?.actors || []).filter(a => {
     if (a.petOwner) return false;
     if (friendlyIds.has(a.id)) return false;
-    const typeUpper = (a.type || '').toUpperCase().replace(/[\s-_]/g, '');
-    if (JOB_CODE_MAP[typeUpper]) return false;
+    // normalizeJobCodeでプレイヤージョブとして認識できるactorを除外
+    const job = normalizeJobCode(a.type, a.subType);
+    if (job !== 'UNK' && JOB_ROLE[job]) return false;
     const n = String(a.name || '').toLowerCase();
     if (n.includes('limit break') || n.includes('リミットブレイク')) return false;
     return true;

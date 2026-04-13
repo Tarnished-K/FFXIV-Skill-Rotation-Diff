@@ -664,8 +664,8 @@ function fillPlayerSelect(select, players, dpsEntries, fightDurationMs) {
   for (const e of (dpsEntries || [])) {
     const id = String(e.id);
     const activeSec = (e.activeTime || 1) / 1000;
-    const rDps = Math.round(e.rDPS || e.total / activeSec || 0);
-    const aDps = Math.round(e.aDPS || e.total / fightSec || 0);
+    const rDps = Math.round(e.rDPS || e.totalRDPS || e.total / activeSec || 0);
+    const aDps = Math.round(e.aDPS || e.totalADPS || e.total / fightSec || 0);
     dpsMap.set(id, { rDps, aDps });
   }
   select.innerHTML = players.map(p => {
@@ -811,11 +811,16 @@ function findEnemyActors(reportJson, fight) {
   return (reportJson?.masterData?.actors || []).filter(a => {
     if (a.petOwner) return false;
     if (friendlyIds.has(a.id)) return false;
+    // type=Playerは明示的に除外（他の戦闘のプレイヤーがmasterDataに含まれる場合）
+    const typeLower = (a.type || '').toLowerCase();
+    if (typeLower === 'player') return false;
     // normalizeJobCodeでプレイヤージョブとして認識できるactorを除外
     const job = normalizeJobCode(a.type, a.subType);
     if (job !== 'UNK' && JOB_ROLE[job]) return false;
     const n = String(a.name || '').toLowerCase();
     if (n.includes('limit break') || n.includes('リミットブレイク')) return false;
+    // Environmentも除外
+    if (typeLower === 'environment') return false;
     return true;
   });
 }
@@ -844,7 +849,12 @@ async function fetchBossCastsV2(reportCode, fight, reportJson) {
     }
   `;
 
-  for (const enemy of enemyActors) {
+  // 安全策: 負のIDを除外し、クエリ数を制限
+  const validEnemies = enemyActors.filter(a => Number(a.id) > 0).slice(0, 5);
+  if (validEnemies.length !== enemyActors.length) {
+    logDebug(`ボス詠唱: ${enemyActors.length}候補中 ${validEnemies.length}体をクエリ（id>0, 上限5）`);
+  }
+  for (const enemy of validEnemies) {
     let startTime = null;
     let enemyCastCount = 0;
     while (true) {
@@ -882,6 +892,47 @@ async function fetchBossCastsV2(reportCode, fight, reportJson) {
   logDebug(`ボス詠唱結果: ${all.length}件（詠唱バー付き）`);
   return all.sort((a, b) => a.t - b.t);
 }
+// FFLogs V2のステータスエフェクトID → バフ/デバフ名マッピング
+// Buffs APIの abilityGameID はステータスエフェクトID (1000000+) であり、アクションIDとは異なる
+const STATUS_DEBUFF_IDS = new Set([
+  1000862, 1002911, // Damage Down (与ダメージ低下) - 各種
+  1000043, 1002727, // Weakness (衰弱)
+  1000044, 1002728, // Brink of Death (衰弱[強])
+]);
+const STATUS_DEBUFF_MAP = {
+  1000862: 'damageDown', 1002911: 'damageDown',
+  1000043: 'weakness',   1002727: 'weakness',
+  1000044: 'brink',      1002728: 'brink',
+};
+const STATUS_BURST_BUFFS = {
+  // ステータスエフェクトID → BURST_BUFFS内のnameEnへのマッピング
+  1000786: 'Battle Litany',
+  1001185: 'Brotherhood',
+  1001882: 'Divination',
+  1001221: 'Chain Stratagem',
+  1001239: 'Embolden',
+  1002599: 'Arcane Circle',
+  1001822: 'Technical Finish', 1002698: 'Technical Finish',
+  1002703: 'Searing Light',
+  1002722: 'Radiant Finale', 1002964: 'Radiant Finale',
+  1003685: 'Starry Muse',
+  1004030: 'Dokumori',
+};
+const STATUS_SELF_BUFFS = {
+  1000076: 'Fight or Flight',
+  1001177: 'Inner Release', 1001303: 'Inner Release',
+  1000742: 'Blood Weapon',
+  1001624: 'Delirium', 1003836: 'Delirium',
+  1000831: 'No Mercy',
+  1001181: 'Riddle of Fire',
+  1002720: 'Lance Charge',
+  1000125: 'Raging Strikes',
+  1000861: 'Wildfire',
+  1001825: 'Devilment',
+  1000737: 'Ley Lines',
+  1001971: 'Manafication',
+  1001233: 'Meikyo Shisui',
+};
 async function fetchPlayerAurasV2(reportCode, fight, targetId) {
   // プレイヤーに適用された全オーラ（バフ+デバフ）を取得し、デバフとPTバフに分離
   const debuffs = [];
@@ -905,6 +956,7 @@ async function fetchPlayerAurasV2(reportCode, fight, targetId) {
   ];
   let rawTotal = 0;
   let pageCount = 0;
+  let debugMatchCount = { debuff: 0, burst: 0, self: 0 };
   while (true) {
     const vars = { code: reportCode, fightID: Number(fight.id), targetID: Number(targetId), startTime };
     const data = await graphqlRequest(query, vars);
@@ -916,45 +968,85 @@ async function fetchPlayerAurasV2(reportCode, fight, targetId) {
     if (pageCount === 1) {
       logDebug(`オーラ raw(target=${targetId}): page1=${rows.length}件`, rows.length > 0 ? {
         types: [...new Set(rows.slice(0, 50).map(e => e.type))],
-        sample: rows.slice(0, 3).map(e => ({ type: e.type, name: e.ability?.name, id: e.abilityGameID, dur: e.duration }))
+        sample: rows.slice(0, 5).map(e => ({
+          type: e.type,
+          name: e.ability?.name || state.abilityById.get(Number(e.abilityGameID)) || '(unknown)',
+          id: e.abilityGameID,
+          dur: e.duration,
+          src: e.sourceID,
+        }))
       } : 'empty');
     }
     for (const e of rows) {
       const type = String(e?.type || '').toLowerCase();
       if (type !== 'applybuff' && type !== 'applydebuff') continue;
-      const abilityName = String(e?.ability?.name || '');
+      const statusId = Number(e?.abilityGameID || e?.ability?.guid || 0);
+      // ability名はAPIから取れない場合があるので、abilityByIdからも解決
+      const abilityName = String(e?.ability?.name || state.abilityById.get(statusId) || '');
       const nameLower = abilityName.toLowerCase();
-      const abilityId = Number(e?.abilityGameID || e?.ability?.guid || 0);
       const ts = Number(e?.timestamp || 0);
       const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
       const dur = Number(e?.duration || 0) / 1000;
 
-      // デバフ判定（衰弱・与ダメージ低下）
-      if (debuffNames.some(d => nameLower.includes(d))) {
+      // デバフ判定: ステータスIDで判定（最優先）
+      if (STATUS_DEBUFF_IDS.has(statusId)) {
+        const kind = STATUS_DEBUFF_MAP[statusId] || 'damageDown';
+        debuffs.push({ t: tSec, duration: dur > 0 ? dur : 10, kind, name: abilityName || DEBUFF_IDS[kind]?.nameJa || 'Debuff' });
+        debugMatchCount.debuff++;
+        continue;
+      }
+      // デバフ判定: 名前フォールバック
+      if (abilityName && debuffNames.some(d => nameLower.includes(d))) {
         let kind = 'damageDown';
         if (nameLower.includes('weakness') || nameLower.includes('衰弱')) {
           kind = (nameLower.includes('brink') || nameLower.includes('強')) ? 'brink' : 'weakness';
         }
         debuffs.push({ t: tSec, duration: dur > 0 ? dur : 10, kind, name: abilityName });
+        debugMatchCount.debuff++;
         continue;
       }
 
-      // レイドバフ判定（パーティメンバーからのシナジー）
-      const buff = findBurstBuff(abilityId, abilityName);
+      // レイドバフ判定: ステータスIDで判定（最優先）
+      const burstName = STATUS_BURST_BUFFS[statusId];
+      if (burstName) {
+        const buff = BURST_BUFFS.find(b => b.nameEn === burstName);
+        if (buff) {
+          partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName || burstName, duration: buff.duration });
+          debugMatchCount.burst++;
+          continue;
+        }
+      }
+      // レイドバフ判定: 名前フォールバック
+      const buff = findBurstBuff(statusId, abilityName);
       if (buff) {
-        partyBuffs.push({ t: tSec, actionId: abilityId, action: abilityName, duration: buff.duration });
+        partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName || buff.nameEn, duration: buff.duration });
+        debugMatchCount.burst++;
         continue;
       }
-      // 自己バフ判定
-      const selfBuff = findSelfBuff(abilityName);
-      if (selfBuff) {
-        partyBuffs.push({ t: tSec, actionId: abilityId, action: abilityName, duration: selfBuff.duration });
+
+      // 自己バフ判定: ステータスIDで判定
+      const selfName = STATUS_SELF_BUFFS[statusId];
+      if (selfName) {
+        const selfBuff = SELF_BUFFS.find(b => b.nameEn === selfName);
+        if (selfBuff) {
+          partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName || selfName, duration: selfBuff.duration });
+          debugMatchCount.self++;
+          continue;
+        }
+      }
+      // 自己バフ判定: 名前フォールバック
+      if (abilityName) {
+        const selfBuff = findSelfBuff(abilityName);
+        if (selfBuff) {
+          partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName, duration: selfBuff.duration });
+          debugMatchCount.self++;
+        }
       }
     }
     if (!block?.nextPageTimestamp) break;
     startTime = block.nextPageTimestamp;
   }
-  logDebug(`オーラ取得(target=${targetId}): raw=${rawTotal}件 pages=${pageCount} デバフ=${debuffs.length}件 PTバフ=${partyBuffs.length}件`);
+  logDebug(`オーラ取得(target=${targetId}): raw=${rawTotal}件 pages=${pageCount} デバフ=${debuffs.length}件 PTバフ=${partyBuffs.length}件`, debugMatchCount);
   return { debuffs, partyBuffs };
 }
 async function fetchFightDpsV2(reportCode, fightId) {
@@ -1562,7 +1654,12 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
   el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
   renderPhaseButtons();
   el.timelineWrap.classList.remove('hidden');
-  renderTimeline();
+  try {
+    renderTimeline();
+  } catch (renderErr) {
+    logDebug('renderTimeline エラー', { error: renderErr.message, stack: renderErr.stack?.split('\n').slice(0, 3).join(' | ') });
+    el.timelineWrap.innerHTML = `<p class="message">タイムライン描画エラー: ${renderErr.message}</p>`;
+  }
 });
 bindClick(el.zoomInBtn, 'zoomInBtn', () => {
   state.zoom = Math.min(3, +(state.zoom + 0.25).toFixed(2));

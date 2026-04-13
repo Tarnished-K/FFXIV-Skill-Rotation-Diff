@@ -204,6 +204,8 @@ const state = {
   partyBuffsB: [],
   rollingDpsA: [],
   rollingDpsB: [],
+  phasesA: [],
+  phasesB: [],
   phases: [],
   currentPhase: null,
   dpsDataA: null,

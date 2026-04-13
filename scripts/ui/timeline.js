@@ -89,21 +89,25 @@ function findEnemyActors(reportJson, fight) {
 }
 
 async function fetchBossCastsV2(reportCode, fight, reportJson) {
-  // masterData.actorsから敵NPCを特定し、sourceID指定で詠唱を取得
-  const enemyActors = findEnemyActors(reportJson, fight);
-  logDebug('ボス詠唱: 敵NPC候補', enemyActors.slice(0, 10).map(a => `${a.name}(id=${a.id},type=${a.type})`));
-  if (!enemyActors.length) {
+  const candidates = findEnemyActors(reportJson, fight);
+  const trackedEnemies = new Map(
+    candidates
+      .filter(actor => Number(actor.id) > 0 && String(actor.name || '').toLowerCase() !== 'environment')
+      .map(actor => [Number(actor.id), actor])
+  );
+  logDebug('ボス詠唱: 敵NPC候補', candidates.slice(0, 10).map(actor => `${actor.name}(id=${actor.id},type=${actor.type})`));
+  if (!trackedEnemies.size) {
     logDebug('ボス詠唱: 敵NPCが見つかりません');
     return [];
   }
 
-  const all = [];
-  const pendingBegincast = new Map();
-  const query = `
-    query BossCasts($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
+  const bossCastResults = [];
+  const pendingBossBegincasts = new Map();
+  const bossQuery = `
+    query BossCasts($code: String!, $fightID: Int!, $startTime: Float) {
       reportData {
         report(code: $code) {
-          events(dataType: Casts, fightIDs: [$fightID], sourceID: $sourceID, startTime: $startTime) {
+          events(dataType: Casts, fightIDs: [$fightID], startTime: $startTime) {
             data
             nextPageTimestamp
           }
@@ -111,50 +115,214 @@ async function fetchBossCastsV2(reportCode, fight, reportJson) {
       }
     }
   `;
-
-  // 安全策: 負のIDを除外し、クエリ数を制限
-  const validEnemies = enemyActors.filter(a => Number(a.id) > 0).slice(0, 5);
-  if (validEnemies.length !== enemyActors.length) {
-    logDebug(`ボス詠唱: ${enemyActors.length}候補中 ${validEnemies.length}体をクエリ（id>0, 上限5）`);
-  }
-  for (const enemy of validEnemies) {
-    let startTime = null;
-    let enemyCastCount = 0;
-    while (true) {
-      const vars = { code: reportCode, fightID: Number(fight.id), sourceID: Number(enemy.id), startTime };
-      const data = await graphqlRequest(query, vars);
-      const block = data?.reportData?.report?.events;
-      const rows = block?.data || [];
-      for (const e of rows) {
-        const name = e?.ability?.name || '';
-        const ts = Number(e?.timestamp || 0);
-        if (!name || !ts) continue;
-        const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
-        const type = String(e?.type || '').toLowerCase();
-        const key = `${enemy.id}_${name}`;
-        if (type === 'begincast') {
-          if (!pendingBegincast.has(key)) pendingBegincast.set(key, []);
-          pendingBegincast.get(key).push({ t: tSec, name });
-          enemyCastCount++;
-          continue;
-        }
-        if (type === 'cast' && pendingBegincast.has(key) && pendingBegincast.get(key).length) {
-          const start = pendingBegincast.get(key).shift();
-          const castDuration = tSec - start.t;
-          if (castDuration > 0.5) {
-            all.push({ t: start.t, endT: tSec, name, duration: castDuration });
-          }
-          continue;
-        }
-      }
-      if (!block?.nextPageTimestamp) break;
-      startTime = block.nextPageTimestamp;
+  logDebug(`ボス詠唱: ${candidates.length}候補中 ${trackedEnemies.size}体を監視`);
+  let cursor = null;
+  const castCountByEnemy = new Map();
+  let loggedSample = false;
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), startTime: cursor };
+    const data = await graphqlRequest(bossQuery, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    if (!loggedSample) {
+      loggedSample = true;
+      logDebug(`ボス詠唱 raw: page1=${rows.length}件`, rows.slice(0, 5).map(event => ({
+        type: event?.type,
+        name: event?.ability?.name || state.abilityById.get(Number(event?.abilityGameID || 0)) || '(unknown)',
+        sourceID: event?.sourceID,
+        castTime: event?.castTime,
+        duration: event?.duration,
+      })));
     }
-    if (enemyCastCount > 0) logDebug(`  ${enemy.name}: rawイベント${enemyCastCount}件`);
+    for (const event of rows) {
+      const sourceId = Number(event?.sourceID || 0);
+      if (!trackedEnemies.has(sourceId)) continue;
+      const actionId = Number(event?.abilityGameID || event?.ability?.guid || 0);
+      const actionName = event?.ability?.name || state.abilityById.get(actionId) || '';
+      const sourceName = trackedEnemies.get(sourceId)?.name || String(event?.source?.name || '');
+      const timestamp = Number(event?.timestamp || 0);
+      if (!actionName || !timestamp) continue;
+      const tSec = Math.max(0, (timestamp - Number(fight.startTime || 0)) / 1000);
+      const type = String(event?.type || '').toLowerCase();
+      const durationSec = Math.max(
+        0,
+        Number.isFinite(Number(event?.castTime)) ? Number(event.castTime) / 1000 : 0,
+        Number.isFinite(Number(event?.duration)) ? Number(event.duration) / 1000 : 0
+      );
+      const key = `${sourceId}_${actionId || actionName}`;
+      if (type === 'begincast') {
+        if (!pendingBossBegincasts.has(key)) pendingBossBegincasts.set(key, []);
+        pendingBossBegincasts.get(key).push({ t: tSec, name: actionName, sourceId, sourceName, duration: durationSec });
+        continue;
+      }
+      if (type !== 'cast') continue;
+      let start = null;
+      let castDuration = durationSec;
+      if (pendingBossBegincasts.has(key) && pendingBossBegincasts.get(key).length) {
+        start = pendingBossBegincasts.get(key).shift();
+        castDuration = castDuration > 0 ? castDuration : Math.max(0, tSec - start.t);
+      } else if (castDuration > 0) {
+        start = { t: Math.max(0, tSec - castDuration), name: actionName, sourceId, sourceName };
+      }
+      if (!start || castDuration <= 0.5) continue;
+      bossCastResults.push({
+        t: start.t,
+        endT: start.t + castDuration,
+        name: actionName,
+        duration: castDuration,
+        sourceId,
+        sourceName: sourceName || start.sourceName || actionName,
+      });
+      castCountByEnemy.set(sourceId, (castCountByEnemy.get(sourceId) || 0) + 1);
+    }
+    if (!block?.nextPageTimestamp) break;
+    cursor = block.nextPageTimestamp;
   }
-  logDebug(`ボス詠唱結果: ${all.length}件（詠唱バー付き）`);
-  return all.sort((a, b) => a.t - b.t);
+  for (const entries of pendingBossBegincasts.values()) {
+    for (const start of entries) {
+      if ((start.duration || 0) <= 0.5) continue;
+      bossCastResults.push({
+        t: start.t,
+        endT: start.t + start.duration,
+        name: start.name,
+        duration: start.duration,
+        sourceId: start.sourceId,
+        sourceName: start.sourceName || start.name,
+      });
+      castCountByEnemy.set(start.sourceId, (castCountByEnemy.get(start.sourceId) || 0) + 1);
+    }
+  }
+  for (const [sourceId, count] of castCountByEnemy.entries()) {
+    const enemy = trackedEnemies.get(sourceId);
+    if (enemy && count > 0) logDebug(`  ${enemy.name}: 詠唱バー${count}件`);
+  }
+  const deduped = bossCastResults
+    .sort((a, b) => a.t - b.t)
+    .filter((cast, index, arr) => {
+      if (index === 0) return true;
+      const prev = arr[index - 1];
+      return !(prev.sourceId === cast.sourceId && prev.name === cast.name && Math.abs(prev.t - cast.t) < 0.2);
+    });
+  logDebug(`ボス詠唱結果: ${deduped.length}件（詠唱バー付き）`);
+  return deduped;
 }
+
+function buildPhaseStarts(boundaryTimes, fightDurationSec, desiredPhaseCount = 0) {
+  const starts = [0];
+  for (const t of [...boundaryTimes].sort((a, b) => a - b)) {
+    if (t <= 0 || t >= fightDurationSec) continue;
+    if (t - starts[starts.length - 1] < 3) continue;
+    starts.push(t);
+  }
+  while (desiredPhaseCount > 0 && starts.length < desiredPhaseCount) {
+    let widestIndex = -1;
+    let widestSpan = 0;
+    for (let i = 0; i < starts.length; i++) {
+      const segStart = starts[i];
+      const segEnd = i < starts.length - 1 ? starts[i + 1] : fightDurationSec;
+      const span = segEnd - segStart;
+      if (span > widestSpan) {
+        widestSpan = span;
+        widestIndex = i;
+      }
+    }
+    if (widestIndex === -1 || widestSpan < 6) break;
+    const segStart = starts[widestIndex];
+    const segEnd = widestIndex < starts.length - 1 ? starts[widestIndex + 1] : fightDurationSec;
+    const midpoint = segStart + widestSpan / 2;
+    starts.splice(widestIndex + 1, 0, midpoint);
+  }
+  return starts.map((startT, index) => ({
+    id: index + 1,
+    startT,
+    endT: index < starts.length - 1 ? starts[index + 1] : fightDurationSec,
+    label: `P${index + 1}`,
+  }));
+}
+
+function normalizePhaseTransitionStartTime(rawStartTime, fight) {
+  const raw = Number(rawStartTime || 0);
+  if (!raw) return 0;
+  const fightStart = Number(fight?.startTime || 0);
+  const fightEnd = Number(fight?.endTime || 0);
+  const fightDurationSec = Math.max(1, (fightEnd - fightStart) / 1000);
+  if (raw >= fightStart && raw <= fightEnd + 1000) {
+    return Math.max(0, (raw - fightStart) / 1000);
+  }
+  if (raw > fightDurationSec + 10) {
+    return Math.max(0, raw / 1000);
+  }
+  return Math.max(0, raw);
+}
+
+function getEncounterPhaseMetadata(reportJson, fight) {
+  const encounterId = Number(fight?.encounterID || 0);
+  const phaseSet = (reportJson?.phases || []).find(entry => Number(entry?.encounterID || 0) === encounterId);
+  return phaseSet?.phases || [];
+}
+
+function getPhaseLabel(meta, fallbackIndex) {
+  const name = String(meta?.name || '').trim();
+  if (name) return name;
+  if (meta?.isIntermission) {
+    return state.lang === 'ja' ? `間奏${fallbackIndex}` : `Intermission ${fallbackIndex}`;
+  }
+  return `P${fallbackIndex}`;
+}
+
+function buildFightPhasesFromFFLogs(reportJson, fight) {
+  const metadata = getEncounterPhaseMetadata(reportJson, fight);
+  const fightDurationSec = Math.max(1, ((fight?.endTime || 0) - (fight?.startTime || 0)) / 1000);
+  const maxAbsoluteIndex = Number(fight?.lastPhaseAsAbsoluteIndex || 0);
+  const relevantMetadata = maxAbsoluteIndex > 0 ? metadata.slice(0, maxAbsoluteIndex) : metadata;
+  const transitions = (fight?.phaseTransitions || [])
+    .map(transition => ({
+      id: Number(transition?.id || 0),
+      startT: normalizePhaseTransitionStartTime(transition?.startTime, fight),
+    }))
+    .filter(transition => transition.id > 0 && transition.startT > 0 && transition.startT < fightDurationSec)
+    .sort((a, b) => a.startT - b.startT);
+
+  if (!relevantMetadata.length && !transitions.length) return [];
+
+  const metadataById = new Map(relevantMetadata.map(meta => [Number(meta.id || 0), meta]));
+  const phaseStarts = [];
+  if (relevantMetadata.length) {
+    const firstMeta = relevantMetadata[0];
+    phaseStarts.push({
+      id: Number(firstMeta.id || 1),
+      startT: 0,
+      label: getPhaseLabel(firstMeta, 1),
+      isIntermission: !!firstMeta.isIntermission,
+    });
+  } else {
+    phaseStarts.push({ id: 1, startT: 0, label: 'P1', isIntermission: false });
+  }
+
+  for (const transition of transitions) {
+    const meta = metadataById.get(transition.id) || null;
+    const fallbackIndex = phaseStarts.length + 1;
+    const prev = phaseStarts[phaseStarts.length - 1];
+    if (prev && Math.abs(prev.startT - transition.startT) < 0.2) continue;
+    phaseStarts.push({
+      id: transition.id || fallbackIndex,
+      startT: transition.startT,
+      label: getPhaseLabel(meta, fallbackIndex),
+      isIntermission: !!meta?.isIntermission,
+    });
+  }
+
+  const phases = phaseStarts.map((phase, index) => ({
+    id: index + 1,
+    phaseId: phase.id,
+    startT: phase.startT,
+    endT: index < phaseStarts.length - 1 ? phaseStarts[index + 1].startT : fightDurationSec,
+    label: phase.label,
+    isIntermission: phase.isIntermission,
+  }));
+  return phases.filter((phase, index) => phase.endT > phase.startT || index === phases.length - 1);
+}
+
 // FFLogs V2のステータスエフェクトID → バフ/デバフ名マッピング
 // Buffs APIの abilityGameID はステータスエフェクトID (1000000+) であり、アクションIDとは異なる
 const STATUS_DEBUFF_IDS = new Set([
@@ -200,6 +368,7 @@ async function fetchPlayerAurasV2(reportCode, fight, targetId) {
   // プレイヤーに適用された全オーラ（バフ+デバフ）を取得し、デバフとPTバフに分離
   const debuffs = [];
   const partyBuffs = [];
+  const friendlyIds = new Set(fight.friendlyPlayers || []);
   let startTime = null;
   const query = `
     query PlayerAuras($code: String!, $fightID: Int!, $targetID: Int!, $startTime: Float) {
@@ -242,11 +411,15 @@ async function fetchPlayerAurasV2(reportCode, fight, targetId) {
     }
     for (const e of rows) {
       const type = String(e?.type || '').toLowerCase();
-      if (type !== 'applybuff' && type !== 'applydebuff') continue;
+      const isBuffApply = type === 'applybuff' || type === 'refreshbuff';
+      const isDebuffApply = type === 'applydebuff' || type === 'refreshdebuff' || type === 'applydebuffstack' || type === 'refreshdebuffstack';
+      if (!isBuffApply && !isDebuffApply) continue;
       const statusId = Number(e?.abilityGameID || e?.ability?.guid || 0);
       // ability名はAPIから取れない場合があるので、abilityByIdからも解決
       const abilityName = String(e?.ability?.name || state.abilityById.get(statusId) || '');
       const nameLower = abilityName.toLowerCase();
+      const sourceId = Number(e?.sourceID || 0);
+      const isEnemyApplied = sourceId !== Number(targetId) && !friendlyIds.has(sourceId);
       const ts = Number(e?.timestamp || 0);
       const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
       const dur = Number(e?.duration || 0) / 1000;
@@ -303,7 +476,18 @@ async function fetchPlayerAurasV2(reportCode, fight, targetId) {
         if (selfBuff) {
           partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName, duration: selfBuff.duration });
           debugMatchCount.self++;
+          continue;
         }
+      }
+      if (isDebuffApply || isEnemyApplied) {
+        debuffs.push({
+          t: tSec,
+          duration: dur > 0 ? dur : 10,
+          kind: 'generic',
+          name: abilityName || `Debuff ${statusId || 'unknown'}`,
+          color: '#ef4444',
+        });
+        debugMatchCount.debuff++;
       }
     }
     if (!block?.nextPageTimestamp) break;
@@ -368,40 +552,40 @@ function computeRollingDps(damageEvents, maxT, windowSec = 15) {
 function detectPhases(bossCasts, fightDurationSec, lastPhase) {
   // lastPhaseが2以上ならフェーズ有りが確定
   const hasMultiPhase = lastPhase && lastPhase > 1;
+  const desiredPhaseCount = hasMultiPhase ? Number(lastPhase) : 0;
 
   if (!bossCasts || bossCasts.length < 2) {
     if (!hasMultiPhase) return [];
-    // ボス詠唱がなくてもlastPhaseから均等分割で仮フェーズ生成
-    const phases = [];
-    for (let i = 1; i <= lastPhase; i++) {
-      phases.push({
-        id: i,
-        startT: (i - 1) * fightDurationSec / lastPhase,
-        endT: i * fightDurationSec / lastPhase,
-        label: `P${i}`,
-      });
-    }
+    const phases = buildPhaseStarts([], fightDurationSec, desiredPhaseCount);
     logDebug(`フェーズ: lastPhase=${lastPhase}から均等分割`, phases.map(p => p.label));
     return phases;
   }
 
-  // ボス詠唱ギャップから検出（3秒以上で区切り）
+  const sortedCasts = [...bossCasts].sort((a, b) => a.t - b.t);
+  const boundaryTimes = [];
+  const seenBosses = new Set();
+
+  for (const cast of sortedCasts) {
+    const bossKey = String(cast.sourceName || '').trim().toLowerCase();
+    if (!bossKey) continue;
+    if (seenBosses.has(bossKey)) continue;
+    seenBosses.add(bossKey);
+    if (seenBosses.size > 1 && cast.t > 3) boundaryTimes.push(cast.t);
+  }
+
   const minGap = 3;
-  const phases = [{ id: 1, startT: 0, label: 'P1' }];
   let lastEndT = 0;
-  for (const c of bossCasts) {
+  for (const c of sortedCasts) {
     if (c.t - lastEndT > minGap && lastEndT > 3) {
-      phases.push({ id: phases.length + 1, startT: c.t, label: `P${phases.length + 1}` });
+      boundaryTimes.push(c.t);
     }
     lastEndT = Math.max(lastEndT, c.endT || c.t);
   }
-  for (let i = 0; i < phases.length; i++) {
-    phases[i].endT = i < phases.length - 1 ? phases[i + 1].startT : fightDurationSec;
-  }
+  const phases = buildPhaseStarts(boundaryTimes, fightDurationSec, desiredPhaseCount);
 
-  // lastPhaseがあってフェーズ数が合わない場合、lastPhaseを信頼
+  // lastPhase がある場合は、その数に満たないフェーズを近似補完
   if (hasMultiPhase && phases.length < lastPhase) {
-    logDebug(`フェーズ: ギャップ検出=${phases.length}個 < lastPhase=${lastPhase} → ギャップ検出結果を使用`);
+    logDebug(`フェーズ: 推定=${phases.length}個 < lastPhase=${lastPhase} → 不足分を補完`, boundaryTimes.map(t => `${t.toFixed(1)}s`));
   }
 
   return phases.length > 1 ? phases : [];
@@ -414,6 +598,19 @@ function formatHitType(hitType, multistrike) {
   if (isCrit) return 'Crit';
   if (isDH) return 'DH';
   return '';
+}
+function formatTimelineTime(seconds) {
+  const totalSeconds = Math.max(0, Number(seconds || 0));
+  const minutes = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds - minutes * 60;
+  const wholeSecs = Math.floor(secs);
+  const fraction = secs - wholeSecs;
+  if (fraction >= 0.05) {
+    const tenth = Math.round(fraction * 10);
+    if (tenth >= 10) return `${minutes + 1}:00`;
+    return `${minutes}:${String(wholeSecs).padStart(2, '0')}.${tenth}`;
+  }
+  return `${minutes}:${String(Math.round(secs)).padStart(2, '0')}`;
 }
 async function fetchPlayerDamageV2(reportCode, fight, sourceId) {
   const all = [];
@@ -480,21 +677,57 @@ function correlateDamage(timeline, damageEvents) {
     }
   }
 }
-function filterTimelineByPhase(records) {
-  if (!state.currentPhase) return records;
-  const p = state.currentPhase;
+function mergePhaseSets(phasesA, phasesB) {
+  const count = Math.max(phasesA?.length || 0, phasesB?.length || 0);
+  const merged = [];
+  for (let i = 0; i < count; i++) {
+    const a = phasesA?.[i] || null;
+    const b = phasesB?.[i] || null;
+    if (!a && !b) continue;
+    merged.push({
+      id: i + 1,
+      label: a?.label || b?.label || `P${i + 1}`,
+      startT: a?.startT ?? b?.startT ?? 0,
+      endT: a?.endT ?? b?.endT ?? 0,
+      a,
+      b,
+    });
+  }
+  return merged;
+}
+function scrollTimelineToPhase(phase) {
+  if (!el.timelineWrap || !phase) return;
+  const startTimes = [phase.a?.startT, phase.b?.startT].filter(t => Number.isFinite(t));
+  if (!startTimes.length) return;
+  const startT = Math.min(...startTimes);
+  const pxPerSec = 16 * state.zoom;
+  const x = 60 + startT * pxPerSec;
+  const viewportWidth = el.timelineWrap.clientWidth || 0;
+  const left = Math.max(0, x - viewportWidth * 0.2);
+  requestAnimationFrame(() => {
+    el.timelineWrap.scrollTo({ left, behavior: 'smooth' });
+  });
+}
+function getCurrentPhaseWindow(owner) {
+  if (!state.currentPhase) return null;
+  return owner === 'b' ? (state.currentPhase.b || state.currentPhase.a || null) : (state.currentPhase.a || state.currentPhase.b || null);
+}
+function filterTimelineByPhase(records, owner) {
+  const p = getCurrentPhaseWindow(owner);
+  if (!p) return records;
   return records.filter(r => r.t >= p.startT && r.t < p.endT);
 }
 
 function renderTimeline() {
   let a = filterTimeline(state.timelineA, state.currentTab);
   let b = filterTimeline(state.timelineB, state.currentTab);
-  a = filterTimelineByPhase(a);
-  b = filterTimelineByPhase(b);
+  a = filterTimelineByPhase(a, 'a');
+  b = filterTimelineByPhase(b, 'b');
   let bossCasts = state.bossCastsA || [];
-  if (state.currentPhase) {
-    const p = state.currentPhase;
-    bossCasts = bossCasts.filter(c => c.t >= p.startT && c.endT <= p.endT + 5);
+  const phaseA = getCurrentPhaseWindow('a');
+  const phaseB = getCurrentPhaseWindow('b');
+  if (phaseA) {
+    bossCasts = bossCasts.filter(c => c.t >= phaseA.startT && c.endT <= phaseA.endT + 5);
   }
   const maxT = Math.max(1, ...a.map(x => x.t), ...b.map(x => x.t));
   const pxPerSec = 16 * state.zoom;
@@ -542,11 +775,8 @@ function renderTimeline() {
     if (!hasDps) return '';
     let dpsA = state.rollingDpsA;
     let dpsB = state.rollingDpsB;
-    if (state.currentPhase) {
-      const p = state.currentPhase;
-      dpsA = dpsA.filter(d => d.t >= p.startT && d.t <= p.endT);
-      dpsB = dpsB.filter(d => d.t >= p.startT && d.t <= p.endT);
-    }
+    if (phaseA) dpsA = dpsA.filter(d => d.t >= phaseA.startT && d.t <= phaseA.endT);
+    if (phaseB) dpsB = dpsB.filter(d => d.t >= phaseB.startT && d.t <= phaseB.endT);
     if (state.currentTab === 'odd') {
       dpsA = dpsA.filter(d => Math.floor(d.t / 60) % 2 === 1);
       dpsB = dpsB.filter(d => Math.floor(d.t / 60) % 2 === 1);
@@ -588,7 +818,7 @@ function renderTimeline() {
     for (let sec = 0; sec <= Math.ceil(maxT); sec++) {
       const x = 60 + sec * pxPerSec;
       const level = sec % 10 === 0 ? 'ten' : sec % 5 === 0 ? 'five' : 'one';
-      const label = sec % 5 === 0 ? `<span>${sec}s</span>` : '';
+      const label = sec % 5 === 0 ? `<span>${formatTimelineTime(sec)}</span>` : '';
       marks.push(`<div class="tick ${level}" style="left:${x}px; top:${rulerTop}px">${label}</div>`);
     }
     return marks.join('');
@@ -599,7 +829,7 @@ function renderTimeline() {
     return bossCasts.map(c => {
       const x = 60 + c.t * pxPerSec;
       const w = Math.max(4, c.duration * pxPerSec);
-      return `<div class="boss-cast" style="left:${x}px; top:${bossTrackTop}px; width:${w}px;" title="${c.t.toFixed(1)}s - ${c.endT.toFixed(1)}s ${c.name}"><span class="boss-cast-name">${c.name}</span></div>`;
+      return `<div class="boss-cast" style="left:${x}px; top:${bossTrackTop}px; width:${w}px;" title="${formatTimelineTime(c.t)} - ${formatTimelineTime(c.endT)} ${c.name} (${c.duration.toFixed(1)}s)"><span class="boss-cast-name">${c.name}</span></div>`;
     }).join('');
   };
 
@@ -618,30 +848,40 @@ function renderTimeline() {
     return overlays.join('');
   };
 
-  const buildDebuffTrack = (debuffs, top) => {
+  const buildDebuffTrack = (debuffs, top, owner) => {
     if (!debuffs || !debuffs.length) return '';
     let filtered = debuffs;
-    if (state.currentPhase) {
-      const p = state.currentPhase;
+    const p = getCurrentPhaseWindow(owner);
+    if (p) {
       filtered = debuffs.filter(d => d.t >= p.startT && d.t < p.endT);
     }
     return filtered.map(d => {
       const x = 60 + d.t * pxPerSec;
       const w = Math.max(6, d.duration * pxPerSec);
-      const info = DEBUFF_IDS[d.kind] || DEBUFF_IDS.damageDown;
-      const label = state.lang === 'ja' ? info.nameJa : info.nameEn;
-      return `<div class="debuff-bar" style="left:${x}px; top:${top}px; width:${w}px; background:${info.color}40; border-left:2px solid ${info.color};" title="${d.t.toFixed(1)}s ${label} (${d.duration.toFixed(1)}s)"><span class="debuff-label">${label}</span></div>`;
+      const info = DEBUFF_IDS[d.kind] || { nameEn: d.name || 'Debuff', nameJa: d.name || 'Debuff', color: d.color || '#ef4444' };
+      const label = d.name || (state.lang === 'ja' ? info.nameJa : info.nameEn);
+      return `<div class="debuff-bar" style="left:${x}px; top:${top}px; width:${w}px; background:${info.color}40; border-left:2px solid ${info.color};" title="${formatTimelineTime(d.t)} ${label} (${d.duration.toFixed(1)}s)"><span class="debuff-label">${label}</span></div>`;
     }).join('');
   };
 
   const buildPhaseLines = () => {
     if (!state.phases || state.phases.length < 2) return '';
-    return state.phases.slice(1).map(phase => {
-      const x = 60 + phase.startT * pxPerSec;
-      return `<div class="phase-divider" style="left:${x}px; top:${rulerTop}px; height:${totalHeight - rulerTop}px">
-        <span class="phase-divider-label">${phase.label}</span>
-      </div>`;
-    }).join('');
+    const parts = [];
+    for (const phase of state.phases.slice(1)) {
+      if (phase.a) {
+        const xA = 60 + phase.a.startT * pxPerSec;
+        parts.push(`<div class="phase-divider a" style="left:${xA}px; top:${rulerTop}px; height:${dividerTop - rulerTop}px" title="A ${phase.label}: ${formatTimelineTime(phase.a.startT)}">
+          <span class="phase-divider-label">${phase.label}</span>
+        </div>`);
+      }
+      if (phase.b) {
+        const xB = 60 + phase.b.startT * pxPerSec;
+        parts.push(`<div class="phase-divider b" style="left:${xB}px; top:${dividerTop}px; height:${totalHeight - dividerTop}px" title="B ${phase.label}: ${formatTimelineTime(phase.b.startT)}">
+          <span class="phase-divider-label">${phase.label}</span>
+        </div>`);
+      }
+    }
+    return parts.join('');
   };
 
   const buildEvents = (records, owner, partyBuffs) => {
@@ -656,7 +896,7 @@ function renderTimeline() {
       const fallback = (r.label || r.action || '?').slice(0, 2).toUpperCase();
       const top = laneTop[`${owner}_${lane}`];
       const candidates = (r.iconCandidates || []).join('|');
-      let tooltip = `${r.t.toFixed(1)}s ${r.label || r.action}`;
+      let tooltip = `${formatTimelineTime(r.t)} ${r.label || r.action}`;
       if (r.damage != null && r.damage > 0) {
         tooltip += `\n${state.lang === 'ja' ? 'ダメージ' : 'Damage'}: ${r.damage.toLocaleString()}`;
         const ht = formatHitType(r.hitType, r.multistrike);
@@ -682,7 +922,7 @@ function renderTimeline() {
       <div class="lane-label" style="top:${laneTop.a_gcd + 12}px">${t('laneGcd')}</div>
       ${buildBuffOverlays(a, 'a')}
       <div class="lane-label" style="top:${debuffATop + 4}px; color:#ef4444">${t('laneDebuff')}</div>
-      ${buildDebuffTrack(state.debuffsA, debuffATop)}
+      ${buildDebuffTrack(state.debuffsA, debuffATop, 'a')}
       <div class="player-divider" style="top:${dividerTop}px"></div>
       <div class="player-label" style="top:${dividerTop + 10}px">${labelB}${jobB ? ' (' + formatJobName(jobB) + ')' : ''}</div>
       <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">${t('laneAbility')}</div>
@@ -690,7 +930,7 @@ function renderTimeline() {
       <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">${t('laneGcd')}</div>
       ${buildBuffOverlays(b, 'b')}
       <div class="lane-label" style="top:${debuffBTop + 4}px; color:#ef4444">${t('laneDebuff')}</div>
-      ${buildDebuffTrack(state.debuffsB, debuffBTop)}
+      ${buildDebuffTrack(state.debuffsB, debuffBTop, 'b')}
       ${buildEvents(a, 'a', state.partyBuffsA)}
       ${buildEvents(b, 'b', state.partyBuffsB)}
       ${buildPhaseLines()}
@@ -725,6 +965,7 @@ function renderPhaseButtons() {
     state.currentPhase = null;
     renderPhaseButtons();
     renderTimeline();
+    el.timelineWrap?.scrollTo({ left: 0, behavior: 'smooth' });
   });
   container.appendChild(allBtn);
   // 各フェーズボタン
@@ -733,11 +974,14 @@ function renderPhaseButtons() {
     const isActive = state.currentPhase && state.currentPhase.id === phase.id;
     btn.className = 'phase-btn' + (isActive ? ' active' : '');
     btn.textContent = phase.label;
-    btn.title = `${phase.startT.toFixed(0)}s - ${phase.endT.toFixed(0)}s`;
+    const titleA = phase.a ? `A: ${formatTimelineTime(phase.a.startT)} - ${formatTimelineTime(phase.a.endT)}` : '';
+    const titleB = phase.b ? `B: ${formatTimelineTime(phase.b.startT)} - ${formatTimelineTime(phase.b.endT)}` : '';
+    btn.title = [titleA, titleB].filter(Boolean).join(' / ');
     btn.addEventListener('click', () => {
       state.currentPhase = phase;
       renderPhaseButtons();
       renderTimeline();
+      scrollTimelineToPhase(phase);
     });
     container.appendChild(btn);
   }

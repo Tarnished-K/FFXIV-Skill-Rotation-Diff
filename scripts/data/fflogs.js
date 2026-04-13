@@ -122,6 +122,15 @@ async function fetchReportDataV2(reportCode) {
         report(code: $code) {
           title
           zone { id name }
+          phases {
+            encounterID
+            separatesWipes
+            phases {
+              id
+              name
+              isIntermission
+            }
+          }
           fights {
             id
             encounterID
@@ -131,7 +140,12 @@ async function fetchReportDataV2(reportCode) {
             endTime
             friendlyPlayers
             lastPhase
+            lastPhaseAsAbsoluteIndex
             lastPhaseIsIntermission
+            phaseTransitions {
+              id
+              startTime
+            }
           }
           masterData {
             actors {
@@ -388,8 +402,7 @@ function fillFightSelect(select, fights, reportJson) {
     const comp = formatPartyComp(reportJson, f.id);
     const duration = formatDurationMs((f.endTime || 0) - (f.startTime || 0));
     const status = f.kill ? t('kill') : t('wipe');
-    // zone名（コンテンツ名）があればそちらを優先、なければfight.name（ボス名）
-    const baseName = zoneName || f.name || `Fight ${f.id}`;
+    const baseName = getEncounterDisplayName(reportJson, f) || `Fight ${f.id}`;
     const floorTag = detectSavageFloor(zoneName, f.name);
     const name = floorTag ? `${baseName} (${floorTag})` : baseName;
     const phaseInfo = f.lastPhase > 1 ? ` P${f.lastPhase}` : '';
@@ -402,9 +415,21 @@ function fillPlayerSelect(select, players, dpsEntries, fightDurationMs) {
   const fightSec = (fightDurationMs || 1) / 1000;
   for (const e of (dpsEntries || [])) {
     const id = String(e.id);
-    const activeSec = (e.activeTime || 1) / 1000;
-    const rDps = Math.round(e.rDPS || e.totalRDPS || e.total / activeSec || 0);
-    const aDps = Math.round(e.aDPS || e.totalADPS || e.total / fightSec || 0);
+    const activeSec = Math.max(1, Number(e.activeTimeReduced || e.activeTime || fightDurationMs || 1000) / 1000);
+    const rDps = Math.round(
+      Number.isFinite(Number(e.rDPS)) && Number(e.rDPS) > 0
+        ? Number(e.rDPS)
+        : Number(e.totalRDPS || 0) > 0
+          ? Number(e.totalRDPS) / activeSec
+          : Number(e.total || 0) / activeSec
+    );
+    const aDps = Math.round(
+      Number.isFinite(Number(e.aDPS)) && Number(e.aDPS) > 0
+        ? Number(e.aDPS)
+        : Number(e.totalADPS || 0) > 0
+          ? Number(e.totalADPS) / activeSec
+          : Number(e.total || 0) / fightSec
+    );
     dpsMap.set(id, { rDps, aDps });
   }
   select.innerHTML = players.map(p => {
@@ -413,6 +438,41 @@ function fillPlayerSelect(select, players, dpsEntries, fightDurationMs) {
     const dpsStr = dps ? ` rDPS:${dps.rDps} aDPS:${dps.aDps}` : '';
     return `<option value="${p.id}">${p.name} (${jobLabel})${dpsStr}</option>`;
   }).join('');
+}
+const ULTIMATE_ENCOUNTER_INFO = {
+  1073: { ja: '絶バハムート討滅戦', en: 'The Unending Coil of Bahamut', short: 'UCoB' },
+  1074: { ja: '絶アルテマウェポン破壊作戦', en: "The Weapon's Refrain", short: 'UWU' },
+  1075: { ja: '絶アレキサンダー討滅戦', en: 'The Epic of Alexander', short: 'TEA' },
+  1076: { ja: '絶竜詩戦争', en: "Dragonsong's Reprise", short: 'DSR' },
+  1077: { ja: '絶オメガ検証戦', en: 'The Omega Protocol', short: 'TOP' },
+  1079: { ja: '絶エデン', en: 'Futures Rewritten', short: 'FRU' },
+};
+const ULTIMATE_PHASE_ENCOUNTERS = Object.values(ULTIMATE_ENCOUNTER_INFO).flatMap(info => [info.ja, info.en, info.short]);
+function normalizeEncounterText(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9一-龠ぁ-んァ-ヶ]/g, '');
+}
+function getUltimateEncounterInfo(fight) {
+  return ULTIMATE_ENCOUNTER_INFO[Number(fight?.encounterID || 0)] || null;
+}
+function isGenericZoneName(zoneName) {
+  const normalized = normalizeEncounterText(zoneName);
+  return normalized === 'ultimateslegacy' || normalized === 'ultimates';
+}
+function getEncounterDisplayName(reportJson, fight) {
+  const encounter = getUltimateEncounterInfo(fight);
+  if (encounter) return state.lang === 'ja' ? encounter.ja : encounter.en;
+  const zoneName = reportJson?.zone?.name || '';
+  if (zoneName && !isGenericZoneName(zoneName)) return zoneName;
+  return fight?.name || '';
+}
+function shouldShowUltimatePhaseSelector(reportJson, fight) {
+  if (getUltimateEncounterInfo(fight)) return true;
+  const haystack = [
+    reportJson?.zone?.name,
+    fight?.name,
+    reportJson?.title,
+  ].map(normalizeEncounterText).join(' ');
+  return ULTIMATE_PHASE_ENCOUNTERS.some(name => haystack.includes(normalizeEncounterText(name)));
 }
 async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode = '') {
   const all = [];

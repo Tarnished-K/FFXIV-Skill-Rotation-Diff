@@ -67,5 +67,9 @@ button { cursor:pointer; }
 
 .phase-divider { position:absolute; width:2px; background:rgba(168,85,247,0.5); z-index:4; pointer-events:none; }
 .phase-divider-label { position:absolute; top:0; left:6px; font-size:10px; font-weight:bold; color:#a855f7; white-space:nowrap; }
+.phase-divider.a { background:rgba(56,189,248,0.65); }
+.phase-divider.a .phase-divider-label { color:#38bdf8; }
+.phase-divider.b { background:rgba(249,115,22,0.65); }
+.phase-divider.b .phase-divider-label { color:#fb923c; }
 
 .event[title] { cursor:pointer; }

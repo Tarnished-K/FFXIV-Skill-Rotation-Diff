@@ -132,12 +132,24 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     state.rollingDpsB = computeRollingDps(dmgB, maxT);
     logDebug(`DPS推移計算完了: A=${state.rollingDpsA.length}点 B=${state.rollingDpsB.length}点`);
 
-    // フェーズ検出（ボス詠唱ギャップから）
-    const fightDuration = ((fightA.endTime || 0) - (fightA.startTime || 0)) / 1000;
-    state.phases = detectPhases(bossA, fightDuration, fightA.lastPhase);
+    // フェーズ検出（FF Logs公式 phaseTransitions 優先）
+    const fightDurationA = ((fightA.endTime || 0) - (fightA.startTime || 0)) / 1000;
+    const fightDurationB = ((fightB.endTime || 0) - (fightB.startTime || 0)) / 1000;
+    const canShowPhaseSelector =
+      Number(fightA.encounterID) === Number(fightB.encounterID) &&
+      shouldShowUltimatePhaseSelector(state.reportA, fightA) &&
+      shouldShowUltimatePhaseSelector(state.reportB, fightB);
+    const officialPhasesA = canShowPhaseSelector ? buildFightPhasesFromFFLogs(state.reportA, fightA) : [];
+    const officialPhasesB = canShowPhaseSelector ? buildFightPhasesFromFFLogs(state.reportB, fightB) : [];
+    if (officialPhasesA.length) logDebug('FF Logs phases A', officialPhasesA.map(p => `${p.label}: ${p.startT.toFixed(1)}s-${p.endT.toFixed(1)}s`));
+    if (officialPhasesB.length) logDebug('FF Logs phases B', officialPhasesB.map(p => `${p.label}: ${p.startT.toFixed(1)}s-${p.endT.toFixed(1)}s`));
+    state.phasesA = officialPhasesA.length ? officialPhasesA : (canShowPhaseSelector ? detectPhases(bossA, fightDurationA, fightA.lastPhase) : []);
+    state.phasesB = officialPhasesB.length ? officialPhasesB : (canShowPhaseSelector ? detectPhases([], fightDurationB, fightB.lastPhase) : []);
+    state.phases = canShowPhaseSelector ? mergePhaseSets(state.phasesA, state.phasesB) : [];
     state.currentPhase = null;
     if (state.phases.length) {
-      logDebug(`フェーズ検出: ${state.phases.length}フェーズ`, state.phases.map(p => `${p.label}: ${p.startT.toFixed(0)}s-${p.endT.toFixed(0)}s`));
+      logDebug(`フェーズ検出A: ${state.phasesA.length}フェーズ`, state.phasesA.map(p => `${p.label}: ${p.startT.toFixed(0)}s-${p.endT.toFixed(0)}s`));
+      logDebug(`フェーズ検出B: ${state.phasesB.length}フェーズ`, state.phasesB.map(p => `${p.label}: ${p.startT.toFixed(0)}s-${p.endT.toFixed(0)}s`));
     }
 
     state.timelineCountA = state.timelineA.length;
@@ -163,6 +175,8 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     state.timelineCountB = state.timelineB.length;
     state.rollingDpsA = [];
     state.rollingDpsB = [];
+    state.phasesA = [];
+    state.phasesB = [];
     state.phases = [];
     state.currentPhase = null;
     logError('TL取得失敗 - サンプルデータで表示', {error: e.message});

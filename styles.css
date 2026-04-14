@@ -1156,6 +1156,206 @@ button:focus-visible {
   border-color: rgba(123, 198, 255, 0.22);
 }
 
+.analytics-main {
+  align-items: stretch;
+}
+
+.analytics-hero {
+  grid-column: 1 / -1;
+  border-color: rgba(123, 198, 255, 0.24);
+}
+
+.analytics-summary-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.analytics-metric-grid {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.analytics-metric-card {
+  grid-column: span 3;
+  min-height: 150px;
+}
+
+.analytics-secondary-grid .analytics-secondary-card {
+  grid-column: span 4;
+  min-height: 128px;
+}
+
+.analytics-metric-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.analytics-metric-value {
+  margin-top: 18px;
+  color: var(--gold-light);
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.analytics-secondary-value {
+  color: var(--blue-light);
+  font-size: clamp(26px, 3vw, 38px);
+}
+
+.analytics-chart-card,
+.analytics-table-card {
+  grid-column: 1 / -1;
+}
+
+.analytics-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.analytics-section-head h2 {
+  margin-bottom: 0;
+}
+
+.analytics-bar-chart {
+  display: grid;
+  gap: 10px;
+}
+
+.analytics-bar-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.analytics-bar-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: right;
+}
+
+.analytics-bar-stack {
+  display: grid;
+  gap: 6px;
+}
+
+.analytics-bar {
+  position: relative;
+  min-width: 22px;
+  min-height: 18px;
+  border-radius: 999px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: #f8fbff;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.analytics-bar.page {
+  background: linear-gradient(135deg, rgba(43, 134, 217, 0.92), rgba(21, 68, 136, 0.92));
+}
+
+.analytics-bar.compare {
+  background: linear-gradient(135deg, rgba(45, 181, 163, 0.92), rgba(14, 105, 95, 0.92));
+}
+
+.analytics-bar.error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(127, 29, 29, 0.9));
+}
+
+.analytics-split-grid {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.analytics-split-grid .analytics-table-card {
+  grid-column: span 6;
+}
+
+.analytics-table-wrap {
+  overflow-x: auto;
+}
+
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.analytics-table th,
+.analytics-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(105, 146, 185, 0.14);
+  text-align: left;
+  font-size: 13px;
+}
+
+.analytics-table th {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.analytics-event-list {
+  display: grid;
+  gap: 10px;
+}
+
+.analytics-event-item {
+  padding: 12px 14px;
+  border: 1px solid rgba(105, 146, 185, 0.16);
+  border-radius: 14px;
+  background: rgba(5, 11, 19, 0.72);
+}
+
+.analytics-event-item-error {
+  border-color: rgba(239, 68, 68, 0.22);
+}
+
+.analytics-event-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.analytics-event-head span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.analytics-event-body {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.analytics-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -1249,6 +1449,12 @@ button:disabled:hover {
   }
 
   .guide-step-card {
+    grid-column: 1 / -1;
+  }
+
+  .analytics-metric-card,
+  .analytics-secondary-grid .analytics-secondary-card,
+  .analytics-split-grid .analytics-table-card {
     grid-column: 1 / -1;
   }
 }

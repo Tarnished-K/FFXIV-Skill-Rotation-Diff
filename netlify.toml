@@ -16,3 +16,8 @@
   from = "/api/build-info"
   to = "/.netlify/functions/build-info"
   status = 200
+
+[[redirects]]
+  from = "/api/analytics-summary"
+  to = "/.netlify/functions/analytics-summary"
+  status = 200

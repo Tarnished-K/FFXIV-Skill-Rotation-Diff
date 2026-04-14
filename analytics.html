@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analytics | FFXIV Skill Rotation Diff</title>
+    <meta name="description" content="FFXIV Skill Rotation Diff の簡易利用状況ダッシュボード" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="guide-page analytics-page">
+    <header>
+      <div class="header-row">
+        <div>
+          <h1>利用状況ダッシュボード</h1>
+          <p>公開ログ比較の直近利用状況をざっくり確認するための簡易ページです。</p>
+        </div>
+        <div class="header-actions">
+          <a class="button-link ghost tutorial-launch-btn" href="/">比較ページへ戻る</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="analytics-main">
+      <section class="card analytics-hero">
+        <div class="guide-kicker">Operations</div>
+        <h2>直近の利用状況</h2>
+        <p id="analyticsSummaryText" class="analytics-summary-text">集計を読み込み中です。</p>
+      </section>
+
+      <section class="analytics-metric-grid">
+        <article class="card analytics-metric-card">
+          <div class="analytics-metric-label">Page Views</div>
+          <div id="metricPageViews" class="analytics-metric-value">-</div>
+        </article>
+        <article class="card analytics-metric-card">
+          <div class="analytics-metric-label">Reports Loaded</div>
+          <div id="metricReportsLoaded" class="analytics-metric-value">-</div>
+        </article>
+        <article class="card analytics-metric-card">
+          <div class="analytics-metric-label">Comparisons</div>
+          <div id="metricComparisons" class="analytics-metric-value">-</div>
+        </article>
+        <article class="card analytics-metric-card">
+          <div class="analytics-metric-label">API Errors</div>
+          <div id="metricErrors" class="analytics-metric-value">-</div>
+        </article>
+      </section>
+
+      <section class="analytics-metric-grid analytics-secondary-grid">
+        <article class="card analytics-metric-card analytics-secondary-card">
+          <div class="analytics-metric-label">Compare / View</div>
+          <div id="metricComparePerView" class="analytics-metric-value analytics-secondary-value">-</div>
+        </article>
+        <article class="card analytics-metric-card analytics-secondary-card">
+          <div class="analytics-metric-label">Compare / Load</div>
+          <div id="metricComparePerLoad" class="analytics-metric-value analytics-secondary-value">-</div>
+        </article>
+        <article class="card analytics-metric-card analytics-secondary-card">
+          <div class="analytics-metric-label">Sampled Events</div>
+          <div id="metricSampledEvents" class="analytics-metric-value analytics-secondary-value">-</div>
+        </article>
+      </section>
+
+      <section class="card analytics-chart-card">
+        <div class="analytics-section-head">
+          <h2>日次推移</h2>
+          <p id="analyticsWindowLabel" class="submessage">過去 14 日</p>
+        </div>
+        <div id="analyticsDailyChart" class="analytics-bar-chart"></div>
+      </section>
+
+      <section class="analytics-split-grid">
+        <section class="card analytics-table-card">
+          <div class="analytics-section-head">
+            <h2>よく使われるジョブ</h2>
+            <p class="submessage">comparison_completed から集計</p>
+          </div>
+          <div id="analyticsTopJobs" class="analytics-table-wrap"></div>
+        </section>
+
+        <section class="card analytics-table-card">
+          <div class="analytics-section-head">
+            <h2>アクセスの多いパス</h2>
+            <p class="submessage">直近イベントの pathname 集計</p>
+          </div>
+          <div id="analyticsTopPaths" class="analytics-table-wrap"></div>
+        </section>
+      </section>
+
+      <section class="analytics-split-grid">
+        <section class="card analytics-table-card">
+          <div class="analytics-section-head">
+            <h2>直近の比較完了</h2>
+            <p class="submessage">比較成功時の要約</p>
+          </div>
+          <div id="analyticsRecentComparisons" class="analytics-event-list"></div>
+        </section>
+
+        <section class="card analytics-table-card">
+          <div class="analytics-section-head">
+            <h2>直近のエラー</h2>
+            <p class="submessage">api_error の詳細</p>
+          </div>
+          <div id="analyticsRecentErrors" class="analytics-event-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <small class="build-info" data-build-info>Version loading...</small>
+    </footer>
+
+    <script src="./scripts/shared/build-info.js"></script>
+    <script src="./scripts/shared/analytics-dashboard.js"></script>
+  </body>
+</html>

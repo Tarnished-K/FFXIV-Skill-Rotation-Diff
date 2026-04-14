@@ -168,6 +168,14 @@ footer small {
   text-align: center;
 }
 
+.build-info {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-family: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
 main {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));

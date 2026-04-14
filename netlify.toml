@@ -11,3 +11,8 @@
   from = "/api/log-event"
   to = "/.netlify/functions/log-event"
   status = 200
+
+[[redirects]]
+  from = "/api/build-info"
+  to = "/.netlify/functions/build-info"
+  status = 200

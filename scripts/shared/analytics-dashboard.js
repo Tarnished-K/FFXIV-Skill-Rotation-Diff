@@ -1,4 +1,13 @@
 (function () {
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function formatNumber(value) {
     return Number(value || 0).toLocaleString('ja-JP');
   }
@@ -107,7 +116,7 @@
     renderTable(
       'analyticsTopJobs',
       [
-        { label: 'Job', render: (row) => row.job },
+        { label: 'Job', render: (row) => escapeHtml(row.job) },
         { label: 'Count', render: (row) => formatNumber(row.count) },
       ],
       analytics.topJobs || [],
@@ -117,7 +126,7 @@
     renderTable(
       'analyticsTopPaths',
       [
-        { label: 'Path', render: (row) => row.pathname },
+        { label: 'Path', render: (row) => escapeHtml(row.pathname) },
         { label: 'Count', render: (row) => formatNumber(row.count) },
       ],
       analytics.topPaths || [],
@@ -129,15 +138,15 @@
       analytics.recentComparisons || [],
       (item) => {
         const details = item.details || {};
-        const pair = [details.jobA, details.jobB].filter(Boolean).join(' vs ') || 'Unknown pair';
-        const encounter = details.encounterA ? `Encounter ${details.encounterA}` : 'Encounter unknown';
+        const pair = [details.jobA, details.jobB].filter(Boolean).map(escapeHtml).join(' vs ') || 'Unknown pair';
+        const encounter = details.encounterA ? `Encounter ${escapeHtml(details.encounterA)}` : 'Encounter unknown';
         return `
           <article class="analytics-event-item">
             <div class="analytics-event-head">
               <strong>${pair}</strong>
               <span>${formatDateTime(item.createdAt)}</span>
             </div>
-            <div class="analytics-event-body">${encounter} / phasesShown: ${details.phasesShown ?? '-'}</div>
+            <div class="analytics-event-body">${encounter} / phasesShown: ${escapeHtml(details.phasesShown ?? '-')}</div>
           </article>
         `;
       },
@@ -149,8 +158,8 @@
       analytics.recentErrors || [],
       (item) => {
         const details = item.details || {};
-        const stage = details.stage || 'unknown';
-        const message = details.message || 'No message';
+        const stage = escapeHtml(details.stage || 'unknown');
+        const message = escapeHtml(details.message || 'No message');
         return `
           <article class="analytics-event-item analytics-event-item-error">
             <div class="analytics-event-head">

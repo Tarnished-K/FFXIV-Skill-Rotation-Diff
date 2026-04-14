@@ -1,0 +1,32 @@
+{
+  "name": "ffxiv-skill-rotation-diff",
+  "version": "1.0.0",
+  "description": "公開 FFLogs ログを 2 件読み込み、戦闘ごとのプレイヤータイムラインを比較するツールです。",
+  "main": "script.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "supabase": "supabase",
+    "supabase:login": "supabase login",
+    "supabase:projects": "supabase projects list",
+    "supabase:link": "supabase link",
+    "supabase:link:prod": "supabase link --project-ref qywkgixcsnzepiruuzda",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tarnished-K/FFXIV-Skill-Rotation-Diff.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Tarnished-K/FFXIV-Skill-Rotation-Diff/issues"
+  },
+  "homepage": "https://github.com/Tarnished-K/FFXIV-Skill-Rotation-Diff#readme",
+  "devDependencies": {
+    "supabase": "^2.91.1"
+  }
+}

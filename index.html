@@ -11,10 +11,10 @@
       <div class="header-row">
         <div>
           <h1 id="siteTitle">FFXIV スキル回し比較</h1>
-          <p id="siteDesc">FFLogs URL 2件からスキル回しを比較</p>
+          <p id="siteDesc">FFLogs の公開ログ URL を 2 つ使って比較します</p>
         </div>
         <div class="header-actions">
-          <a id="tutorialBtn" class="button-link ghost tutorial-launch-btn" href="http://xiv-srd.com/tutorial.html">初めての方はこちら</a>
+          <a id="tutorialBtn" class="button-link ghost tutorial-launch-btn" href="/tutorial.html">初めての方はこちら</a>
           <button id="langToggle" type="button" class="lang-btn">EN</button>
         </div>
       </div>
@@ -22,12 +22,8 @@
 
     <main>
       <section class="card" id="step1">
-        <h2 id="step1Title">1. FFLogs連携 & ログURL入力</h2>
-        <div class="oauth-row">
-          <button id="connectBtn" type="button">FFLogsと連携（V2）</button>
-          <button id="disconnectBtn" type="button" class="ghost">連携解除</button>
-          <span id="authStatus" class="submessage">未連携</span>
-        </div>
+        <h2 id="step1Title">1. 公開 FFLogs ログを読み込む</h2>
+        <p id="publicOnlyNote" class="submessage">公開ログのみ対応です。FFLogs の連携は不要です。</p>
         <label id="logUrlALabel">ログURL A <input id="urlA" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
         <label id="logUrlBLabel">ログURL B <input id="urlB" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
         <button id="loadBtn">読み込み開始</button>
@@ -35,7 +31,7 @@
       </section>
 
       <section class="card hidden" id="step2">
-        <h2 id="step2Title">2. 戦闘データ選択（Killのみ）</h2>
+        <h2 id="step2Title">2. 戦闘データ選択（Kill のみ）</h2>
         <div class="player-grid">
           <label id="logAFightLabel">ログA 戦闘
             <select id="fightA"></select>
@@ -49,7 +45,7 @@
       </section>
 
       <section class="card hidden" id="step3">
-        <h2 id="step3Title">3. 比較プレイヤー選択</h2>
+        <h2 id="step3Title">3. 比較するプレイヤー選択</h2>
         <div class="player-grid">
           <label id="logAPlayerLabel">ログAプレイヤー
             <select id="playerA"></select>
@@ -58,7 +54,7 @@
             <select id="playerB"></select>
           </label>
         </div>
-        <button id="compareBtn">比較開始</button>
+        <button id="compareBtn">比較を開始</button>
       </section>
 
       <section class="card hidden" id="step4">
@@ -90,18 +86,18 @@
     </main>
 
     <footer>
-      <small id="footerNote">注: FFLogs V2(PKCE)で連携。まず戦闘を選んでからプレイヤーを選択します。</small>
+      <small id="footerNote">注: 公開 FFLogs ログのみ対応しています。2つのレポート URL を入力し、戦闘とプレイヤーを選択してください。</small>
     </footer>
 
     <div id="tutorialOverlay" class="tutorial-overlay hidden" aria-hidden="true">
       <div id="tutorialBackdrop" class="tutorial-backdrop"></div>
       <div id="tutorialCard" class="tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
         <div class="tutorial-card-head">
-          <div id="tutorialStepMeta" class="tutorial-step-meta">Step 1 / 6</div>
+          <div id="tutorialStepMeta" class="tutorial-step-meta">Step 1 / 5</div>
           <button id="tutorialCloseBtn" type="button" class="tutorial-close-btn" aria-label="Close tutorial">×</button>
         </div>
-        <h3 id="tutorialTitle">初回ガイド</h3>
-        <p id="tutorialBody">このガイドでは、比較表示までの流れを順番に案内します。</p>
+        <h3 id="tutorialTitle">クイックガイド</h3>
+        <p id="tutorialBody">このガイドでは、比較表示までの最小手順を案内します。</p>
         <div id="tutorialStatus" class="tutorial-status"></div>
         <div class="tutorial-actions">
           <button id="tutorialPrevBtn" type="button" class="ghost tutorial-nav-btn">戻る</button>

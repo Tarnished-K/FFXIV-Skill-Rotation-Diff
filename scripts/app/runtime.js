@@ -1,9 +1,5 @@
 // Core constants, state, DOM bindings, and debug helpers
 
-const FFLOGS_V2_CLIENT_ID = 'a182a7d9-18bd-49d6-a5d3-26f40a3f3a7d';
-const AUTH_STATE_KEY = 'fflogs_v2_state';
-const AUTH_VERIFIER_KEY = 'fflogs_v2_verifier';
-const TOKEN_KEY = 'fflogs_v2_access_token';
 const TUTORIAL_STATE_KEY = 'ffxiv_rotation_diff_tutorial';
 
 const JOB_CODE_MAP = {
@@ -85,12 +81,9 @@ const DEBUFF_IDS = {
 const I18N = {
   en: {
     siteTitle: 'FFXIV Skill Rotation Diff',
-    siteDesc: 'Compare skill rotations from 2 FFLogs URLs',
-    step1Title: '1. FFLogs Auth & Log URL Input',
-    connectBtn: 'Connect to FFLogs (V2)',
-    disconnectBtn: 'Disconnect',
-    authConnected: 'Connected',
-    authDisconnected: 'Not connected',
+    siteDesc: 'Compare skill rotations from 2 public FFLogs URLs',
+    step1Title: '1. Load Public FFLogs Logs',
+    publicOnlyNote: 'Public FFLogs logs only. No FFLogs sign-in is required.',
     logUrlA: 'Log URL A',
     logUrlB: 'Log URL B',
     loadBtn: 'Load Reports',
@@ -120,27 +113,23 @@ const I18N = {
     tutorialWaiting: 'Waiting for this step to be completed.',
     tutorialReady: 'Completed. Move to the next step.',
     tutorialIntroTitle: 'Quick Start Guide',
-    tutorialIntroBody: 'This guide walks you through the minimum steps needed to load two logs and reach the comparison timeline.',
-    tutorialConnectTitle: '1. Connect to FFLogs',
-    tutorialConnectBody: 'Use this button to sign in to FFLogs first. After the authorization flow returns to this page, the guide will continue automatically.',
-    tutorialLoadReportsTitle: '2. Enter two log URLs and load them',
+    tutorialIntroBody: 'This guide walks you through the minimum steps needed to load two public logs and reach the comparison timeline.',
+    tutorialLoadReportsTitle: '1. Enter two public log URLs',
     tutorialLoadReportsBody: 'Paste one FFLogs report URL into A and one into B, then load the reports. When the fight selectors appear, this step is complete.',
-    tutorialLoadPlayersTitle: '3. Choose fights and load players',
+    tutorialLoadPlayersTitle: '2. Choose fights and load players',
     tutorialLoadPlayersBody: 'Pick the fight you want to compare from each log, then load the player list for both sides.',
-    tutorialCompareTitle: '4. Choose players and start comparison',
+    tutorialCompareTitle: '3. Choose players and start comparison',
     tutorialCompareBody: 'Select one player from each log and run the comparison. When the timeline panel opens, the main setup is complete.',
     tutorialDoneTitle: 'Guide Complete',
     tutorialDoneBody: 'The comparison view is now ready. You can switch tabs, change phase filters, zoom, and inspect the timeline freely.',
     tutorialStep: (current, total) => `Step ${current} / ${total}`,
-    footerNote: 'Note: Connects via FFLogs V2 (PKCE). Select a fight first, then select players.',
-    needAuth: 'Please connect to FFLogs (V2) first.',
+    footerNote: 'Note: Public FFLogs logs only. Paste two report URLs, then select a fight and players.',
     badUrl: 'Please check FFLogs URL format.',
-    loading: 'Loading reports via V2...',
+    loading: 'Loading reports...',
     killFightsLoaded: (a,b) => `Kill fights loaded: A=${a} / B=${b}`,
     playersLoaded: (a,b) => `Players loaded: A=${a} / B=${b}`,
     tlLoading: 'Loading player timeline...',
     tlLoaded: (a,b) => `TL loaded: A=${a} / B=${b}`,
-    disconnected: 'FFLogs disconnected.',
     kill: 'Kill',
     wipe: 'Wipe',
     encounterMismatch: 'Cannot compare different bosses. Please select the same encounter.',
@@ -148,23 +137,19 @@ const I18N = {
   },
   ja: {
     siteTitle: 'FFXIV スキル回し比較',
-    siteDesc: 'FFLogs URL 2件からスキル回しを比較するMVP',
-    step1Title: '1. FFLogs連携 & ログURL入力',
-    connectBtn: 'FFLogsと連携（V2）',
-    disconnectBtn: '連携解除',
-    authConnected: '連携済み',
-    authDisconnected: '未連携',
+    siteDesc: 'FFLogs の公開ログ URL 2 件からスキル回しを比較します',
+    step1Title: '1. 公開 FFLogs ログを読み込む',
     logUrlA: 'ログURL A',
     logUrlB: 'ログURL B',
     loadBtn: '読み込み開始',
-    step2Title: '2. 戦闘データ選択（Killのみ）',
+    step2Title: '2. 戦闘データ選択（Kill のみ）',
     logAFight: 'ログA 戦闘',
     logBFight: 'ログB 戦闘',
     loadPlayersBtn: 'この戦闘でプレイヤー一覧を取得',
-    step3Title: '3. 比較プレイヤー選択',
+    step3Title: '3. 比較するプレイヤー選択',
     logAPlayer: 'ログAプレイヤー',
     logBPlayer: 'ログBプレイヤー',
-    compareBtn: '比較開始',
+    compareBtn: '比較を開始',
     step4Title: '4. 比較結果',
     tabAll: '全体TL',
     tabOdd: '奇数分TL',
@@ -175,15 +160,14 @@ const I18N = {
     laneBoss: 'ボス詠唱',
     debugNormalTitle: 'ログ',
     debugErrorTitle: 'エラーログ',
-    footerNote: '注: FFLogs V2(PKCE)で連携。まず戦闘を選んでからプレイヤーを選択します。',
-    needAuth: '先に「FFLogsと連携（V2）」を実行してください。',
+    publicOnlyNote: '公開ログのみ対応です。FFLogs の連携は不要です。',
+    footerNote: '注: 公開 FFLogs ログのみ対応しています。2つのレポート URL を入力し、戦闘とプレイヤーを選択してください。',
     badUrl: 'FFLogs URL形式を確認してください。',
-    loading: 'V2でレポートを読み込み中...',
+    loading: 'レポートを読み込み中...',
     killFightsLoaded: (a,b) => `Kill戦闘一覧取得成功: A=${a}件 / B=${b}件`,
     playersLoaded: (a,b) => `プレイヤー取得成功: A=${a}人 / B=${b}人`,
     tlLoading: '選択プレイヤーのTLを取得中...',
     tlLoaded: (a,b) => `TL取得成功: A=${a}件 / B=${b}件`,
-    disconnected: 'FFLogs連携を解除しました。',
     kill: 'Kill',
     wipe: 'Wipe',
     encounterMismatch: '異なるボスの戦闘は比較できません。同じ敵を選択してください。',
@@ -191,11 +175,65 @@ const I18N = {
   },
 };
 
+Object.assign(I18N.en, {
+  siteDesc: 'Compare skill rotations from 2 public FFLogs URLs',
+  step1Title: '1. Load Public FFLogs Logs',
+  publicOnlyNote: 'Public FFLogs logs only. No FFLogs sign-in is required.',
+  tutorialIntroBody: 'This guide walks you through the minimum steps needed to load two public logs and reach the comparison timeline.',
+  tutorialLoadReportsTitle: '1. Enter two public log URLs',
+  tutorialLoadPlayersTitle: '2. Choose fights and load players',
+  tutorialCompareTitle: '3. Choose players and start comparison',
+  footerNote: 'Note: Public FFLogs logs only. Paste two report URLs, then select a fight and players.',
+  loading: 'Loading reports...',
+});
+
+Object.assign(I18N.ja, {
+  siteTitle: 'FFXIV スキル回し比較',
+  siteDesc: 'FFLogs の公開ログ URL 2 件からスキル回しを比較します',
+  step1Title: '1. 公開 FFLogs ログを読み込む',
+  publicOnlyNote: '公開ログのみ対応です。FFLogs の連携は不要です。',
+  loadBtn: '読み込み開始',
+  step2Title: '2. 戦闘データ選択（Kill のみ）',
+  logAFight: 'ログA 戦闘',
+  logBFight: 'ログB 戦闘',
+  loadPlayersBtn: 'この戦闘でプレイヤー一覧を取得',
+  step3Title: '3. 比較するプレイヤー選択',
+  compareBtn: '比較を開始',
+  step4Title: '4. 比較結果',
+  tabAll: '全体TL',
+  tabOdd: '奇数分TL',
+  tabEven: '偶数分TL',
+  laneAbility: 'アビリティ',
+  laneGcd: 'WS / 魔法',
+  laneDebuff: 'デバフ',
+  laneBoss: 'ボス詠唱',
+  debugNormalTitle: 'ログ',
+  debugErrorTitle: 'エラーログ',
+  tutorialIntroTitle: 'クイックスタートガイド',
+  tutorialIntroBody: 'このガイドでは、2つの公開ログを読み込んで比較タイムラインを表示するまでの最小手順を案内します。',
+  tutorialLoadReportsTitle: '1. 公開ログ URL を 2 つ入力する',
+  tutorialLoadReportsBody: 'A と B に FFLogs のレポート URL を 1 つずつ貼り付けて読み込みます。戦闘セレクトが表示されたら完了です。',
+  tutorialLoadPlayersTitle: '2. 戦闘を選んでプレイヤーを取得する',
+  tutorialLoadPlayersBody: 'A / B それぞれで比較したい戦闘を選び、プレイヤー一覧を取得してください。',
+  tutorialCompareTitle: '3. プレイヤーを選んで比較する',
+  tutorialCompareBody: '両方のログから 1 人ずつ選び、比較を開始します。タイムラインが表示されたら準備完了です。',
+  tutorialDoneTitle: 'ガイド完了',
+  tutorialDoneBody: '比較表示まで完了しました。ここからはタブ切替、フェーズ選択、ズーム、ログ確認を自由に使えます。',
+  footerNote: '注: 公開 FFLogs ログのみ対応しています。2つのレポート URL を入力し、戦闘とプレイヤーを選択してください。',
+  badUrl: 'FFLogs URL形式を確認してください。',
+  loading: 'レポートを読み込み中...',
+  killFightsLoaded: (a,b) => `Kill戦闘一覧取得成功: A=${a}件 / B=${b}件`,
+  playersLoaded: (a,b) => `プレイヤー一覧取得成功: A=${a}人 / B=${b}人`,
+  tlLoading: '選択プレイヤーのTLを取得中...',
+  tlLoaded: (a,b) => `TL取得成功: A=${a}件 / B=${b}件`,
+  encounterMismatch: '異なるボス同士の比較はできません。同じ encounter を選択してください。',
+  phaseAll: '全フェーズ',
+});
+
 function t(key) { return I18N[state.lang]?.[key] ?? I18N.en[key] ?? key; }
 
 const state = {
   iconMap: [],
-  token: '',
   lang: 'ja',
   urlA: null,
   urlB: null,
@@ -241,9 +279,7 @@ const state = {
 };
 const el = {
   tutorialBtn: document.getElementById('tutorialBtn'),
-  connectBtn: document.getElementById('connectBtn'),
-  disconnectBtn: document.getElementById('disconnectBtn'),
-  authStatus: document.getElementById('authStatus'),
+  publicOnlyNote: document.getElementById('publicOnlyNote'),
   urlA: document.getElementById('urlA'),
   urlB: document.getElementById('urlB'),
   loadBtn: document.getElementById('loadBtn'),
@@ -295,7 +331,6 @@ const el = {
 };
 function bindClick(node, name, handler) {
   if (!node) {
-    console.error(`[bind] missing element: ${name}`);
     return;
   }
   node.addEventListener('click', handler);

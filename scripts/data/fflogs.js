@@ -1,22 +1,5 @@
-// FFLogs auth, API access, icon lookup, and report/player data helpers
+// FFLogs API access, icon lookup, and report/player data helpers
 
-function getRedirectUri() {
-  // FFLogs側の登録と完全一致させるため、ルート配下は末尾スラッシュを付けない
-  if (window.location.pathname === '/' || window.location.pathname === '') return window.location.origin;
-  return window.location.origin + window.location.pathname;
-}
-function randomString(length = 64) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-  let out = '';
-  const arr = new Uint8Array(length);
-  crypto.getRandomValues(arr);
-  for (let i = 0; i < arr.length; i++) out += chars[arr[i] % chars.length];
-  return out;
-}
-async function sha256Base64Url(value) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
 function parseFFLogsUrl(raw) {
   try {
     const u = new URL(raw);
@@ -27,93 +10,39 @@ function parseFFLogsUrl(raw) {
     return null;
   }
 }
-async function startOAuthLogin() {
-  const verifier = randomString(96);
-  const stateVal = randomString(32);
-  const challenge = await sha256Base64Url(verifier);
-  localStorage.setItem(AUTH_VERIFIER_KEY, verifier);
-  localStorage.setItem(AUTH_STATE_KEY, stateVal);
-  const params = new URLSearchParams({
-    client_id: FFLOGS_V2_CLIENT_ID,
-    response_type: 'code',
-    redirect_uri: getRedirectUri(),
-    code_challenge: challenge,
-    code_challenge_method: 'S256',
-    state: stateVal,
-  });
-  window.location.href = `https://ja.fflogs.com/oauth/authorize?${params.toString()}`;
-}
-async function exchangeCodeForToken(code) {
-  const savedState = localStorage.getItem(AUTH_STATE_KEY);
-  const verifier = localStorage.getItem(AUTH_VERIFIER_KEY);
-  const currentState = new URLSearchParams(window.location.search).get('state');
-  if (!savedState || !verifier || !currentState || savedState !== currentState) {
-    throw new Error('OAuth state検証に失敗しました。再連携してください。');
-  }
-  const body = new URLSearchParams({
-    client_id: FFLOGS_V2_CLIENT_ID,
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: getRedirectUri(),
-    code_verifier: verifier,
-  });
-  const res = await fetch('https://ja.fflogs.com/oauth/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString(),
-  });
-  if (!res.ok) {
-    throw new Error(`token取得失敗: ${res.status}`);
-  }
-  const json = await res.json();
-  if (!json.access_token) {
-    throw new Error('access_tokenが返却されませんでした');
-  }
-  localStorage.setItem(TOKEN_KEY, json.access_token);
-  localStorage.removeItem(AUTH_STATE_KEY);
-  localStorage.removeItem(AUTH_VERIFIER_KEY);
-  history.replaceState({}, '', getRedirectUri());
-  return json.access_token;
-}
-async function restoreOrAuthorize() {
-  const qp = new URLSearchParams(window.location.search);
-  const oauthError = qp.get('error');
-  if (oauthError) {
-    const desc = qp.get('error_description') || qp.get('message') || oauthError;
-    el.msg.textContent = `FFLogs認証エラー: ${decodeURIComponent(desc)}`;
-    history.replaceState({}, '', getRedirectUri());
-    state.token = localStorage.getItem(TOKEN_KEY) || '';
-    el.authStatus.textContent = state.token ? '連携済み' : '未連携';
-    return;
-  }
-  const code = qp.get('code');
-  if (code) {
-    state.token = await exchangeCodeForToken(code);
-  } else {
-    state.token = localStorage.getItem(TOKEN_KEY) || '';
-  }
-  el.authStatus.textContent = state.token ? '連携済み' : '未連携';
-}
-async function graphqlRequest(query, variables = {}) {
-  if (!state.token) {
-    throw new Error('FFLogs連携が必要です');
-  }
-  const res = await fetch('https://ja.fflogs.com/api/v2/client', {
+async function postJson(url, payload) {
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${state.token}`,
     },
-    body: JSON.stringify({ query, variables }),
+    body: JSON.stringify(payload),
   });
+  let json = null;
+  try {
+    json = await res.json();
+  } catch {
+    json = null;
+  }
   if (!res.ok) {
-    throw new Error(`GraphQL request failed: ${res.status}`);
+    throw new Error(json?.error || `Request failed: ${res.status}`);
   }
-  const json = await res.json();
-  if (json.errors?.length) {
-    throw new Error(json.errors[0].message || 'GraphQLエラー');
+  return json;
+}
+async function sendAnalyticsEvent(eventType, details = {}) {
+  try {
+    await postJson('/api/log-event', {
+      eventType,
+      pathname: window.location.pathname,
+      details,
+    });
+  } catch (error) {
+    logDebug('analytics skipped', { eventType, error: error.message });
   }
-  return json.data;
+}
+async function graphqlRequest(query, variables = {}) {
+  const json = await postJson('/api/fflogs-proxy', { query, variables });
+  return json?.data;
 }
 async function fetchReportDataV2(reportCode) {
   const query = `

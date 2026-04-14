@@ -8,21 +8,19 @@ function getTutorialCopy() {
       next: '次へ',
       finish: '完了',
       close: '閉じる',
-      waiting: 'この操作が完了するまで待機しています。',
+      waiting: 'この手順の完了を待っています。',
       ready: '完了しました。次の手順へ進めます。',
       step: (current, total) => `手順 ${current} / ${total}`,
-      introTitle: 'クイックスタート',
-      introBody: 'このガイドでは、2つのログを読み込んで比較タイムラインを表示するところまでを順番に案内します。',
-      connectTitle: '1. FFLogs と連携する',
-      connectBody: 'まずこのボタンから FFLogs に接続します。認証後にこのページへ戻ると、ガイドは自動で続行されます。',
-      loadReportsTitle: '2. ログ URL を入力して読み込む',
-      loadReportsBody: 'A と B に FFLogs の URL を1つずつ入力し、レポートを読み込みます。戦闘選択が表示されたら完了です。',
-      loadPlayersTitle: '3. 戦闘を選んでプレイヤー一覧を取得する',
-      loadPlayersBody: '比較したい戦闘を A / B それぞれで選び、プレイヤー一覧を取得してください。',
-      compareTitle: '4. プレイヤーを選んで比較する',
-      compareBody: '各ログから1人ずつ選び、比較を開始します。タイムラインが表示されたらセットアップ完了です。',
+      introTitle: 'クイックスタートガイド',
+      introBody: 'このガイドでは、2つの公開ログを読み込んで比較タイムラインを表示するまでの最小手順を案内します。',
+      loadReportsTitle: '1. 公開ログ URL を 2 つ入力する',
+      loadReportsBody: 'A と B に FFLogs のレポート URL を 1 つずつ貼り付けて読み込みます。戦闘セレクトが表示されたら完了です。',
+      loadPlayersTitle: '2. 戦闘を選んでプレイヤーを取得する',
+      loadPlayersBody: 'A / B それぞれで比較したい戦闘を選び、プレイヤー一覧を取得してください。',
+      compareTitle: '3. プレイヤーを選んで比較する',
+      compareBody: '両方のログから 1 人ずつ選び、比較を開始します。タイムラインが表示されたら準備完了です。',
       doneTitle: 'ガイド完了',
-      doneBody: '比較表示まで完了しました。ここからはタブ切替、フェーズ選択、ズーム、ログ確認が自由に行えます。',
+      doneBody: '比較表示まで完了しました。ここからはタブ切替、フェーズ選択、ズーム、ログ確認を自由に使えます。',
     };
   }
   return {
@@ -35,14 +33,12 @@ function getTutorialCopy() {
     ready: 'Completed. Move to the next step.',
     step: (current, total) => `Step ${current} / ${total}`,
     introTitle: 'Quick Start Guide',
-    introBody: 'This guide walks you through the minimum steps needed to load two logs and reach the comparison timeline.',
-    connectTitle: '1. Connect to FFLogs',
-    connectBody: 'Use this button to sign in to FFLogs first. After the authorization flow returns to this page, the guide will continue automatically.',
-    loadReportsTitle: '2. Enter two log URLs and load them',
+    introBody: 'This guide walks you through the minimum steps needed to load two public logs and reach the comparison timeline.',
+    loadReportsTitle: '1. Enter two public log URLs',
     loadReportsBody: 'Paste one FFLogs report URL into A and one into B, then load the reports. When the fight selectors appear, this step is complete.',
-    loadPlayersTitle: '3. Choose fights and load players',
+    loadPlayersTitle: '2. Choose fights and load players',
     loadPlayersBody: 'Pick the fight you want to compare from each log, then load the player list for both sides.',
-    compareTitle: '4. Choose players and start comparison',
+    compareTitle: '3. Choose players and start comparison',
     compareBody: 'Select one player from each log and run the comparison. When the timeline panel opens, the main setup is complete.',
     doneTitle: 'Guide Complete',
     doneBody: 'The comparison view is now ready. You can switch tabs, change phase filters, zoom, and inspect the timeline freely.',
@@ -58,14 +54,6 @@ function getTutorialSteps() {
       body: copy.introBody,
       getTarget: () => document.getElementById('step1'),
       waitForAction: false,
-    },
-    {
-      key: 'connect',
-      title: copy.connectTitle,
-      body: copy.connectBody,
-      getTarget: () => el.connectBtn,
-      waitForAction: true,
-      isComplete: () => Boolean(state.token),
     },
     {
       key: 'reports',
@@ -260,7 +248,7 @@ bindClick(el.tutorialBtn, 'tutorialBtn', () => {
   clearTutorialState();
   state.tutorial.active = false;
   state.tutorial.stepIndex = 0;
-  window.location.href = 'http://xiv-srd.com/tutorial.html';
+  window.location.href = '/tutorial.html';
 });
 bindClick(el.tutorialCloseBtn, 'tutorialCloseBtn', () => {
   logDebug('click: tutorial close');
@@ -279,31 +267,10 @@ window.addEventListener('scroll', () => {
   if (state.tutorial.active) positionTutorialCard(getCurrentTutorialStep().step?.getTarget?.());
 }, true);
 
-bindClick(el.connectBtn, 'connectBtn', () => {
-  logDebug('click: connect');
-  if (state.tutorial.active) saveTutorialState();
-  startOAuthLogin().catch(e => {
-    el.msg.textContent = `連携開始失敗: ${e.message}`;
-  });
-});
-bindClick(el.disconnectBtn, 'disconnectBtn', () => {
-  logDebug('click: disconnect');
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(AUTH_STATE_KEY);
-  localStorage.removeItem(AUTH_VERIFIER_KEY);
-  state.token = '';
-  el.authStatus.textContent = t('authDisconnected');
-  el.msg.textContent = t('disconnected');
-  syncTutorialProgress();
-});
 bindClick(el.loadBtn, 'loadBtn', async () => {
   logDebug('click: load reports', {urlA: el.urlA.value, urlB: el.urlB.value});
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
-  if (!state.token) {
-    el.msg.textContent = t('needAuth');
-    return;
-  }
   if (!parsedA || !parsedB) {
     el.msg.textContent = t('badUrl');
     return;
@@ -335,8 +302,15 @@ bindClick(el.loadBtn, 'loadBtn', async () => {
     el.step3.classList.add('hidden');
     el.step4.classList.add('hidden');
     el.msg.textContent = t('killFightsLoaded')(fightsA.length, fightsB.length);
+    sendAnalyticsEvent('reports_loaded', {
+      reportCodeA: state.urlA.reportId,
+      reportCodeB: state.urlB.reportId,
+      fightsA: fightsA.length,
+      fightsB: fightsB.length,
+    });
     syncTutorialProgress();
   } catch (e) {
+    sendAnalyticsEvent('api_error', { stage: 'load_reports', message: e.message });
     el.msg.textContent = `取得失敗: ${e.message}`;
   } finally {
     el.loadBtn.disabled = false;
@@ -454,7 +428,15 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
       if (unknownsB.length) logDebug('[B] 未分類サンプル', unknownsB.map(e => `${e.action}(id:${e.actionId})`));
     }
     el.step2Message.textContent = t('tlLoaded')(state.timelineA.length, state.timelineB.length);
+    sendAnalyticsEvent('comparison_completed', {
+      encounterA: Number(fightA?.encounterID || 0),
+      encounterB: Number(fightB?.encounterID || 0),
+      jobA: state.selectedA?.job || '',
+      jobB: state.selectedB?.job || '',
+      phasesShown: state.phases.length,
+    });
   } catch (e) {
+    sendAnalyticsEvent('api_error', { stage: 'compare', message: e.message });
     state.timelineA = makeSampleTimeline();
     state.timelineB = makeSampleTimeline();
     state.timelineCountA = state.timelineA.length;
@@ -508,8 +490,7 @@ function applyLang() {
   if (el.siteTitle) el.siteTitle.textContent = s.siteTitle;
   if (el.siteDesc) el.siteDesc.textContent = s.siteDesc;
   if (el.step1Title) el.step1Title.textContent = s.step1Title;
-  if (el.connectBtn) el.connectBtn.textContent = s.connectBtn;
-  if (el.disconnectBtn) el.disconnectBtn.textContent = s.disconnectBtn;
+  if (el.publicOnlyNote) el.publicOnlyNote.textContent = s.publicOnlyNote;
   if (el.loadBtn) el.loadBtn.textContent = s.loadBtn;
   if (el.step2Title) el.step2Title.textContent = s.step2Title;
   if (el.loadPlayersBtn) el.loadPlayersBtn.textContent = s.loadPlayersBtn;
@@ -529,7 +510,6 @@ function applyLang() {
     const key = { all: 'tabAll', odd: 'tabOdd', even: 'tabEven' }[tb.dataset.tab];
     if (key) tb.textContent = s[key];
   });
-  if (el.authStatus) el.authStatus.textContent = state.token ? s.authConnected : s.authDisconnected;
   if (el.tutorialBtn) el.tutorialBtn.textContent = tutorialCopy.launch;
   if (el.langToggle) el.langToggle.textContent = state.lang === 'ja' ? 'EN' : 'JA';
   // Re-render fight selects if data exists
@@ -555,19 +535,16 @@ function applyLang() {
 bindClick(el.langToggle, 'langToggle', () => {
   state.lang = state.lang === 'ja' ? 'en' : 'ja';
   applyLang();
+  sendAnalyticsEvent('lang_changed', { lang: state.lang });
   logDebug('lang toggled', { lang: state.lang });
 });
 try {
   logDebug('script initialized');
+  sendAnalyticsEvent('page_view', { lang: state.lang });
   clearTutorialState();
   state.tutorial.active = false;
   state.tutorial.stepIndex = 0;
   applyLang();
-  restoreOrAuthorize().then(() => {
-  }).catch(e => {
-    if (el.msg) el.msg.textContent = `認証初期化失敗: ${e.message}`;
-    logError('auth init failed', { message: e.message });
-  });
 } catch (e) {
   if (el.msg) el.msg.textContent = `初期化失敗: ${e.message}`;
   console.error(e);

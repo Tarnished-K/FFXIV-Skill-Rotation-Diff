@@ -3,20 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>はじめての方向けガイド | FFXIV Skill Rotation Diff</title>
-    <meta name="description" content="FFXIV Skill Rotation Diff の初回利用ガイドです。FFLogs 連携から比較表示までの流れを順番に確認できます。" />
-    <link rel="canonical" href="http://xiv-srd.com/tutorial.html" />
+    <title>初めての方向けガイド | FFXIV Skill Rotation Diff</title>
+    <meta name="description" content="FFXIV Skill Rotation Diff の初回ガイドです。公開 FFLogs ログを比較結果の表示まで読み込む流れを案内します。" />
+    <link rel="canonical" href="https://xiv-srd.com/tutorial.html" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="guide-page">
     <header>
       <div class="header-row">
         <div>
-          <h1>はじめての方向けガイド</h1>
-          <p>FFLogs 連携から比較タイムラインの表示まで、最短の流れだけをまとめています。</p>
+          <h1>初めての方向けガイド</h1>
+          <p>公開 FFLogs ログを比較表示するまでの流れを、最短手順だけに絞ってまとめています。</p>
         </div>
         <div class="header-actions">
-          <a class="button-link ghost tutorial-launch-btn" href="http://xiv-srd.com/">比較ページへ戻る</a>
+          <a class="button-link ghost tutorial-launch-btn" href="/">比較ページへ戻る</a>
         </div>
       </div>
     </header>
@@ -24,13 +24,13 @@
     <main class="guide-main">
       <section class="card guide-hero">
         <div class="guide-kicker">Quick Start</div>
-        <h2>まず何をすればいいかだけを順に確認</h2>
+        <h2>まずは 3 ステップだけ覚えれば大丈夫です</h2>
         <p>
-          このツールは、2件の FFLogs URL を読み込み、戦闘とプレイヤーを選んでタイムライン比較を行います。
-          下の 4 ステップを上から順に進めれば、比較表示まで辿り着けます。
+          このツールは、2つの FFLogs 公開ログ URL を読み込み、戦闘とプレイヤーを選んでタイムライン比較を行います。
+          FFLogs の連携や API 設定は不要です。
         </p>
         <div class="guide-actions">
-          <a class="button-link guide-primary" href="http://xiv-srd.com/">比較ページを開く</a>
+          <a class="button-link guide-primary" href="/">比較ページを開く</a>
           <a class="button-link ghost" href="https://ja.fflogs.com/" target="_blank" rel="noopener noreferrer">FFLogs を開く</a>
         </div>
       </section>
@@ -38,48 +38,41 @@
       <section class="guide-grid">
         <article class="card guide-step-card">
           <div class="guide-step-no">1</div>
-          <h2>FFLogs と連携する</h2>
-          <p>トップページの <strong>FFLogs と連携</strong> ボタンを押します。認証画面が開くので、そのまま許可してください。</p>
-          <p class="guide-note">認証後は自動で比較ページに戻ります。戻ったら右上の状態が「連携済み」になっていることを確認します。</p>
+          <h2>公開ログ URL を 2 つ貼る</h2>
+          <p>トップページの <strong>ログURL A</strong> と <strong>ログURL B</strong> に、比較したい FFLogs レポート URL を 1 つずつ入力して <strong>読み込み開始</strong> を押します。</p>
+          <p class="guide-note">非公開ログは取得できません。FF Logs 側で公開されているレポートのみ対応です。</p>
         </article>
 
         <article class="card guide-step-card">
           <div class="guide-step-no">2</div>
-          <h2>比較したい 2 件のログ URL を入れる</h2>
-          <p>URL A と URL B に、それぞれ比較したい FFLogs レポートの URL を貼り付けて <strong>読み込み</strong> を押します。</p>
-          <p class="guide-note">読み込みが成功すると、次の戦闘選択エリアが表示されます。</p>
+          <h2>戦闘を選んでプレイヤー一覧を取得する</h2>
+          <p>A と B それぞれで比較したい戦闘を選び、<strong>この戦闘でプレイヤー一覧を取得</strong> を押します。</p>
+          <p class="guide-note">ここでは Kill 戦闘のみ一覧に出ます。同じコンテンツ同士を選ぶと比較しやすいです。</p>
         </article>
 
         <article class="card guide-step-card">
           <div class="guide-step-no">3</div>
-          <h2>戦闘を選んでプレイヤー一覧を取得する</h2>
-          <p>A と B それぞれで比較したい戦闘を選び、<strong>プレイヤー一覧を取得</strong> を押します。</p>
-          <p class="guide-note">同じボス同士を比較したい場合は、ここで同一コンテンツの戦闘を選んでください。</p>
-        </article>
-
-        <article class="card guide-step-card">
-          <div class="guide-step-no">4</div>
           <h2>プレイヤーを選んで比較する</h2>
-          <p>A 側と B 側のプレイヤーを 1 人ずつ選択し、<strong>比較開始</strong> を押します。</p>
-          <p class="guide-note">比較結果が開いたら完了です。タブ切替、フェーズ選択、ズーム、ログ確認が使えます。</p>
+          <p>A と B のプレイヤーを 1 人ずつ選び、<strong>比較を開始</strong> を押すとタイムライン比較が表示されます。</p>
+          <p class="guide-note">比較後はタブ切替、フェーズ選択、ズーム、ログ確認が使えます。</p>
         </article>
       </section>
 
       <section class="card guide-tips">
         <h2>つまずきやすい点</h2>
         <ul class="guide-list">
-          <li>URL の読み込み前に FFLogs 連携が必要です。</li>
+          <li>FFLogs 側で非公開のレポートは読み込めません。</li>
           <li>プレイヤー一覧は、先に戦闘を選ばないと取得できません。</li>
-          <li>別ボス同士は比較できません。同一 encounter を選んでください。</li>
-          <li>比較後は下部の Log / Error Log を見ると、進行状況や異常の切り分けがしやすいです。</li>
+          <li>異なるボス同士は比較できません。同じ encounter を選んでください。</li>
+          <li>表示がおかしいときは Log / Error Log を確認すると原因を追いやすいです。</li>
         </ul>
       </section>
 
       <section class="card guide-return-card">
         <h2>準備できたら戻る</h2>
-        <p>内容を確認したら、下のボタンから比較ページへ戻ってそのまま操作できます。</p>
+        <p>手順を確認したら、下のボタンから比較ページに戻ってそのまま操作できます。</p>
         <div class="guide-actions">
-          <a class="button-link guide-primary" href="http://xiv-srd.com/">比較ページへ戻る</a>
+          <a class="button-link guide-primary" href="/">比較ページへ戻る</a>
         </div>
       </section>
     </main>

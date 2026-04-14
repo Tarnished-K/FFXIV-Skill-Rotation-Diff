@@ -1,0 +1,13 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/fflogs-proxy"
+  to = "/.netlify/functions/fflogs-proxy"
+  status = 200
+
+[[redirects]]
+  from = "/api/log-event"
+  to = "/.netlify/functions/log-event"
+  status = 200

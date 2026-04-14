@@ -4,6 +4,7 @@ const FFLOGS_V2_CLIENT_ID = 'a182a7d9-18bd-49d6-a5d3-26f40a3f3a7d';
 const AUTH_STATE_KEY = 'fflogs_v2_state';
 const AUTH_VERIFIER_KEY = 'fflogs_v2_verifier';
 const TOKEN_KEY = 'fflogs_v2_access_token';
+const TUTORIAL_STATE_KEY = 'ffxiv_rotation_diff_tutorial';
 
 const JOB_CODE_MAP = {
   PALADIN: 'PLD', WARRIOR: 'WAR', DARKKNIGHT: 'DRK', GUNBREAKER: 'GNB',
@@ -111,6 +112,26 @@ const I18N = {
     laneBoss: 'Boss Cast',
     debugNormalTitle: 'Log',
     debugErrorTitle: 'Error Log',
+    tutorialBtn: 'First time here?',
+    tutorialPrev: 'Back',
+    tutorialNext: 'Next',
+    tutorialFinish: 'Done',
+    tutorialClose: 'Close',
+    tutorialWaiting: 'Waiting for this step to be completed.',
+    tutorialReady: 'Completed. Move to the next step.',
+    tutorialIntroTitle: 'Quick Start Guide',
+    tutorialIntroBody: 'This guide walks you through the minimum steps needed to load two logs and reach the comparison timeline.',
+    tutorialConnectTitle: '1. Connect to FFLogs',
+    tutorialConnectBody: 'Use this button to sign in to FFLogs first. After the authorization flow returns to this page, the guide will continue automatically.',
+    tutorialLoadReportsTitle: '2. Enter two log URLs and load them',
+    tutorialLoadReportsBody: 'Paste one FFLogs report URL into A and one into B, then load the reports. When the fight selectors appear, this step is complete.',
+    tutorialLoadPlayersTitle: '3. Choose fights and load players',
+    tutorialLoadPlayersBody: 'Pick the fight you want to compare from each log, then load the player list for both sides.',
+    tutorialCompareTitle: '4. Choose players and start comparison',
+    tutorialCompareBody: 'Select one player from each log and run the comparison. When the timeline panel opens, the main setup is complete.',
+    tutorialDoneTitle: 'Guide Complete',
+    tutorialDoneBody: 'The comparison view is now ready. You can switch tabs, change phase filters, zoom, and inspect the timeline freely.',
+    tutorialStep: (current, total) => `Step ${current} / ${total}`,
     footerNote: 'Note: Connects via FFLogs V2 (PKCE). Select a fight first, then select players.',
     needAuth: 'Please connect to FFLogs (V2) first.',
     badUrl: 'Please check FFLogs URL format.',
@@ -212,8 +233,14 @@ const state = {
   dpsDataB: null,
   fightA: null,
   fightB: null,
+  tutorial: {
+    active: false,
+    stepIndex: 0,
+    highlightKey: '',
+  },
 };
 const el = {
+  tutorialBtn: document.getElementById('tutorialBtn'),
   connectBtn: document.getElementById('connectBtn'),
   disconnectBtn: document.getElementById('disconnectBtn'),
   authStatus: document.getElementById('authStatus'),
@@ -239,6 +266,16 @@ const el = {
   phaseContainer: document.getElementById('phaseContainer'),
   debugLog: document.getElementById('debugLog'),
   errorLog: document.getElementById('errorLog'),
+  tutorialOverlay: document.getElementById('tutorialOverlay'),
+  tutorialBackdrop: document.getElementById('tutorialBackdrop'),
+  tutorialCard: document.getElementById('tutorialCard'),
+  tutorialStepMeta: document.getElementById('tutorialStepMeta'),
+  tutorialTitle: document.getElementById('tutorialTitle'),
+  tutorialBody: document.getElementById('tutorialBody'),
+  tutorialStatus: document.getElementById('tutorialStatus'),
+  tutorialPrevBtn: document.getElementById('tutorialPrevBtn'),
+  tutorialNextBtn: document.getElementById('tutorialNextBtn'),
+  tutorialCloseBtn: document.getElementById('tutorialCloseBtn'),
   langToggle: document.getElementById('langToggle'),
   siteTitle: document.getElementById('siteTitle'),
   siteDesc: document.getElementById('siteDesc'),

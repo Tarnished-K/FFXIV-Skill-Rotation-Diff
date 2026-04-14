@@ -1,7 +1,287 @@
 // UI event wiring, language application, and bootstrap
 
+function getTutorialCopy() {
+  if (state.lang === 'ja') {
+    return {
+      launch: '初めての方はこちら',
+      prev: '戻る',
+      next: '次へ',
+      finish: '完了',
+      close: '閉じる',
+      waiting: 'この操作が完了するまで待機しています。',
+      ready: '完了しました。次の手順へ進めます。',
+      step: (current, total) => `手順 ${current} / ${total}`,
+      introTitle: 'クイックスタート',
+      introBody: 'このガイドでは、2つのログを読み込んで比較タイムラインを表示するところまでを順番に案内します。',
+      connectTitle: '1. FFLogs と連携する',
+      connectBody: 'まずこのボタンから FFLogs に接続します。認証後にこのページへ戻ると、ガイドは自動で続行されます。',
+      loadReportsTitle: '2. ログ URL を入力して読み込む',
+      loadReportsBody: 'A と B に FFLogs の URL を1つずつ入力し、レポートを読み込みます。戦闘選択が表示されたら完了です。',
+      loadPlayersTitle: '3. 戦闘を選んでプレイヤー一覧を取得する',
+      loadPlayersBody: '比較したい戦闘を A / B それぞれで選び、プレイヤー一覧を取得してください。',
+      compareTitle: '4. プレイヤーを選んで比較する',
+      compareBody: '各ログから1人ずつ選び、比較を開始します。タイムラインが表示されたらセットアップ完了です。',
+      doneTitle: 'ガイド完了',
+      doneBody: '比較表示まで完了しました。ここからはタブ切替、フェーズ選択、ズーム、ログ確認が自由に行えます。',
+    };
+  }
+  return {
+    launch: 'First time here?',
+    prev: 'Back',
+    next: 'Next',
+    finish: 'Done',
+    close: 'Close',
+    waiting: 'Waiting for this step to be completed.',
+    ready: 'Completed. Move to the next step.',
+    step: (current, total) => `Step ${current} / ${total}`,
+    introTitle: 'Quick Start Guide',
+    introBody: 'This guide walks you through the minimum steps needed to load two logs and reach the comparison timeline.',
+    connectTitle: '1. Connect to FFLogs',
+    connectBody: 'Use this button to sign in to FFLogs first. After the authorization flow returns to this page, the guide will continue automatically.',
+    loadReportsTitle: '2. Enter two log URLs and load them',
+    loadReportsBody: 'Paste one FFLogs report URL into A and one into B, then load the reports. When the fight selectors appear, this step is complete.',
+    loadPlayersTitle: '3. Choose fights and load players',
+    loadPlayersBody: 'Pick the fight you want to compare from each log, then load the player list for both sides.',
+    compareTitle: '4. Choose players and start comparison',
+    compareBody: 'Select one player from each log and run the comparison. When the timeline panel opens, the main setup is complete.',
+    doneTitle: 'Guide Complete',
+    doneBody: 'The comparison view is now ready. You can switch tabs, change phase filters, zoom, and inspect the timeline freely.',
+  };
+}
+
+function getTutorialSteps() {
+  const copy = getTutorialCopy();
+  return [
+    {
+      key: 'intro',
+      title: copy.introTitle,
+      body: copy.introBody,
+      getTarget: () => document.getElementById('step1'),
+      waitForAction: false,
+    },
+    {
+      key: 'connect',
+      title: copy.connectTitle,
+      body: copy.connectBody,
+      getTarget: () => el.connectBtn,
+      waitForAction: true,
+      isComplete: () => Boolean(state.token),
+    },
+    {
+      key: 'reports',
+      title: copy.loadReportsTitle,
+      body: copy.loadReportsBody,
+      getTarget: () => el.loadBtn,
+      waitForAction: true,
+      isComplete: () => Boolean(state.reportA && state.reportB && !el.step2?.classList.contains('hidden')),
+    },
+    {
+      key: 'players',
+      title: copy.loadPlayersTitle,
+      body: copy.loadPlayersBody,
+      getTarget: () => el.loadPlayersBtn,
+      waitForAction: true,
+      isComplete: () => Boolean(state.playersA.length && state.playersB.length && !el.step3?.classList.contains('hidden')),
+    },
+    {
+      key: 'compare',
+      title: copy.compareTitle,
+      body: copy.compareBody,
+      getTarget: () => el.compareBtn,
+      waitForAction: true,
+      isComplete: () => Boolean(!el.step4?.classList.contains('hidden') && state.timelineA.length && state.timelineB.length),
+    },
+    {
+      key: 'done',
+      title: copy.doneTitle,
+      body: copy.doneBody,
+      getTarget: () => el.step4,
+      waitForAction: false,
+    },
+  ];
+}
+
+function saveTutorialState() {
+  try {
+    localStorage.setItem(TUTORIAL_STATE_KEY, JSON.stringify({
+      active: state.tutorial.active,
+      stepIndex: state.tutorial.stepIndex,
+    }));
+  } catch {}
+}
+
+function restoreTutorialState() {
+  try {
+    const raw = localStorage.getItem(TUTORIAL_STATE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.active) return;
+    state.tutorial.active = true;
+    state.tutorial.stepIndex = Number.isFinite(parsed.stepIndex) ? parsed.stepIndex : 0;
+  } catch {}
+}
+
+function clearTutorialState() {
+  try {
+    localStorage.removeItem(TUTORIAL_STATE_KEY);
+  } catch {}
+}
+
+function clearTutorialHighlight() {
+  document.querySelectorAll('.tutorial-target').forEach(node => node.classList.remove('tutorial-target'));
+  state.tutorial.highlightKey = '';
+}
+
+function setTutorialHighlight(target) {
+  clearTutorialHighlight();
+  if (!target) return;
+  target.classList.add('tutorial-target');
+  state.tutorial.highlightKey = target.id || target.className || 'tutorial-target';
+}
+
+function isTutorialTargetVisible(target) {
+  return !!target && !target.classList.contains('hidden') && !!(target.offsetWidth || target.offsetHeight || target.getClientRects().length);
+}
+
+function ensureTutorialTargetVisible(target) {
+  if (!target) return;
+  const rect = target.getBoundingClientRect();
+  const margin = 48;
+  if (rect.top < margin || rect.bottom > window.innerHeight - margin) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  }
+}
+
+function positionTutorialCard(target) {
+  if (!state.tutorial.active || !el.tutorialCard) return;
+  const fallbackTop = 24;
+  const fallbackLeft = Math.max(16, window.innerWidth - 408);
+  if (!target || !isTutorialTargetVisible(target)) {
+    el.tutorialCard.style.top = `${fallbackTop}px`;
+    el.tutorialCard.style.left = `${fallbackLeft}px`;
+    return;
+  }
+  const rect = target.getBoundingClientRect();
+  const cardRect = el.tutorialCard.getBoundingClientRect();
+  const gap = 18;
+  let top = rect.bottom + gap;
+  let left = Math.max(16, Math.min(rect.left, window.innerWidth - cardRect.width - 16));
+  if (top + cardRect.height > window.innerHeight - 16) {
+    top = rect.top - cardRect.height - gap;
+  }
+  if (top < 16) top = 16;
+  if (left < 16) left = 16;
+  el.tutorialCard.style.top = `${top}px`;
+  el.tutorialCard.style.left = `${left}px`;
+}
+
+function getCurrentTutorialStep() {
+  const steps = getTutorialSteps();
+  const index = Math.max(0, Math.min(state.tutorial.stepIndex, steps.length - 1));
+  return { steps, step: steps[index], index };
+}
+
+function renderTutorial() {
+  if (!el.tutorialOverlay || !el.tutorialCard || !el.tutorialBtn) return;
+  const copy = getTutorialCopy();
+  el.tutorialBtn.textContent = copy.launch;
+  if (!state.tutorial.active) {
+    el.tutorialOverlay.classList.add('hidden');
+    el.tutorialOverlay.setAttribute('aria-hidden', 'true');
+    clearTutorialHighlight();
+    return;
+  }
+  const { steps, step, index } = getCurrentTutorialStep();
+  const target = step?.getTarget?.() || document.getElementById('step1');
+  const completed = Boolean(step?.isComplete?.());
+
+  el.tutorialOverlay.classList.remove('hidden');
+  el.tutorialOverlay.setAttribute('aria-hidden', 'false');
+  el.tutorialStepMeta.textContent = copy.step(index + 1, steps.length);
+  el.tutorialTitle.textContent = step?.title || copy.introTitle;
+  el.tutorialBody.textContent = step?.body || copy.introBody;
+  el.tutorialStatus.textContent = step?.waitForAction ? (completed ? copy.ready : copy.waiting) : '';
+  el.tutorialStatus.dataset.complete = completed ? 'true' : 'false';
+  el.tutorialPrevBtn.textContent = copy.prev;
+  el.tutorialNextBtn.textContent = index === steps.length - 1 ? copy.finish : copy.next;
+  el.tutorialCloseBtn.setAttribute('aria-label', copy.close);
+  el.tutorialPrevBtn.disabled = index === 0;
+  el.tutorialNextBtn.disabled = Boolean(step?.waitForAction && !completed);
+  ensureTutorialTargetVisible(target);
+  setTutorialHighlight(target);
+  requestAnimationFrame(() => positionTutorialCard(target));
+  saveTutorialState();
+}
+
+function syncTutorialProgress() {
+  if (!state.tutorial.active) {
+    renderTutorial();
+    return;
+  }
+  const steps = getTutorialSteps();
+  let index = Math.max(0, Math.min(state.tutorial.stepIndex, steps.length - 1));
+  while (index < steps.length - 1) {
+    const step = steps[index];
+    if (!step.waitForAction || !step.isComplete?.()) break;
+    index += 1;
+  }
+  state.tutorial.stepIndex = index;
+  renderTutorial();
+}
+
+function startTutorial() {
+  state.tutorial.active = true;
+  state.tutorial.stepIndex = 0;
+  saveTutorialState();
+  renderTutorial();
+}
+
+function closeTutorial() {
+  state.tutorial.active = false;
+  state.tutorial.stepIndex = 0;
+  clearTutorialHighlight();
+  clearTutorialState();
+  renderTutorial();
+}
+
+function moveTutorial(direction) {
+  const { steps, step, index } = getCurrentTutorialStep();
+  if (direction > 0 && index === steps.length - 1) {
+    closeTutorial();
+    return;
+  }
+  if (direction > 0 && step?.waitForAction && !step.isComplete?.()) return;
+  state.tutorial.stepIndex = Math.max(0, Math.min(index + direction, steps.length - 1));
+  syncTutorialProgress();
+}
+
+bindClick(el.tutorialBtn, 'tutorialBtn', () => {
+  logDebug('click: tutorial page');
+  clearTutorialState();
+  state.tutorial.active = false;
+  state.tutorial.stepIndex = 0;
+  window.location.href = 'http://xiv-srd.com/tutorial.html';
+});
+bindClick(el.tutorialCloseBtn, 'tutorialCloseBtn', () => {
+  logDebug('click: tutorial close');
+  closeTutorial();
+});
+bindClick(el.tutorialPrevBtn, 'tutorialPrevBtn', () => {
+  moveTutorial(-1);
+});
+bindClick(el.tutorialNextBtn, 'tutorialNextBtn', () => {
+  moveTutorial(1);
+});
+window.addEventListener('resize', () => {
+  if (state.tutorial.active) renderTutorial();
+});
+window.addEventListener('scroll', () => {
+  if (state.tutorial.active) positionTutorialCard(getCurrentTutorialStep().step?.getTarget?.());
+}, true);
+
 bindClick(el.connectBtn, 'connectBtn', () => {
   logDebug('click: connect');
+  if (state.tutorial.active) saveTutorialState();
   startOAuthLogin().catch(e => {
     el.msg.textContent = `連携開始失敗: ${e.message}`;
   });
@@ -14,6 +294,7 @@ bindClick(el.disconnectBtn, 'disconnectBtn', () => {
   state.token = '';
   el.authStatus.textContent = t('authDisconnected');
   el.msg.textContent = t('disconnected');
+  syncTutorialProgress();
 });
 bindClick(el.loadBtn, 'loadBtn', async () => {
   logDebug('click: load reports', {urlA: el.urlA.value, urlB: el.urlB.value});
@@ -54,10 +335,12 @@ bindClick(el.loadBtn, 'loadBtn', async () => {
     el.step3.classList.add('hidden');
     el.step4.classList.add('hidden');
     el.msg.textContent = t('killFightsLoaded')(fightsA.length, fightsB.length);
+    syncTutorialProgress();
   } catch (e) {
     el.msg.textContent = `取得失敗: ${e.message}`;
   } finally {
     el.loadBtn.disabled = false;
+    if (state.tutorial.active) renderTutorial();
   }
 });
 bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
@@ -82,8 +365,11 @@ bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
     el.step3.classList.remove('hidden');
     el.step4.classList.add('hidden');
     el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
+    syncTutorialProgress();
   } catch (e) {
     el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
+  } finally {
+    if (state.tutorial.active) renderTutorial();
   }
 });
 bindClick(el.compareBtn, 'compareBtn', async () => {
@@ -193,6 +479,7 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     logError('renderTimeline エラー', { error: renderErr.message, stack: renderErr.stack?.split('\n').slice(0, 3).join(' | ') });
     el.timelineWrap.innerHTML = `<p class="message">タイムライン描画エラー: ${renderErr.message}</p>`;
   }
+  syncTutorialProgress();
 });
 bindClick(el.zoomInBtn, 'zoomInBtn', () => {
   state.zoom = Math.min(3, +(state.zoom + 0.25).toFixed(2));
@@ -217,6 +504,7 @@ el.tabs.forEach((tab, i) => {
 });
 function applyLang() {
   const s = I18N[state.lang];
+  const tutorialCopy = getTutorialCopy();
   if (el.siteTitle) el.siteTitle.textContent = s.siteTitle;
   if (el.siteDesc) el.siteDesc.textContent = s.siteDesc;
   if (el.step1Title) el.step1Title.textContent = s.step1Title;
@@ -242,6 +530,7 @@ function applyLang() {
     if (key) tb.textContent = s[key];
   });
   if (el.authStatus) el.authStatus.textContent = state.token ? s.authConnected : s.authDisconnected;
+  if (el.tutorialBtn) el.tutorialBtn.textContent = tutorialCopy.launch;
   if (el.langToggle) el.langToggle.textContent = state.lang === 'ja' ? 'EN' : 'JA';
   // Re-render fight selects if data exists
   if (state.reportA) {
@@ -261,6 +550,7 @@ function applyLang() {
     fillPlayerSelect(el.playerB, state.playersB, state.dpsDataB, fB ? (fB.endTime - fB.startTime) : 1);
   }
   if (!el.timelineWrap.classList.contains('hidden') && state.timelineA.length) renderTimeline();
+  if (state.tutorial.active) renderTutorial();
 }
 bindClick(el.langToggle, 'langToggle', () => {
   state.lang = state.lang === 'ja' ? 'en' : 'ja';
@@ -269,8 +559,12 @@ bindClick(el.langToggle, 'langToggle', () => {
 });
 try {
   logDebug('script initialized');
+  clearTutorialState();
+  state.tutorial.active = false;
+  state.tutorial.stepIndex = 0;
   applyLang();
-  restoreOrAuthorize().catch(e => {
+  restoreOrAuthorize().then(() => {
+  }).catch(e => {
     if (el.msg) el.msg.textContent = `認証初期化失敗: ${e.message}`;
     logError('auth init failed', { message: e.message });
   });

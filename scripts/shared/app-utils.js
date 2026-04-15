@@ -34,6 +34,9 @@
   function parseSharedState(search = '') {
     const raw = String(search || '');
     const params = new URLSearchParams(raw.startsWith('?') ? raw : `?${raw}`);
+    const tab = String(params.get('tb') || '').trim();
+    const zoom = Number(params.get('z') || '');
+    const lang = String(params.get('l') || '').trim();
     return {
       reportA: String(params.get('ra') || '').trim(),
       reportB: String(params.get('rb') || '').trim(),
@@ -41,6 +44,9 @@
       fightB: String(params.get('fb') || '').trim(),
       playerA: String(params.get('pa') || '').trim(),
       playerB: String(params.get('pb') || '').trim(),
+      tab: ['all', 'odd', 'even'].includes(tab) ? tab : '',
+      zoom: Number.isFinite(zoom) && zoom >= 0.5 && zoom <= 3 ? zoom : null,
+      lang: ['ja', 'en'].includes(lang) ? lang : '',
     };
   }
 
@@ -53,6 +59,9 @@
       ['fb', sharedState.fightB],
       ['pa', sharedState.playerA],
       ['pb', sharedState.playerB],
+      ['tb', sharedState.tab],
+      ['z', sharedState.zoom],
+      ['l', sharedState.lang],
     ];
     for (const [key, value] of entries) {
       if (value === null || value === undefined || value === '') continue;

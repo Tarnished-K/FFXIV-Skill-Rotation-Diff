@@ -38,13 +38,16 @@ describe('computeRollingDps', () => {
 
 describe('shareable state query helpers', () => {
   it('parses known query parameters into shareable state', () => {
-    expect(parseSharedState('?ra=AAA&rb=BBB&fa=1&fb=2&pa=11&pb=22')).toEqual({
+    expect(parseSharedState('?ra=AAA&rb=BBB&fa=1&fb=2&pa=11&pb=22&tb=odd&z=1.5&l=ja')).toEqual({
       reportA: 'AAA',
       reportB: 'BBB',
       fightA: '1',
       fightB: '2',
       playerA: '11',
       playerB: '22',
+      tab: 'odd',
+      zoom: 1.5,
+      lang: 'ja',
     });
   });
 
@@ -54,6 +57,23 @@ describe('shareable state query helpers', () => {
       reportB: 'BBB',
       fightA: 1,
       playerB: 22,
-    })).toBe('?ra=AAA&rb=BBB&fa=1&pb=22');
+      tab: 'even',
+      zoom: 2.25,
+      lang: 'en',
+    })).toBe('?ra=AAA&rb=BBB&fa=1&pb=22&tb=even&z=2.25&l=en');
+  });
+
+  it('drops unsupported tab, zoom, and lang values', () => {
+    expect(parseSharedState('?tb=bad&z=10&l=de')).toEqual({
+      reportA: '',
+      reportB: '',
+      fightA: '',
+      fightB: '',
+      playerA: '',
+      playerB: '',
+      tab: '',
+      zoom: null,
+      lang: '',
+    });
   });
 });

@@ -319,6 +319,36 @@ function getShareStateFromUrl() {
   return parseSharedState(window.location.search);
 }
 
+function setActiveTab(tab) {
+  const nextTab = ['all', 'odd', 'even'].includes(tab) ? tab : 'all';
+  state.currentTab = nextTab;
+  el.tabs.forEach((button) => {
+    button.classList.toggle('active', button.dataset.tab === nextTab);
+  });
+}
+
+function setZoomLevel(zoom) {
+  const numeric = Number(zoom);
+  const nextZoom = Number.isFinite(numeric)
+    ? Math.max(0.5, Math.min(3, +numeric.toFixed(2)))
+    : state.zoom;
+  state.zoom = nextZoom;
+  if (el.zoomLabel) el.zoomLabel.textContent = `${Math.round(nextZoom * 100)}%`;
+}
+
+function applySharedViewState(shareState, options = {}) {
+  const { rerender = false } = options;
+  if (shareState.lang && shareState.lang !== state.lang) {
+    state.lang = shareState.lang;
+    applyLang();
+  }
+  if (shareState.tab) setActiveTab(shareState.tab);
+  if (shareState.zoom !== null && shareState.zoom !== undefined) setZoomLevel(shareState.zoom);
+  if (rerender && !state.compareError && !el.timelineWrap?.classList.contains('hidden') && state.timelineA.length) {
+    renderTimeline();
+  }
+}
+
 function syncShareStateUrl() {
   const url = new URL(window.location.href);
   const parsedA = state.urlA || parseFFLogsUrl(el.urlA?.value?.trim?.() || '');
@@ -330,6 +360,9 @@ function syncShareStateUrl() {
     fightB: state.selectedFightB || '',
     playerA: el.playerA?.value || '',
     playerB: el.playerB?.value || '',
+    tab: state.currentTab || 'all',
+    zoom: state.zoom,
+    lang: state.lang,
   });
   window.history.replaceState({}, '', url);
 }
@@ -613,6 +646,7 @@ async function handleCompare(options = {}) {
 
 async function restoreStateFromUrl() {
   const shareState = getShareStateFromUrl();
+  applySharedViewState(shareState);
   if (!shareState.reportA || !shareState.reportB) return;
   el.urlA.value = buildSharedReportUrl(shareState.reportA);
   el.urlB.value = buildSharedReportUrl(shareState.reportB);
@@ -638,6 +672,7 @@ async function restoreStateFromUrl() {
   if (selectHasValue(el.playerA, shareState.playerA) && selectHasValue(el.playerB, shareState.playerB)) {
     await handleCompare({ skipShareUrl: true });
   }
+  applySharedViewState(shareState, { rerender: true });
   syncShareStateUrl();
 }
 
@@ -680,24 +715,23 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
 el.playerA?.addEventListener('change', syncShareStateUrl);
 el.playerB?.addEventListener('change', syncShareStateUrl);
 bindClick(el.zoomInBtn, 'zoomInBtn', () => {
-  state.zoom = Math.min(3, +(state.zoom + 0.25).toFixed(2));
-  el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
+  setZoomLevel(state.zoom + 0.25);
   renderTimeline();
+  syncShareStateUrl();
   logDebug('zoom in', {zoom: state.zoom});
 });
 bindClick(el.zoomOutBtn, 'zoomOutBtn', () => {
-  state.zoom = Math.max(0.5, +(state.zoom - 0.25).toFixed(2));
-  el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
+  setZoomLevel(state.zoom - 0.25);
   renderTimeline();
+  syncShareStateUrl();
   logDebug('zoom out', {zoom: state.zoom});
 });
 el.tabs.forEach((tab, i) => {
   bindClick(tab, `tab-${i}`, () => {
-    el.tabs.forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    state.currentTab = tab.dataset.tab;
+    setActiveTab(tab.dataset.tab);
     el.timelineWrap.classList.remove('hidden');
     renderTimeline();
+    syncShareStateUrl();
   });
 });
 function applyLang() {
@@ -752,6 +786,7 @@ function applyLang() {
 bindClick(el.langToggle, 'langToggle', () => {
   state.lang = state.lang === 'ja' ? 'en' : 'ja';
   applyLang();
+  syncShareStateUrl();
   sendAnalyticsEvent('lang_changed', { lang: state.lang });
   logDebug('lang toggled', { lang: state.lang });
 });

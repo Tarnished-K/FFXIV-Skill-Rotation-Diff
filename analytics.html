@@ -49,6 +49,10 @@
 
       <section class="analytics-metric-grid analytics-secondary-grid">
         <article class="card analytics-metric-card analytics-secondary-card">
+          <div class="analytics-metric-label">Sessions</div>
+          <div id="metricSessions" class="analytics-metric-value analytics-secondary-value">-</div>
+        </article>
+        <article class="card analytics-metric-card analytics-secondary-card">
           <div class="analytics-metric-label">Compare / View</div>
           <div id="metricComparePerView" class="analytics-metric-value analytics-secondary-value">-</div>
         </article>
@@ -64,8 +68,15 @@
 
       <section class="card analytics-chart-card">
         <div class="analytics-section-head">
-          <h2>日次推移</h2>
-          <p id="analyticsWindowLabel" class="submessage">過去 14 日</p>
+          <div>
+            <h2>日次推移</h2>
+            <p id="analyticsWindowLabel" class="submessage">過去 14 日</p>
+          </div>
+          <div class="analytics-range-group" role="group" aria-label="集計期間">
+            <button type="button" class="analytics-range-btn" data-analytics-days="7">7日</button>
+            <button type="button" class="analytics-range-btn is-active" data-analytics-days="14">14日</button>
+            <button type="button" class="analytics-range-btn" data-analytics-days="30">30日</button>
+          </div>
         </div>
         <div id="analyticsDailyChart" class="analytics-bar-chart"></div>
       </section>
@@ -85,6 +96,24 @@
             <p class="submessage">直近イベントの pathname 集計</p>
           </div>
           <div id="analyticsTopPaths" class="analytics-table-wrap"></div>
+        </section>
+      </section>
+
+      <section class="analytics-split-grid">
+        <section class="card analytics-table-card">
+          <div class="analytics-section-head">
+            <h2>上位の失敗要因</h2>
+            <p class="submessage">api_error の stage / reason 集計</p>
+          </div>
+          <div id="analyticsTopErrorCauses" class="analytics-table-wrap"></div>
+        </section>
+
+        <section class="card analytics-table-card">
+          <div class="analytics-section-head">
+            <h2>直近の読み込み</h2>
+            <p class="submessage">reports_loaded の詳細</p>
+          </div>
+          <div id="analyticsRecentLoads" class="analytics-event-list"></div>
         </section>
       </section>
 

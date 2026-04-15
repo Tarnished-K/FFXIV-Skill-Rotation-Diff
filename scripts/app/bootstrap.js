@@ -373,6 +373,9 @@ bindClick(el.loadBtn, 'loadBtn', async () => {
       reportCodeB: state.urlB.reportId,
       fightsA: fightsA.length,
       fightsB: fightsB.length,
+      zoneA: state.reportA?.zone?.name || '',
+      zoneB: state.reportB?.zone?.name || '',
+      sameReport: state.urlA.reportId === state.urlB.reportId,
     });
     syncTutorialProgress();
   } catch (e) {
@@ -520,6 +523,8 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     state.phasesB = officialPhasesB.length ? officialPhasesB : (phaseResultB?.phases || []);
     state.phases = canShowPhaseSelector ? mergePhaseSets(state.phasesA, state.phasesB) : [];
     state.currentPhase = null;
+    const phaseSourceA = officialPhasesA.length ? 'fflogs' : (phaseResultA?.phases?.length ? 'fallback' : 'none');
+    const phaseSourceB = officialPhasesB.length ? 'fflogs' : (phaseResultB?.phases?.length ? 'fallback' : 'none');
     if (state.phases.length) {
       logDebug(`フェーズ検出A: ${state.phasesA.length}フェーズ`, state.phasesA.map(p => `${p.label}: ${p.startT.toFixed(0)}s-${p.endT.toFixed(0)}s`));
       logDebug(`フェーズ検出B: ${state.phasesB.length}フェーズ`, state.phasesB.map(p => `${p.label}: ${p.startT.toFixed(0)}s-${p.endT.toFixed(0)}s`));
@@ -542,11 +547,20 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     }
     el.step2Message.textContent = t('tlLoaded')(state.timelineA.length, state.timelineB.length);
     sendAnalyticsEvent('comparison_completed', {
+      reportCodeA: state.urlA?.reportId || '',
+      reportCodeB: state.urlB?.reportId || '',
+      fightIdA: Number(fightA?.id || 0),
+      fightIdB: Number(fightB?.id || 0),
       encounterA: Number(fightA?.encounterID || 0),
       encounterB: Number(fightB?.encounterID || 0),
       jobA: state.selectedA?.job || '',
       jobB: state.selectedB?.job || '',
+      timelineCountA: state.timelineA.length,
+      timelineCountB: state.timelineB.length,
       phasesShown: state.phases.length,
+      phaseSourceA,
+      phaseSourceB,
+      usedPhaseSelector: canShowPhaseSelector,
     });
   } catch (e) {
     sendAnalyticsEvent('api_error', { stage: 'compare', message: e.message });

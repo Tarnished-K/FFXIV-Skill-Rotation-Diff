@@ -1,4 +1,7 @@
 (function () {
+  const DEFAULT_WINDOW_DAYS = 14;
+  const ALLOWED_WINDOW_DAYS = new Set([7, 14, 30]);
+
   function escapeHtml(value) {
     return String(value ?? '')
       .replace(/&/g, '&amp;')
@@ -32,6 +35,32 @@
   function setText(id, value) {
     const node = document.getElementById(id);
     if (node) node.textContent = value;
+  }
+
+  function formatPhaseSource(value) {
+    const normalized = String(value || '').trim();
+    if (!normalized || normalized === 'none') return 'none';
+    return normalized;
+  }
+
+  function getSelectedDays() {
+    const url = new URL(window.location.href);
+    const days = Number(url.searchParams.get('days') || DEFAULT_WINDOW_DAYS);
+    return ALLOWED_WINDOW_DAYS.has(days) ? days : DEFAULT_WINDOW_DAYS;
+  }
+
+  function syncDaysButtons(days) {
+    document.querySelectorAll('[data-analytics-days]').forEach((button) => {
+      const active = Number(button.dataset.analyticsDays) === days;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function syncDaysUrl(days) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('days', String(days));
+    window.history.replaceState({}, '', url);
   }
 
   function renderTable(containerId, columns, rows, emptyText) {
@@ -97,12 +126,14 @@
     setText('metricReportsLoaded', formatNumber(totals.reportsLoaded));
     setText('metricComparisons', formatNumber(totals.comparisons));
     setText('metricErrors', formatNumber(totals.apiErrors));
+    setText('metricSessions', formatNumber(totals.sessions));
     setText('metricComparePerView', formatPercent(totals.comparePerViewRate));
     setText('metricComparePerLoad', formatPercent(totals.comparePerLoadRate));
     setText('metricSampledEvents', formatNumber(analytics.sampledEvents));
     setText('analyticsWindowLabel', `過去 ${analytics.windowDays} 日`);
 
     const summary = [
+      `${formatNumber(totals.sessions)} セッション`,
       `直近 ${analytics.windowDays} 日で ${formatNumber(totals.pageViews)} PV`,
       `${formatNumber(totals.reportsLoaded)} 回の読み込み`,
       `${formatNumber(totals.comparisons)} 回の比較完了`,
@@ -133,6 +164,16 @@
       'まだアクセス記録がありません。'
     );
 
+    renderTable(
+      'analyticsTopErrorCauses',
+      [
+        { label: 'Cause', render: (row) => escapeHtml(row.label) },
+        { label: 'Count', render: (row) => formatNumber(row.count) },
+      ],
+      analytics.topErrorCauses || [],
+      '直近の api_error はありません。'
+    );
+
     renderEventList(
       'analyticsRecentComparisons',
       analytics.recentComparisons || [],
@@ -140,17 +181,37 @@
         const details = item.details || {};
         const pair = [details.jobA, details.jobB].filter(Boolean).map(escapeHtml).join(' vs ') || 'Unknown pair';
         const encounter = details.encounterA ? `Encounter ${escapeHtml(details.encounterA)}` : 'Encounter unknown';
+        const phaseSources = `${formatPhaseSource(details.phaseSourceA)} / ${formatPhaseSource(details.phaseSourceB)}`;
         return `
           <article class="analytics-event-item">
             <div class="analytics-event-head">
               <strong>${pair}</strong>
               <span>${formatDateTime(item.createdAt)}</span>
             </div>
-            <div class="analytics-event-body">${encounter} / phasesShown: ${escapeHtml(details.phasesShown ?? '-')}</div>
+            <div class="analytics-event-body">${encounter} / phasesShown: ${escapeHtml(details.phasesShown ?? '-')} / phaseSource: ${escapeHtml(phaseSources)} / TL: ${escapeHtml(details.timelineCountA ?? '-')} / ${escapeHtml(details.timelineCountB ?? '-')}</div>
           </article>
         `;
       },
       'まだ比較完了イベントはありません。'
+    );
+
+    renderEventList(
+      'analyticsRecentLoads',
+      analytics.recentLoads || [],
+      (item) => {
+        const details = item.details || {};
+        const zones = [details.zoneA, details.zoneB].filter(Boolean).map(escapeHtml).join(' / ') || 'Zone unknown';
+        return `
+          <article class="analytics-event-item">
+            <div class="analytics-event-head">
+              <strong>${escapeHtml(details.reportCodeA || '-')} vs ${escapeHtml(details.reportCodeB || '-')}</strong>
+              <span>${formatDateTime(item.createdAt)}</span>
+            </div>
+            <div class="analytics-event-body">${zones} / fights: ${escapeHtml(details.fightsA ?? '-')} / ${escapeHtml(details.fightsB ?? '-')}</div>
+          </article>
+        `;
+      },
+      '直近の reports_loaded はありません。'
     );
 
     renderEventList(
@@ -174,8 +235,8 @@
     );
   }
 
-  async function loadAnalytics() {
-    const response = await fetch('/api/analytics-summary', {
+  async function loadAnalytics(days) {
+    const response = await fetch(`/api/analytics-summary?days=${encodeURIComponent(days)}`, {
       cache: 'no-store',
       headers: {
         Accept: 'application/json',
@@ -188,15 +249,32 @@
     return json.analytics;
   }
 
-  async function initAnalyticsDashboard() {
-    if (!document.body.classList.contains('analytics-page')) return;
+  async function refreshAnalytics(days) {
     try {
-      const analytics = await loadAnalytics();
+      syncDaysButtons(days);
+      const analytics = await loadAnalytics(days);
       renderSummary(analytics);
+      syncDaysUrl(days);
     } catch (error) {
       setText('analyticsSummaryText', `集計の読み込みに失敗しました: ${error.message}`);
       setText('analyticsWindowLabel', '読み込み失敗');
     }
+  }
+
+  function bindDaysButtons() {
+    document.querySelectorAll('[data-analytics-days]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const days = Number(button.dataset.analyticsDays);
+        if (!ALLOWED_WINDOW_DAYS.has(days)) return;
+        refreshAnalytics(days);
+      });
+    });
+  }
+
+  async function initAnalyticsDashboard() {
+    if (!document.body.classList.contains('analytics-page')) return;
+    bindDaysButtons();
+    await refreshAnalytics(getSelectedDays());
   }
 
   if (document.readyState === 'loading') {

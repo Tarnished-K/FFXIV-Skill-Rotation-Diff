@@ -1,4 +1,4 @@
-const { buildDayKeys, summarizeEvents, toJstDateKey } = require('../lib/analytics-utils');
+const { buildDayKeys, getErrorCauseLabel, summarizeEvents, toJstDateKey } = require('../lib/analytics-utils');
 
 describe('toJstDateKey', () => {
   it('converts timestamps into JST day keys', () => {
@@ -22,31 +22,31 @@ describe('summarizeEvents', () => {
       {
         event_type: 'comparison_completed',
         pathname: '/',
-        details: { jobA: 'BLM', jobB: 'PCT' },
+        details: { jobA: 'BLM', jobB: 'PCT', sessionId: 'sess-1' },
         created_at: '2026-04-15T02:00:00.000Z',
       },
       {
         event_type: 'reports_loaded',
         pathname: '/',
-        details: {},
+        details: { sessionId: 'sess-1' },
         created_at: '2026-04-15T01:00:00.000Z',
       },
       {
         event_type: 'page_view',
         pathname: '/',
-        details: {},
+        details: { sessionId: 'sess-1' },
         created_at: '2026-04-15T00:00:00.000Z',
       },
       {
         event_type: 'api_error',
         pathname: '/analytics.html',
-        details: { stage: 'compare' },
+        details: { stage: 'compare', reason: 'encounter_mismatch', sessionId: 'sess-2' },
         created_at: '2026-04-14T03:00:00.000Z',
       },
       {
         event_type: 'page_view',
         pathname: '/',
-        details: {},
+        details: { sessionId: 'sess-3' },
         created_at: '2026-04-10T00:00:00.000Z',
       },
     ];
@@ -55,6 +55,7 @@ describe('summarizeEvents', () => {
 
     expect(summary.windowEvents).toBe(4);
     expect(summary.totals).toEqual({
+      sessions: 2,
       pageViews: 1,
       reportsLoaded: 1,
       comparisons: 1,
@@ -88,6 +89,18 @@ describe('summarizeEvents', () => {
       { pathname: '/', count: 3 },
       { pathname: '/analytics.html', count: 1 },
     ]);
+    expect(summary.topErrorCauses).toEqual([
+      { label: 'compare:encounter_mismatch', count: 1 },
+    ]);
     expect(summary.recentErrors).toHaveLength(1);
+    expect(summary.recentLoads).toHaveLength(1);
+  });
+});
+
+describe('getErrorCauseLabel', () => {
+  it('prefers reason, then kind, and falls back to stage', () => {
+    expect(getErrorCauseLabel({ stage: 'compare', reason: 'encounter_mismatch' })).toBe('compare:encounter_mismatch');
+    expect(getErrorCauseLabel({ stage: 'compare', kind: 'validation' })).toBe('compare:validation');
+    expect(getErrorCauseLabel({ stage: 'render' })).toBe('render');
   });
 });

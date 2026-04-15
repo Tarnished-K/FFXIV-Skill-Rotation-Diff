@@ -243,6 +243,70 @@ function moveTutorial(direction) {
   syncTutorialProgress();
 }
 
+function resetComparisonData() {
+  state.timelineA = [];
+  state.timelineB = [];
+  state.timelineCountA = 0;
+  state.timelineCountB = 0;
+  state.damageA = [];
+  state.damageB = [];
+  state.bossCastsA = [];
+  state.bossCastsB = [];
+  state.debuffsA = [];
+  state.debuffsB = [];
+  state.partyBuffsA = [];
+  state.partyBuffsB = [];
+  state.rollingDpsA = [];
+  state.rollingDpsB = [];
+  state.phasesA = [];
+  state.phasesB = [];
+  state.phases = [];
+  state.currentPhase = null;
+}
+
+function setComparisonControlsDisabled(disabled) {
+  el.tabs.forEach((tab) => {
+    tab.disabled = disabled;
+  });
+  if (el.zoomInBtn) el.zoomInBtn.disabled = disabled;
+  if (el.zoomOutBtn) el.zoomOutBtn.disabled = disabled;
+}
+
+function renderComparisonError() {
+  if (!el.step4Message) return;
+  if (!state.compareError) {
+    el.step4Message.textContent = '';
+    el.step4Message.classList.add('hidden');
+    return;
+  }
+  if (state.compareError.kind === 'validation') {
+    el.step4Message.textContent = state.compareError.message;
+  } else {
+    const formatter = t(state.compareError.kind === 'render' ? 'timelineRenderFailed' : 'compareFailed');
+    el.step4Message.textContent = typeof formatter === 'function'
+      ? formatter(state.compareError.message)
+      : state.compareError.message;
+  }
+  el.step4Message.classList.remove('hidden');
+}
+
+function clearComparisonError() {
+  state.compareError = null;
+  renderComparisonError();
+  setComparisonControlsDisabled(false);
+}
+
+function setComparisonError(kind, message) {
+  state.compareError = { kind, message };
+  renderComparisonError();
+  setComparisonControlsDisabled(true);
+  if (el.phaseContainer) el.phaseContainer.innerHTML = '';
+  if (el.timelineWrap) {
+    el.timelineWrap.innerHTML = '';
+    el.timelineWrap.classList.add('hidden');
+  }
+}
+
 bindClick(el.tutorialBtn, 'tutorialBtn', () => {
   logDebug('click: tutorial page');
   clearTutorialState();
@@ -298,6 +362,8 @@ bindClick(el.loadBtn, 'loadBtn', async () => {
     fillFightSelect(el.fightB, fightsB, state.reportB);
     el.playerA.innerHTML = '';
     el.playerB.innerHTML = '';
+    resetComparisonData();
+    clearComparisonError();
     el.step2.classList.remove('hidden');
     el.step3.classList.add('hidden');
     el.step4.classList.add('hidden');
@@ -336,11 +402,14 @@ bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
     const durB = fightBObj ? (fightBObj.endTime - fightBObj.startTime) : 1;
     fillPlayerSelect(el.playerA, state.playersA, dpsA, durA);
     fillPlayerSelect(el.playerB, state.playersB, dpsB, durB);
+    resetComparisonData();
+    clearComparisonError();
     el.step3.classList.remove('hidden');
     el.step4.classList.add('hidden');
     el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
     syncTutorialProgress();
   } catch (e) {
+    sendAnalyticsEvent('api_error', { stage: 'load_players', message: e.message });
     el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
   } finally {
     if (state.tutorial.active) renderTutorial();
@@ -355,10 +424,30 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
   const fightB = (state.reportB?.fights || []).find(f => Number(f.id) === Number(state.selectedFightB));
   state.fightA = fightA;
   state.fightB = fightB;
+  resetComparisonData();
+  clearComparisonError();
+  el.step4.classList.add('hidden');
 
-  // encounterIDチェック: 異なるボスの比較は警告のみ（ブロックしない）
   if (fightA && fightB && Number(fightA.encounterID) !== Number(fightB.encounterID)) {
-    logError('encounterID不一致（警告）', { a: fightA.encounterID, b: fightB.encounterID });
+    const message = t('encounterMismatch');
+    setComparisonError('validation', message);
+    logError('encounterID不一致のため比較を中止', { a: fightA.encounterID, b: fightB.encounterID });
+    sendAnalyticsEvent('api_error', {
+      stage: 'compare',
+      kind: 'validation',
+      reason: 'encounter_mismatch',
+      encounterA: Number(fightA.encounterID || 0),
+      encounterB: Number(fightB.encounterID || 0),
+      message,
+    });
+    el.step2Message.textContent = message;
+    el.step4.classList.remove('hidden');
+    state.currentTab = 'all';
+    el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
+    renderPhaseButtons();
+    renderComparisonError();
+    syncTutorialProgress();
+    return;
   }
 
   el.step2Message.textContent = t('tlLoading');
@@ -437,29 +526,26 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     });
   } catch (e) {
     sendAnalyticsEvent('api_error', { stage: 'compare', message: e.message });
-    state.timelineA = makeSampleTimeline();
-    state.timelineB = makeSampleTimeline();
-    state.timelineCountA = state.timelineA.length;
-    state.timelineCountB = state.timelineB.length;
-    state.rollingDpsA = [];
-    state.rollingDpsB = [];
-    state.phasesA = [];
-    state.phasesB = [];
-    state.phases = [];
-    state.currentPhase = null;
-    logError('TL取得失敗 - サンプルデータで表示', {error: e.message});
-    el.step2Message.textContent = `TL取得失敗(サンプル表示): ${e.message}`;
+    resetComparisonData();
+    setComparisonError('compare', e.message);
+    logError('TL取得失敗', {error: e.message});
+    el.step2Message.textContent = t('compareFailed')(e.message);
   }
   el.step4.classList.remove('hidden');
   state.currentTab = 'all';
   el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
   renderPhaseButtons();
-  el.timelineWrap.classList.remove('hidden');
-  try {
-    renderTimeline();
-  } catch (renderErr) {
-    logError('renderTimeline エラー', { error: renderErr.message, stack: renderErr.stack?.split('\n').slice(0, 3).join(' | ') });
-    el.timelineWrap.innerHTML = `<p class="message">タイムライン描画エラー: ${renderErr.message}</p>`;
+  renderComparisonError();
+  if (!state.compareError) {
+    el.timelineWrap.classList.remove('hidden');
+    try {
+      renderTimeline();
+    } catch (renderErr) {
+      setComparisonError('render', renderErr.message);
+      sendAnalyticsEvent('api_error', { stage: 'render', message: renderErr.message });
+      logError('renderTimeline エラー', { error: renderErr.message, stack: renderErr.stack?.split('\n').slice(0, 3).join(' | ') });
+      el.step2Message.textContent = t('timelineRenderFailed')(renderErr.message);
+    }
   }
   syncTutorialProgress();
 });
@@ -529,6 +615,7 @@ function applyLang() {
     const fB = state.fightB || (state.reportB?.fights || []).find(f => Number(f.id) === state.selectedFightB);
     fillPlayerSelect(el.playerB, state.playersB, state.dpsDataB, fB ? (fB.endTime - fB.startTime) : 1);
   }
+  renderComparisonError();
   if (!el.timelineWrap.classList.contains('hidden') && state.timelineA.length) renderTimeline();
   if (state.tutorial.active) renderTutorial();
 }

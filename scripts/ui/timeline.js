@@ -36,27 +36,11 @@ function findSelfBuff(actionName) {
   return null;
 }
 function getActiveSynergies(t, allRecords, partyBuffRecords) {
-  const active = new Set();
-  // 閾ｪ蛻・・繧ｭ繝｣繧ｹ繝郁ｨ倬鹸縺九ｉ繝舌ヵ讀懷・
-  for (const r of allRecords) {
-    const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action);
-    if (!buff) continue;
-    if (t >= r.t && t <= r.t + buff.duration) {
-      active.add(state.lang === 'ja' ? buff.nameJa : buff.nameEn);
-    }
-  }
-  // 繝代・繝・ぅ繝｡繝ｳ繝舌・縺九ｉ縺ｮ繝舌ヵ險倬鹸・・uffs API縺九ｉ蜿門ｾ暦ｼ・
-  for (const r of (partyBuffRecords || [])) {
-    const dur = r.duration || 20;
-    if (t >= r.t && t <= r.t + dur) {
-      const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action);
-      const label = buff
-        ? (state.lang === 'ja' ? buff.nameJa : buff.nameEn)
-        : r.action;
-      active.add(label);
-    }
-  }
-  return [...active];
+  return getActiveSynergiesShared(t, allRecords, partyBuffRecords, {
+    burstBuffs: BURST_BUFFS,
+    selfBuffs: SELF_BUFFS,
+    lang: state.lang,
+  });
 }
 function findEnemyActors(reportJson, fight) {
   return findEnemyActorsShared(reportJson, fight, {

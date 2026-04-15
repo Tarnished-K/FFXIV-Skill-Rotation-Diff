@@ -36,7 +36,7 @@ function findSelfBuff(actionName) {
   return null;
 }
 function getActiveSynergies(t, allRecords, partyBuffRecords) {
-  return getActiveSynergiesShared(t, allRecords, partyBuffRecords, {
+  return globalThis.BuffUtils.getActiveSynergies(t, allRecords, partyBuffRecords, {
     burstBuffs: BURST_BUFFS,
     selfBuffs: SELF_BUFFS,
     lang: state.lang,

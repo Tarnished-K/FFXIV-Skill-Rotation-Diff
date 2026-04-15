@@ -336,6 +336,16 @@ function setZoomLevel(zoom) {
   if (el.zoomLabel) el.zoomLabel.textContent = `${Math.round(nextZoom * 100)}%`;
 }
 
+function setCurrentPhaseById(phaseId) {
+  if (!state.phases.length) return;
+  if (phaseId === null || phaseId === undefined || phaseId === '') {
+    state.currentPhase = null;
+    return;
+  }
+  const matched = state.phases.find((phase) => String(phase.id) === String(phaseId));
+  if (matched) state.currentPhase = matched;
+}
+
 function applySharedViewState(shareState, options = {}) {
   const { rerender = false } = options;
   if (shareState.lang && shareState.lang !== state.lang) {
@@ -344,6 +354,10 @@ function applySharedViewState(shareState, options = {}) {
   }
   if (shareState.tab) setActiveTab(shareState.tab);
   if (shareState.zoom !== null && shareState.zoom !== undefined) setZoomLevel(shareState.zoom);
+  if (state.phases.length) {
+    setCurrentPhaseById(shareState.phase);
+    renderPhaseButtons();
+  }
   if (rerender && !state.compareError && !el.timelineWrap?.classList.contains('hidden') && state.timelineA.length) {
     renderTimeline();
   }
@@ -360,6 +374,7 @@ function syncShareStateUrl() {
     fightB: state.selectedFightB || '',
     playerA: el.playerA?.value || '',
     playerB: el.playerB?.value || '',
+    phase: state.currentPhase?.id || '',
     tab: state.currentTab || 'all',
     zoom: state.zoom,
     lang: state.lang,
@@ -714,6 +729,9 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
 });
 el.playerA?.addEventListener('change', syncShareStateUrl);
 el.playerB?.addEventListener('change', syncShareStateUrl);
+el.phaseContainer?.addEventListener('click', (event) => {
+  if (event.target.closest('.phase-btn')) syncShareStateUrl();
+});
 bindClick(el.zoomInBtn, 'zoomInBtn', () => {
   setZoomLevel(state.zoom + 0.25);
   renderTimeline();

@@ -113,6 +113,15 @@
     return `P${fallbackIndex}`;
   }
 
+  function formatPhaseLabel(meta, fallbackIndex, lang = 'en') {
+    const name = String(meta?.name || '').trim();
+    if (name) return name;
+    if (meta?.isIntermission) {
+      return lang === 'ja' ? `間奏${fallbackIndex}` : `Intermission ${fallbackIndex}`;
+    }
+    return `P${fallbackIndex}`;
+  }
+
   function buildFightPhasesFromFFLogs(reportJson, fight, options = {}) {
     const metadata = getEncounterPhaseMetadata(reportJson, fight);
     const fightDurationSec = Math.max(1, ((fight?.endTime || 0) - (fight?.startTime || 0)) / 1000);
@@ -193,6 +202,7 @@
     buildFightPhasesFromFFLogs,
     buildPhaseStarts,
     detectPhasesFromBossCasts,
+    formatPhaseLabel,
     getEncounterPhaseMetadata,
     mergePhaseSets,
     normalizePhaseTransitionStartTime,

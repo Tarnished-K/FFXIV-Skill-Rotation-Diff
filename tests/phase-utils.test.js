@@ -2,6 +2,7 @@ const {
   buildFightPhasesFromFFLogs,
   buildPhaseStarts,
   detectPhasesFromBossCasts,
+  formatPhaseLabel,
   mergePhaseSets,
   normalizePhaseTransitionStartTime,
 } = require('../scripts/shared/phase-utils');
@@ -89,6 +90,14 @@ describe('buildFightPhasesFromFFLogs', () => {
       { id: 2, phaseId: 2, startT: 10, endT: 20, label: 'Intermission 2', isIntermission: true },
       { id: 3, phaseId: 3, startT: 20, endT: 30, label: 'Final', isIntermission: false },
     ]);
+  });
+});
+
+describe('formatPhaseLabel', () => {
+  it('returns localized fallback labels without relying on app state', () => {
+    expect(formatPhaseLabel({ isIntermission: true }, 2, 'ja')).toBe('間奏2');
+    expect(formatPhaseLabel({ isIntermission: true }, 2, 'en')).toBe('Intermission 2');
+    expect(formatPhaseLabel({}, 3, 'ja')).toBe('P3');
   });
 });
 

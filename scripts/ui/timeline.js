@@ -3,6 +3,7 @@ const { computeRollingDps: computeRollingDpsShared } = globalThis.AppSharedUtils
 const {
   buildFightPhasesFromFFLogs: buildFightPhasesFromFFLogsShared,
   detectPhasesFromBossCasts,
+  formatPhaseLabel,
   mergePhaseSets: mergePhaseSetsShared,
 } = globalThis.PhaseUtils;
 
@@ -209,15 +210,10 @@ async function fetchBossCastsV2(reportCode, fight, reportJson) {
   return deduped;
 }
 
-function buildFightPhasesFromFFLogs(reportJson, fight) {
+function buildFightPhasesFromFFLogs(reportJson, fight, lang = 'en') {
   return buildFightPhasesFromFFLogsShared(reportJson, fight, {
     getPhaseLabel(meta, fallbackIndex) {
-      const name = String(meta?.name || '').trim();
-      if (name) return name;
-      if (meta?.isIntermission) {
-        return state.lang === 'ja' ? `\u9593\u594f${fallbackIndex}` : `Intermission ${fallbackIndex}`;
-      }
-      return `P${fallbackIndex}`;
+      return formatPhaseLabel(meta, fallbackIndex, lang);
     },
   });
 }
@@ -436,17 +432,7 @@ function computeRollingDps(damageEvents, maxT, windowSec = 15) {
 }
 
 function detectPhases(bossCasts, fightDurationSec, lastPhase) {
-  const result = detectPhasesFromBossCasts(bossCasts, fightDurationSec, lastPhase);
-  if (result.usedFallbackSplit && result.phases.length) {
-    logDebug(`phase fallback split from lastPhase=${lastPhase}`, result.phases.map((phase) => phase.label));
-  }
-  if (result.incompleteLastPhase) {
-    logDebug(
-      `phase estimate incomplete: ${result.phases.length} < lastPhase=${lastPhase}`,
-      result.boundaryTimes.map((time) => `${time.toFixed(1)}s`),
-    );
-  }
-  return result.phases;
+  return detectPhasesFromBossCasts(bossCasts, fightDurationSec, lastPhase);
 }
 
 function formatHitType(hitType, multistrike) {

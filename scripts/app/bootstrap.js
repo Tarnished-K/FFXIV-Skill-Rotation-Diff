@@ -488,12 +488,36 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
       Number(fightA.encounterID) === Number(fightB.encounterID) &&
       shouldShowUltimatePhaseSelector(state.reportA, fightA) &&
       shouldShowUltimatePhaseSelector(state.reportB, fightB);
-    const officialPhasesA = canShowPhaseSelector ? buildFightPhasesFromFFLogs(state.reportA, fightA) : [];
-    const officialPhasesB = canShowPhaseSelector ? buildFightPhasesFromFFLogs(state.reportB, fightB) : [];
+    const officialPhasesA = canShowPhaseSelector ? buildFightPhasesFromFFLogs(state.reportA, fightA, state.lang) : [];
+    const officialPhasesB = canShowPhaseSelector ? buildFightPhasesFromFFLogs(state.reportB, fightB, state.lang) : [];
     if (officialPhasesA.length) logDebug('FF Logs phases A', officialPhasesA.map(p => `${p.label}: ${p.startT.toFixed(1)}s-${p.endT.toFixed(1)}s`));
     if (officialPhasesB.length) logDebug('FF Logs phases B', officialPhasesB.map(p => `${p.label}: ${p.startT.toFixed(1)}s-${p.endT.toFixed(1)}s`));
-    state.phasesA = officialPhasesA.length ? officialPhasesA : (canShowPhaseSelector ? detectPhases(bossA, fightDurationA, fightA.lastPhase) : []);
-    state.phasesB = officialPhasesB.length ? officialPhasesB : (canShowPhaseSelector ? detectPhases([], fightDurationB, fightB.lastPhase) : []);
+    const phaseResultA = canShowPhaseSelector && !officialPhasesA.length
+      ? detectPhases(bossA, fightDurationA, fightA.lastPhase)
+      : null;
+    const phaseResultB = canShowPhaseSelector && !officialPhasesB.length
+      ? detectPhases([], fightDurationB, fightB.lastPhase)
+      : null;
+    if (phaseResultA?.usedFallbackSplit && phaseResultA.phases.length) {
+      logDebug(`phase fallback split from lastPhase=${fightA.lastPhase}`, phaseResultA.phases.map((phase) => phase.label));
+    }
+    if (phaseResultB?.usedFallbackSplit && phaseResultB.phases.length) {
+      logDebug(`phase fallback split from lastPhase=${fightB.lastPhase}`, phaseResultB.phases.map((phase) => phase.label));
+    }
+    if (phaseResultA?.incompleteLastPhase) {
+      logDebug(
+        `phase estimate incomplete: ${phaseResultA.phases.length} < lastPhase=${fightA.lastPhase}`,
+        phaseResultA.boundaryTimes.map((time) => `${time.toFixed(1)}s`),
+      );
+    }
+    if (phaseResultB?.incompleteLastPhase) {
+      logDebug(
+        `phase estimate incomplete: ${phaseResultB.phases.length} < lastPhase=${fightB.lastPhase}`,
+        phaseResultB.boundaryTimes.map((time) => `${time.toFixed(1)}s`),
+      );
+    }
+    state.phasesA = officialPhasesA.length ? officialPhasesA : (phaseResultA?.phases || []);
+    state.phasesB = officialPhasesB.length ? officialPhasesB : (phaseResultB?.phases || []);
     state.phases = canShowPhaseSelector ? mergePhaseSets(state.phasesA, state.phasesB) : [];
     state.currentPhase = null;
     if (state.phases.length) {

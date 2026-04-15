@@ -1,4 +1,4 @@
-const { computeRollingDps, parseFFLogsUrl } = require('../scripts/shared/app-utils');
+const { buildSharedStateQuery, computeRollingDps, parseFFLogsUrl, parseSharedState } = require('../scripts/shared/app-utils');
 
 describe('parseFFLogsUrl', () => {
   it('extracts report ids from FFLogs report urls', () => {
@@ -33,5 +33,27 @@ describe('computeRollingDps', () => {
     expect(points[5]).toEqual({ t: 5, dps: 30 });
     expect(points[10]).toEqual({ t: 10, dps: 15 });
     expect(points[20]).toEqual({ t: 20, dps: 15 });
+  });
+});
+
+describe('shareable state query helpers', () => {
+  it('parses known query parameters into shareable state', () => {
+    expect(parseSharedState('?ra=AAA&rb=BBB&fa=1&fb=2&pa=11&pb=22')).toEqual({
+      reportA: 'AAA',
+      reportB: 'BBB',
+      fightA: '1',
+      fightB: '2',
+      playerA: '11',
+      playerB: '22',
+    });
+  });
+
+  it('builds a compact query string from partial state', () => {
+    expect(buildSharedStateQuery({
+      reportA: 'AAA',
+      reportB: 'BBB',
+      fightA: 1,
+      playerB: 22,
+    })).toBe('?ra=AAA&rb=BBB&fa=1&pb=22');
   });
 });

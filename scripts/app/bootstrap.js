@@ -1,4 +1,8 @@
 // UI event wiring, language application, and bootstrap
+const {
+  buildSharedStateQuery,
+  parseSharedState,
+} = globalThis.AppSharedUtils;
 
 function getTutorialCopy() {
   if (state.lang === 'ja') {
@@ -307,37 +311,41 @@ function setComparisonError(kind, message) {
   }
 }
 
-bindClick(el.tutorialBtn, 'tutorialBtn', () => {
-  logDebug('click: tutorial page');
-  clearTutorialState();
-  state.tutorial.active = false;
-  state.tutorial.stepIndex = 0;
-  window.location.href = '/tutorial.html';
-});
-bindClick(el.tutorialCloseBtn, 'tutorialCloseBtn', () => {
-  logDebug('click: tutorial close');
-  closeTutorial();
-});
-bindClick(el.tutorialPrevBtn, 'tutorialPrevBtn', () => {
-  moveTutorial(-1);
-});
-bindClick(el.tutorialNextBtn, 'tutorialNextBtn', () => {
-  moveTutorial(1);
-});
-window.addEventListener('resize', () => {
-  if (state.tutorial.active) renderTutorial();
-});
-window.addEventListener('scroll', () => {
-  if (state.tutorial.active) positionTutorialCard(getCurrentTutorialStep().step?.getTarget?.());
-}, true);
+function buildSharedReportUrl(reportId) {
+  return reportId ? `https://www.fflogs.com/reports/${reportId}` : '';
+}
 
-bindClick(el.loadBtn, 'loadBtn', async () => {
-  logDebug('click: load reports', {urlA: el.urlA.value, urlB: el.urlB.value});
+function getShareStateFromUrl() {
+  return parseSharedState(window.location.search);
+}
+
+function syncShareStateUrl() {
+  const url = new URL(window.location.href);
+  const parsedA = state.urlA || parseFFLogsUrl(el.urlA?.value?.trim?.() || '');
+  const parsedB = state.urlB || parseFFLogsUrl(el.urlB?.value?.trim?.() || '');
+  url.search = buildSharedStateQuery({
+    reportA: parsedA?.reportId || '',
+    reportB: parsedB?.reportId || '',
+    fightA: state.selectedFightA || '',
+    fightB: state.selectedFightB || '',
+    playerA: el.playerA?.value || '',
+    playerB: el.playerB?.value || '',
+  });
+  window.history.replaceState({}, '', url);
+}
+
+function selectHasValue(select, value) {
+  if (!select || value === null || value === undefined || value === '') return false;
+  return [...select.options].some((option) => option.value === String(value));
+}
+
+async function handleLoadReports(options = {}) {
+  const { skipShareUrl = false } = options;
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
   if (!parsedA || !parsedB) {
     el.msg.textContent = t('badUrl');
-    return;
+    return false;
   }
   el.loadBtn.disabled = true;
   el.msg.textContent = t('loading');
@@ -364,6 +372,10 @@ bindClick(el.loadBtn, 'loadBtn', async () => {
     el.playerB.innerHTML = '';
     resetComparisonData();
     clearComparisonError();
+    state.selectedFightA = null;
+    state.selectedFightB = null;
+    state.selectedA = null;
+    state.selectedB = null;
     el.step2.classList.remove('hidden');
     el.step3.classList.add('hidden');
     el.step4.classList.add('hidden');
@@ -377,17 +389,21 @@ bindClick(el.loadBtn, 'loadBtn', async () => {
       zoneB: state.reportB?.zone?.name || '',
       sameReport: state.urlA.reportId === state.urlB.reportId,
     });
+    if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
+    return true;
   } catch (e) {
     sendAnalyticsEvent('api_error', { stage: 'load_reports', message: e.message });
     el.msg.textContent = `取得失敗: ${e.message}`;
+    return false;
   } finally {
     el.loadBtn.disabled = false;
     if (state.tutorial.active) renderTutorial();
   }
-});
-bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
-  logDebug('click: load players', {fightA: el.fightA.value, fightB: el.fightB.value});
+}
+
+async function handleLoadPlayers(options = {}) {
+  const { skipShareUrl = false } = options;
   try {
     state.selectedFightA = Number(el.fightA.value);
     state.selectedFightB = Number(el.fightB.value);
@@ -407,22 +423,28 @@ bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
     fillPlayerSelect(el.playerB, state.playersB, dpsB, durB);
     resetComparisonData();
     clearComparisonError();
+    state.selectedA = null;
+    state.selectedB = null;
     el.step3.classList.remove('hidden');
     el.step4.classList.add('hidden');
     el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
+    if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
+    return true;
   } catch (e) {
     sendAnalyticsEvent('api_error', { stage: 'load_players', message: e.message });
     el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
+    return false;
   } finally {
     if (state.tutorial.active) renderTutorial();
   }
-});
-bindClick(el.compareBtn, 'compareBtn', async () => {
-  logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
+}
+
+async function handleCompare(options = {}) {
+  const { skipShareUrl = false } = options;
   state.selectedA = state.playersA.find(p => p.id === el.playerA.value);
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
-  if (!state.selectedA || !state.selectedB) return;
+  if (!state.selectedA || !state.selectedB) return false;
   const fightA = (state.reportA?.fights || []).find(f => Number(f.id) === Number(state.selectedFightA));
   const fightB = (state.reportB?.fights || []).find(f => Number(f.id) === Number(state.selectedFightB));
   state.fightA = fightA;
@@ -449,8 +471,9 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
     renderPhaseButtons();
     renderComparisonError();
+    if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
-    return;
+    return false;
   }
 
   el.step2Message.textContent = t('tlLoading');
@@ -478,13 +501,11 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
     logDebug(`ダメージイベント: A=${dmgA.length}件 B=${dmgB.length}件`);
     logDebug(`ボス詠唱: ${bossA.length}件 / デバフ: A=${aurasA.debuffs.length} B=${aurasB.debuffs.length} / PTバフ: A=${aurasA.partyBuffs.length} B=${aurasB.partyBuffs.length}`);
 
-    // リアルDPS推移計算
     const maxT = Math.max(1, ...state.timelineA.map(x => x.t), ...state.timelineB.map(x => x.t));
     state.rollingDpsA = computeRollingDps(dmgA, maxT);
     state.rollingDpsB = computeRollingDps(dmgB, maxT);
     logDebug(`DPS推移計算完了: A=${state.rollingDpsA.length}点 B=${state.rollingDpsB.length}点`);
 
-    // フェーズ検出（FF Logs公式 phaseTransitions 優先）
     const fightDurationA = ((fightA.endTime || 0) - (fightA.startTime || 0)) / 1000;
     const fightDurationB = ((fightB.endTime || 0) - (fightB.startTime || 0)) / 1000;
     const canShowPhaseSelector =
@@ -585,8 +606,79 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
       el.step2Message.textContent = t('timelineRenderFailed')(renderErr.message);
     }
   }
+  if (!skipShareUrl) syncShareStateUrl();
   syncTutorialProgress();
+  return !state.compareError;
+}
+
+async function restoreStateFromUrl() {
+  const shareState = getShareStateFromUrl();
+  if (!shareState.reportA || !shareState.reportB) return;
+  el.urlA.value = buildSharedReportUrl(shareState.reportA);
+  el.urlB.value = buildSharedReportUrl(shareState.reportB);
+  logDebug('restoring share state', shareState);
+  const reportsLoaded = await handleLoadReports({ skipShareUrl: true });
+  if (!reportsLoaded) {
+    syncShareStateUrl();
+    return;
+  }
+  if (selectHasValue(el.fightA, shareState.fightA)) el.fightA.value = shareState.fightA;
+  if (selectHasValue(el.fightB, shareState.fightB)) el.fightB.value = shareState.fightB;
+  if (!selectHasValue(el.fightA, shareState.fightA) || !selectHasValue(el.fightB, shareState.fightB)) {
+    syncShareStateUrl();
+    return;
+  }
+  const playersLoaded = await handleLoadPlayers({ skipShareUrl: true });
+  if (!playersLoaded) {
+    syncShareStateUrl();
+    return;
+  }
+  if (selectHasValue(el.playerA, shareState.playerA)) el.playerA.value = shareState.playerA;
+  if (selectHasValue(el.playerB, shareState.playerB)) el.playerB.value = shareState.playerB;
+  if (selectHasValue(el.playerA, shareState.playerA) && selectHasValue(el.playerB, shareState.playerB)) {
+    await handleCompare({ skipShareUrl: true });
+  }
+  syncShareStateUrl();
+}
+
+bindClick(el.tutorialBtn, 'tutorialBtn', () => {
+  logDebug('click: tutorial page');
+  clearTutorialState();
+  state.tutorial.active = false;
+  state.tutorial.stepIndex = 0;
+  window.location.href = '/tutorial.html';
 });
+bindClick(el.tutorialCloseBtn, 'tutorialCloseBtn', () => {
+  logDebug('click: tutorial close');
+  closeTutorial();
+});
+bindClick(el.tutorialPrevBtn, 'tutorialPrevBtn', () => {
+  moveTutorial(-1);
+});
+bindClick(el.tutorialNextBtn, 'tutorialNextBtn', () => {
+  moveTutorial(1);
+});
+window.addEventListener('resize', () => {
+  if (state.tutorial.active) renderTutorial();
+});
+window.addEventListener('scroll', () => {
+  if (state.tutorial.active) positionTutorialCard(getCurrentTutorialStep().step?.getTarget?.());
+}, true);
+
+bindClick(el.loadBtn, 'loadBtn', async () => {
+  logDebug('click: load reports', {urlA: el.urlA.value, urlB: el.urlB.value});
+  await handleLoadReports();
+});
+bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
+  logDebug('click: load players', {fightA: el.fightA.value, fightB: el.fightB.value});
+  await handleLoadPlayers();
+});
+bindClick(el.compareBtn, 'compareBtn', async () => {
+  logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
+  await handleCompare();
+});
+el.playerA?.addEventListener('change', syncShareStateUrl);
+el.playerB?.addEventListener('change', syncShareStateUrl);
 bindClick(el.zoomInBtn, 'zoomInBtn', () => {
   state.zoom = Math.min(3, +(state.zoom + 0.25).toFixed(2));
   el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
@@ -670,6 +762,11 @@ try {
   state.tutorial.active = false;
   state.tutorial.stepIndex = 0;
   applyLang();
+  Promise.resolve()
+    .then(() => restoreStateFromUrl())
+    .catch((error) => {
+      logError('URL state restore failed', { error: error.message });
+    });
 } catch (e) {
   if (el.msg) el.msg.textContent = `初期化失敗: ${e.message}`;
   console.error(e);

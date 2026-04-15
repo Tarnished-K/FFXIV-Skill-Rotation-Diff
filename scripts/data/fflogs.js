@@ -5,6 +5,14 @@ const {
   getEncounterDisplayName: getEncounterDisplayNameShared,
   shouldShowUltimatePhaseSelector: shouldShowUltimatePhaseSelectorShared,
 } = globalThis.EncounterUtils;
+const {
+  formatPartyComp: formatPartyCompShared,
+  getPlayersFromFight: getPlayersFromFightShared,
+} = globalThis.PlayerUtils;
+const {
+  buildFightOptionLabel,
+  buildPlayerSelectOptions,
+} = globalThis.SelectionUtils;
 const ANALYTICS_SESSION_KEY = 'ffxiv_rotation_diff_session_id';
 let analyticsSessionId = '';
 
@@ -266,18 +274,6 @@ function normalizeJobCode(type, subType) {
   const raw = (subType || type || '').toString().toUpperCase().replace(/[\s-_]/g, '');
   return JOB_CODE_MAP[raw] || raw || 'UNK';
 }
-function formatDurationMs(ms) {
-  const sec = Math.floor(ms / 1000);
-  const m = Math.floor(sec / 60);
-  const s = String(sec % 60).padStart(2, '0');
-  return `${m}:${s}`;
-}
-function formatFightLabel(fight, index) {
-  const duration = formatDurationMs((fight.endTime || 0) - (fight.startTime || 0));
-  const status = fight.kill ? 'Kill' : 'Wipe';
-  const name = fight.name || `Fight ${fight.id}`;
-  return `#${index + 1} ${name} / ${duration} / ${status}`;
-}
 function indexAbilities(report) {
   for (const a of report?.masterData?.abilities || []) {
     const id = Number(a?.gameID || 0);
@@ -291,50 +287,21 @@ function extractSelectableFights(reportJson) {
   return (reportJson.fights || []).filter(f => Number(f.encounterID || 0) > 0 && f.kill === true);
 }
 function getPlayersFromFight(reportJson, fightId) {
-  const fight = (reportJson.fights || []).find(f => Number(f.id) === Number(fightId));
-  if (!fight) throw new Error(`fight=${fightId} が見つかりません`);
-  const allowedIds = new Set(fight.friendlyPlayers || []);
-  const base = (reportJson.masterData?.actors || [])
-    .filter(a => !a.petOwner)
-    .filter(a => {
-      const tl = (a.type || '').toLowerCase();
-      return tl !== 'pet' && tl !== 'npc' && tl !== 'boss' && tl !== 'environment';
-    })
-    .filter(a => {
-      const n = String(a.name || '').toLowerCase();
-      return !n.includes('limit break') && !n.includes('リミットブレイク');
-    })
-    .filter(a => {
-      // ジョブコードに変換できるactorのみ（NPC等を除外）
-      const job = normalizeJobCode(a.type, a.subType);
+  return getPlayersFromFightShared(reportJson, fightId, {
+    normalizeJobCode,
+    isSupportedJob(job) {
       return job !== 'UNK' && !!JOB_ROLE[job];
-    });
-  // V2では actor.fights が取得できないため、fight.friendlyPlayers を主軸に絞る
-  let filtered = base.filter(a => (allowedIds.size > 0 ? allowedIds.has(a.id) : true));
-  // fallback: friendlyPlayers が空の場合のみ全actorから採用
-  if (!filtered.length && allowedIds.size === 0) filtered = base;
-  const players = filtered
-    .map(a => ({
-      id: String(a.id),
-      name: a.name || `Unknown-${a.id}`,
-      job: normalizeJobCode(a.type, a.subType),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
-  if (!players.length) throw new Error('選択戦闘に紐づくプレイヤー一覧を取得できませんでした');
-  return players;
+    },
+  });
 }
 function formatPartyComp(reportJson, fightId) {
   try {
-    const players = getPlayersFromFight(reportJson, fightId);
-    const sorted = [...players].sort((a, b) => {
-      const ra = ROLE_ORDER.indexOf(JOB_ROLE[a.job] || 'D');
-      const rb = ROLE_ORDER.indexOf(JOB_ROLE[b.job] || 'D');
-      return ra - rb;
+    return formatPartyCompShared(getPlayersFromFight(reportJson, fightId), {
+      jobRole: JOB_ROLE,
+      jobShortJa: JOB_SHORT_JA,
+      lang: state.lang,
+      roleOrder: ROLE_ORDER,
     });
-    if (state.lang === 'ja') {
-      return sorted.map(p => JOB_SHORT_JA[p.job] || p.job).join('');
-    }
-    return sorted.map(p => p.job).join(',');
   } catch { return ''; }
 }
 function detectSavageFloor(zoneName, fightName) {
@@ -343,45 +310,19 @@ function detectSavageFloor(zoneName, fightName) {
 function fillFightSelect(select, fights, reportJson) {
   const zoneName = reportJson?.zone?.name || '';
   select.innerHTML = fights.map((f, i) => {
-    const comp = formatPartyComp(reportJson, f.id);
-    const duration = formatDurationMs((f.endTime || 0) - (f.startTime || 0));
-    const status = f.kill ? t('kill') : t('wipe');
-    const baseName = getEncounterDisplayName(reportJson, f) || `Fight ${f.id}`;
-    const floorTag = detectSavageFloor(zoneName, f.name);
-    const name = floorTag ? `${baseName} (${floorTag})` : baseName;
-    const phaseInfo = f.lastPhase > 1 ? ` P${f.lastPhase}` : '';
-    const compStr = comp ? ` [${comp}]` : '';
-    return `<option value="${f.id}">#${i + 1} ${name}${phaseInfo} / ${duration} / ${status}${compStr}</option>`;
+    const label = buildFightOptionLabel(f, i, {
+      baseName: getEncounterDisplayName(reportJson, f) || `Fight ${f.id}`,
+      floorTag: detectSavageFloor(zoneName, f.name),
+      partyComp: formatPartyComp(reportJson, f.id),
+      statusLabel: f.kill ? t('kill') : t('wipe'),
+    });
+    return `<option value="${f.id}">${label}</option>`;
   }).join('');
 }
 function fillPlayerSelect(select, players, dpsEntries, fightDurationMs) {
-  const dpsMap = new Map();
-  const fightSec = (fightDurationMs || 1) / 1000;
-  for (const e of (dpsEntries || [])) {
-    const id = String(e.id);
-    const activeSec = Math.max(1, Number(e.activeTimeReduced || e.activeTime || fightDurationMs || 1000) / 1000);
-    const rDps = Math.round(
-      Number.isFinite(Number(e.rDPS)) && Number(e.rDPS) > 0
-        ? Number(e.rDPS)
-        : Number(e.totalRDPS || 0) > 0
-          ? Number(e.totalRDPS) / activeSec
-          : Number(e.total || 0) / activeSec
-    );
-    const aDps = Math.round(
-      Number.isFinite(Number(e.aDPS)) && Number(e.aDPS) > 0
-        ? Number(e.aDPS)
-        : Number(e.totalADPS || 0) > 0
-          ? Number(e.totalADPS) / activeSec
-          : Number(e.total || 0) / fightSec
-    );
-    dpsMap.set(id, { rDps, aDps });
-  }
-  select.innerHTML = players.map(p => {
-    const jobLabel = formatJobName(p.job);
-    const dps = dpsMap.get(p.id);
-    const dpsStr = dps ? ` rDPS:${dps.rDps} aDPS:${dps.aDps}` : '';
-    return `<option value="${p.id}">${p.name} (${jobLabel})${dpsStr}</option>`;
-  }).join('');
+  select.innerHTML = buildPlayerSelectOptions(players, dpsEntries, fightDurationMs, { formatJobName })
+    .map((player) => `<option value="${player.value}">${player.label}</option>`)
+    .join('');
 }
 function getEncounterDisplayName(reportJson, fight) {
   return getEncounterDisplayNameShared(reportJson, fight, state.lang);

@@ -2,6 +2,8 @@ const SCRIPT_LOAD_ORDER = [
   './scripts/app/runtime.js',
   './scripts/shared/app-utils.js',
   './scripts/shared/encounter-utils.js',
+  './scripts/shared/player-utils.js',
+  './scripts/shared/selection-utils.js',
   './scripts/shared/phase-utils.js',
   './scripts/data/fflogs.js',
   './scripts/ui/timeline.js',

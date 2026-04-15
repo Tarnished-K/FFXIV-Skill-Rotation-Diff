@@ -360,6 +360,7 @@ function applySharedViewState(shareState, options = {}) {
   }
   if (rerender && !state.compareError && !el.timelineWrap?.classList.contains('hidden') && state.timelineA.length) {
     renderTimeline();
+    if (state.currentPhase) scrollTimelineToPhase(state.currentPhase);
   }
 }
 

@@ -1,14 +1,8 @@
 // FFLogs API access, icon lookup, and report/player data helpers
+const { parseFFLogsUrl: parseFFLogsUrlShared } = globalThis.AppSharedUtils;
 
 function parseFFLogsUrl(raw) {
-  try {
-    const u = new URL(raw);
-    const match = u.pathname.match(/\/reports\/([A-Za-z0-9]+)/);
-    if (!match) return null;
-    return { reportId: match[1], original: raw };
-  } catch {
-    return null;
-  }
+  return parseFFLogsUrlShared(raw);
 }
 async function postJson(url, payload) {
   const res = await fetch(url, {

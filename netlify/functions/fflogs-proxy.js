@@ -1,4 +1,5 @@
 const { graphqlRequest } = require('../../lib/fflogs-client');
+const { inferStatusCode, normalizeErrorMessage } = require('../../lib/fflogs-proxy-utils');
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -14,23 +15,6 @@ function json(statusCode, body) {
     headers: JSON_HEADERS,
     body: JSON.stringify(body),
   };
-}
-
-function normalizeErrorMessage(rawMessage) {
-  const message = String(rawMessage || 'Unknown FF Logs proxy error.');
-  if (/Missing required environment variable/i.test(message)) {
-    return 'サーバー設定が未完了です。FFLOGS_CLIENT_ID と FFLOGS_CLIENT_SECRET を設定してください。';
-  }
-  if (/authoriz|permission|private|forbidden|public/i.test(message)) {
-    return '公開ログのみ対応です。FF Logs 側で公開されているレポートを指定してください。';
-  }
-  return message;
-}
-
-function inferStatusCode(message) {
-  if (message.includes('公開ログのみ対応')) return 403;
-  if (message.includes('サーバー設定が未完了')) return 500;
-  return 502;
 }
 
 exports.handler = async (event) => {

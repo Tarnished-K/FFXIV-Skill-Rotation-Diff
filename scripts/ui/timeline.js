@@ -6,41 +6,27 @@ const {
   formatPhaseLabel,
   mergePhaseSets: mergePhaseSetsShared,
 } = globalThis.PhaseUtils;
+const {
+  buildRuler: buildRulerShared,
+  classifyStats: classifyStatsShared,
+  deduplicateTimeline: deduplicateTimelineShared,
+  filterTimeline: filterTimelineShared,
+  findEnemyActors: findEnemyActorsShared,
+  formatHitType: formatHitTypeShared,
+  formatTimelineTime: formatTimelineTimeShared,
+} = globalThis.TimelineUtils;
 
 function filterTimeline(records, tab) {
-  if (tab === 'all') return records;
-  if (tab === 'odd') return records.filter(r => Math.floor(r.t / 60) % 2 === 1);
-  if (tab === 'even') return records.filter(r => Math.floor(r.t / 60) % 2 === 0 && r.t >= 60);
-  return records;
+  return filterTimelineShared(records, tab);
 }
 function buildRuler(maxT, pxPerSec) {
-  const marks = [];
-  for (let sec = 0; sec <= Math.ceil(maxT); sec++) {
-    const x = 60 + sec * pxPerSec;
-    const level = sec % 10 === 0 ? 'ten' : sec % 5 === 0 ? 'five' : 'one';
-    const label = sec % 5 === 0 ? `<span>${sec}s</span>` : '';
-    marks.push(`<div class="tick ${level}" style="left:${x}px">${label}</div>`);
-  }
-  return `<div class="ruler">${marks.join('')}</div>`;
+  return buildRulerShared(maxT, pxPerSec);
 }
 function classifyStats(records) {
-  let gcd = 0, ogcd = 0, unknown = 0;
-  for (const r of records) {
-    if (r.category === 'weaponskill' || r.category === 'spell') gcd++;
-    else if (r.category === 'ability') ogcd++;
-    else unknown++;
-  }
-  return { gcd, ogcd, unknown, total: records.length };
+  return classifyStatsShared(records);
 }
 function deduplicateTimeline(records) {
-  const out = [];
-  for (let i = 0; i < records.length; i++) {
-    const r = records[i];
-    const prev = out[out.length - 1];
-    if (prev && prev.actionId === r.actionId && Math.abs(prev.t - r.t) < 0.5) continue;
-    out.push(r);
-  }
-  return out;
+  return deduplicateTimelineShared(records);
 }
 function findSelfBuff(actionName) {
   const n = String(actionName || '').toLowerCase();
@@ -73,24 +59,13 @@ function getActiveSynergies(t, allRecords, partyBuffRecords) {
   return [...active];
 }
 function findEnemyActors(reportJson, fight) {
-  const friendlyIds = new Set(fight.friendlyPlayers || []);
-  return (reportJson?.masterData?.actors || []).filter(a => {
-    if (a.petOwner) return false;
-    if (friendlyIds.has(a.id)) return false;
-    // type=Playerは明示皁E��除外（他�E戦闘�EプレイヤーがmasterDataに含まれる場合！E
-    const typeLower = (a.type || '').toLowerCase();
-    if (typeLower === 'player') return false;
-    // normalizeJobCodeでプレイヤージョブとして認識できるactorを除夁E
-    const job = normalizeJobCode(a.type, a.subType);
-    if (job !== 'UNK' && JOB_ROLE[job]) return false;
-    const n = String(a.name || '').toLowerCase();
-    if (n.includes('limit break') || n.includes('リミットブレイク')) return false;
-    // Environmentも除夁E
-    if (typeLower === 'environment') return false;
-    return true;
+  return findEnemyActorsShared(reportJson, fight, {
+    normalizeJobCode,
+    isSupportedJob(job) {
+      return !!JOB_ROLE[job];
+    },
   });
 }
-
 async function fetchBossCastsV2(reportCode, fight, reportJson) {
   const candidates = findEnemyActors(reportJson, fight);
   const trackedEnemies = new Map(
@@ -436,25 +411,10 @@ function detectPhases(bossCasts, fightDurationSec, lastPhase) {
 }
 
 function formatHitType(hitType, multistrike) {
-  const isCrit = hitType === 2;
-  const isDH = !!multistrike;
-  if (isCrit && isDH) return 'CDH';
-  if (isCrit) return 'Crit';
-  if (isDH) return 'DH';
-  return '';
+  return formatHitTypeShared(hitType, multistrike);
 }
 function formatTimelineTime(seconds) {
-  const totalSeconds = Math.max(0, Number(seconds || 0));
-  const minutes = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds - minutes * 60;
-  const wholeSecs = Math.floor(secs);
-  const fraction = secs - wholeSecs;
-  if (fraction >= 0.05) {
-    const tenth = Math.round(fraction * 10);
-    if (tenth >= 10) return `${minutes + 1}:00`;
-    return `${minutes}:${String(wholeSecs).padStart(2, '0')}.${tenth}`;
-  }
-  return `${minutes}:${String(Math.round(secs)).padStart(2, '0')}`;
+  return formatTimelineTimeShared(seconds);
 }
 async function fetchPlayerDamageV2(reportCode, fight, sourceId) {
   const all = [];

@@ -1,5 +1,10 @@
 // FFLogs API access, icon lookup, and report/player data helpers
 const { parseFFLogsUrl: parseFFLogsUrlShared } = globalThis.AppSharedUtils;
+const {
+  detectSavageFloor: detectSavageFloorShared,
+  getEncounterDisplayName: getEncounterDisplayNameShared,
+  shouldShowUltimatePhaseSelector: shouldShowUltimatePhaseSelectorShared,
+} = globalThis.EncounterUtils;
 const ANALYTICS_SESSION_KEY = 'ffxiv_rotation_diff_session_id';
 let analyticsSessionId = '';
 
@@ -333,25 +338,7 @@ function formatPartyComp(reportJson, fightId) {
   } catch { return ''; }
 }
 function detectSavageFloor(zoneName, fightName) {
-  // 零式/Savageコンテンツの何層目かを検出する
-  const zn = (zoneName || '').toLowerCase();
-  const fn = (fightName || '').toLowerCase();
-  const isSavage = zn.includes('savage') || zn.includes('零式');
-  if (!isSavage) return '';
-  // zone名からフロア番号を抽出 (例: "M1 (Savage)", "P3S", "E8S" 等)
-  // パターン: [A-Z]\d+S? or [A-Z]\d+ (Savage)
-  const zoneFloorMatch = zoneName.match(/[MEPOmepoa](\d+)/i);
-  if (zoneFloorMatch) {
-    const floor = zoneFloorMatch[1];
-    return state.lang === 'ja' ? `${floor}層` : `F${floor}`;
-  }
-  // fight名からフロア番号を推定 (例: "1層", "Floor 1")
-  const jaFloorMatch = fightName.match(/(\d+)層/);
-  if (jaFloorMatch) return state.lang === 'ja' ? `${jaFloorMatch[1]}層` : `F${jaFloorMatch[1]}`;
-  const enFloorMatch = fightName.match(/floor\s*(\d+)/i);
-  if (enFloorMatch) return state.lang === 'ja' ? `${enFloorMatch[1]}層` : `F${enFloorMatch[1]}`;
-  // ゾーン名に "Savage" があるが層番号が取れない場合は零式とだけ表示
-  return state.lang === 'ja' ? '零式' : 'Savage';
+  return detectSavageFloorShared(zoneName, fightName, state.lang);
 }
 function fillFightSelect(select, fights, reportJson) {
   const zoneName = reportJson?.zone?.name || '';
@@ -396,40 +383,11 @@ function fillPlayerSelect(select, players, dpsEntries, fightDurationMs) {
     return `<option value="${p.id}">${p.name} (${jobLabel})${dpsStr}</option>`;
   }).join('');
 }
-const ULTIMATE_ENCOUNTER_INFO = {
-  1073: { ja: '絶バハムート討滅戦', en: 'The Unending Coil of Bahamut', short: 'UCoB' },
-  1074: { ja: '絶アルテマウェポン破壊作戦', en: "The Weapon's Refrain", short: 'UWU' },
-  1075: { ja: '絶アレキサンダー討滅戦', en: 'The Epic of Alexander', short: 'TEA' },
-  1076: { ja: '絶竜詩戦争', en: "Dragonsong's Reprise", short: 'DSR' },
-  1077: { ja: '絶オメガ検証戦', en: 'The Omega Protocol', short: 'TOP' },
-  1079: { ja: '絶エデン', en: 'Futures Rewritten', short: 'FRU' },
-};
-const ULTIMATE_PHASE_ENCOUNTERS = Object.values(ULTIMATE_ENCOUNTER_INFO).flatMap(info => [info.ja, info.en, info.short]);
-function normalizeEncounterText(value) {
-  return String(value || '').toLowerCase().replace(/[^a-z0-9一-龠ぁ-んァ-ヶ]/g, '');
-}
-function getUltimateEncounterInfo(fight) {
-  return ULTIMATE_ENCOUNTER_INFO[Number(fight?.encounterID || 0)] || null;
-}
-function isGenericZoneName(zoneName) {
-  const normalized = normalizeEncounterText(zoneName);
-  return normalized === 'ultimateslegacy' || normalized === 'ultimates';
-}
 function getEncounterDisplayName(reportJson, fight) {
-  const encounter = getUltimateEncounterInfo(fight);
-  if (encounter) return state.lang === 'ja' ? encounter.ja : encounter.en;
-  const zoneName = reportJson?.zone?.name || '';
-  if (zoneName && !isGenericZoneName(zoneName)) return zoneName;
-  return fight?.name || '';
+  return getEncounterDisplayNameShared(reportJson, fight, state.lang);
 }
 function shouldShowUltimatePhaseSelector(reportJson, fight) {
-  if (getUltimateEncounterInfo(fight)) return true;
-  const haystack = [
-    reportJson?.zone?.name,
-    fight?.name,
-    reportJson?.title,
-  ].map(normalizeEncounterText).join(' ');
-  return ULTIMATE_PHASE_ENCOUNTERS.some(name => haystack.includes(normalizeEncounterText(name)));
+  return shouldShowUltimatePhaseSelectorShared(reportJson, fight);
 }
 async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode = '') {
   const all = [];

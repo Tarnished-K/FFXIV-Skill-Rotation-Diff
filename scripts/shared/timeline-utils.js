@@ -5,6 +5,9 @@
     module.exports = exports;
   }
 }(typeof globalThis !== 'undefined' ? globalThis : this, function createTimelineUtils() {
+  const NINJUTSU_KEYWORDS_JA = ['火遁', '雷遁', '氷遁', '風遁', '土遁', '水遁', '劫火滅却', '氷晶乱流', '月影'];
+  const NINJUTSU_KEYWORDS_EN = ['katon', 'raiton', 'hyoton', 'huton', 'doton', 'suiton', 'goka mekkyaku', 'hyosho ranryu', 'moonshadow'];
+
   function filterTimeline(records, tab) {
     if (tab === 'all') return records;
     if (tab === 'odd') return records.filter((record) => Math.floor(record.t / 60) % 2 === 1);
@@ -90,6 +93,17 @@
     return `${minutes}:${String(Math.round(secs)).padStart(2, '0')}`;
   }
 
+  function normalizeActionCategory(category, actionName, jobCode = '') {
+    const normalizedCategory = String(category || '').toLowerCase();
+    if (normalizedCategory !== 'ability' || String(jobCode || '').toUpperCase() !== 'NIN') return normalizedCategory;
+    const name = String(actionName || '');
+    const lowerName = name.toLowerCase();
+    const isNinjutsu =
+      NINJUTSU_KEYWORDS_JA.some((keyword) => name.includes(keyword))
+      || NINJUTSU_KEYWORDS_EN.some((keyword) => lowerName.includes(keyword));
+    return isNinjutsu ? 'weaponskill' : normalizedCategory;
+  }
+
   return {
     buildRuler,
     classifyStats,
@@ -98,5 +112,6 @@
     findEnemyActors,
     formatHitType,
     formatTimelineTime,
+    normalizeActionCategory,
   };
 }));

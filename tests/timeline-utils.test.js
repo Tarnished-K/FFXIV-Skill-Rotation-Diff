@@ -6,6 +6,7 @@ const {
   findEnemyActors,
   formatHitType,
   formatTimelineTime,
+  normalizeActionCategory,
 } = require('../scripts/shared/timeline-utils');
 
 describe('filterTimeline', () => {
@@ -41,6 +42,19 @@ describe('classifyStats', () => {
       { category: 'ability' },
       { category: 'other' },
     ])).toEqual({ gcd: 2, ogcd: 1, unknown: 1, total: 4 });
+  });
+});
+
+describe('normalizeActionCategory', () => {
+  it('treats ninja ninjutsu finishers as weaponskills for timeline lanes', () => {
+    expect(normalizeActionCategory('ability', '火遁', 'NIN')).toBe('weaponskill');
+    expect(normalizeActionCategory('ability', '月影雷獣牙', 'NIN')).toBe('weaponskill');
+    expect(normalizeActionCategory('ability', 'Katon', 'NIN')).toBe('weaponskill');
+  });
+
+  it('keeps non-ninjutsu abilities unchanged', () => {
+    expect(normalizeActionCategory('ability', 'Dokumori', 'NIN')).toBe('ability');
+    expect(normalizeActionCategory('spell', 'Katon', 'NIN')).toBe('spell');
   });
 });
 

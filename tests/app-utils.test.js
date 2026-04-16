@@ -1,4 +1,10 @@
-const { buildSharedStateQuery, computeRollingDps, parseFFLogsUrl, parseSharedState } = require('../scripts/shared/app-utils');
+const {
+  buildSharedStateQuery,
+  computeRollingDps,
+  formatZoomPercent,
+  parseFFLogsUrl,
+  parseSharedState,
+} = require('../scripts/shared/app-utils');
 
 describe('parseFFLogsUrl', () => {
   it('extracts report ids from FFLogs report urls', () => {
@@ -78,5 +84,13 @@ describe('shareable state query helpers', () => {
       zoom: null,
       lang: '',
     });
+  });
+});
+
+describe('formatZoomPercent', () => {
+  it('treats 2.5x as the 100 percent baseline', () => {
+    expect(formatZoomPercent(2.5)).toBe('100%');
+    expect(formatZoomPercent(3)).toBe('120%');
+    expect(formatZoomPercent(1.25)).toBe('50%');
   });
 });

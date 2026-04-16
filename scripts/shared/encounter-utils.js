@@ -17,8 +17,33 @@
   const ULTIMATE_PHASE_ENCOUNTERS = Object.values(ULTIMATE_ENCOUNTER_INFO)
     .flatMap((info) => [info.ja, info.en, info.short]);
 
+  const SAVAGE_ZONE_PATTERNS = [
+    {
+      patterns: [/aac\s*light[-\s]?heavyweight/i, /aaclightheavyweight/i],
+      ja: 'アルカディアライトヘビー級零式',
+      en: 'AAC Light-heavyweight (Savage)',
+    },
+    {
+      patterns: [/aac\s*heavyweight/i, /aacheavyweight/i],
+      ja: 'アルカディアヘビー級零式',
+      en: 'AAC Heavyweight (Savage)',
+    },
+    {
+      patterns: [/aac\s*cruiserweight/i, /aaccruiserweight/i],
+      ja: 'アルカディアクルーザー級零式',
+      en: 'AAC Cruiserweight (Savage)',
+    },
+    {
+      patterns: [/the arcadion/i, /arcadion/i],
+      ja: 'アルカディア零式',
+      en: 'The Arcadion (Savage)',
+    },
+  ];
+
   function normalizeEncounterText(value) {
-    return String(value || '').toLowerCase().replace(/[^a-z0-9一-龠ぁ-んァ-ヶ]/g, '');
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff]/g, '');
   }
 
   function getUltimateEncounterInfo(fight) {
@@ -30,11 +55,34 @@
     return normalized === 'ultimateslegacy' || normalized === 'ultimates';
   }
 
+  function stripSavageFloorSuffix(zoneName) {
+    return String(zoneName || '')
+      .replace(/\s+[MF]\d+\s*\(Savage\)$/i, ' (Savage)')
+      .trim();
+  }
+
+  function getSavageZoneDisplayName(zoneName, lang = 'en') {
+    const rawZoneName = String(zoneName || '').trim();
+    if (!rawZoneName) return '';
+    for (const entry of SAVAGE_ZONE_PATTERNS) {
+      if (entry.patterns.some((pattern) => pattern.test(rawZoneName))) {
+        return lang === 'ja' ? entry.ja : entry.en;
+      }
+    }
+    return stripSavageFloorSuffix(rawZoneName);
+  }
+
   function getEncounterDisplayName(reportJson, fight, lang = 'en') {
     const encounter = getUltimateEncounterInfo(fight);
     if (encounter) return lang === 'ja' ? encounter.ja : encounter.en;
+
     const zoneName = reportJson?.zone?.name || '';
-    if (zoneName && !isGenericZoneName(zoneName)) return zoneName;
+    if (zoneName && !isGenericZoneName(zoneName)) {
+      const normalizedZone = zoneName.toLowerCase();
+      const isSavage = normalizedZone.includes('savage') || normalizedZone.includes('零式');
+      return isSavage ? getSavageZoneDisplayName(zoneName, lang) : zoneName;
+    }
+
     return fight?.name || '';
   }
 

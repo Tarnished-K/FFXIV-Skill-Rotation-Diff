@@ -257,7 +257,7 @@ const state = {
   compareError: null,
   actionById: new Map(),
   abilityById: new Map(),
-  zoom: 2,
+  zoom: 2.5,
   damageA: [],
   damageB: [],
   bossCastsA: [],

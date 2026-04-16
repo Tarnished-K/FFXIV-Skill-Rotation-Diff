@@ -6,6 +6,9 @@ const {
   shouldShowUltimatePhaseSelector: shouldShowUltimatePhaseSelectorShared,
 } = globalThis.EncounterUtils;
 const {
+  normalizeActionCategory: normalizeActionCategoryShared,
+} = globalThis.TimelineUtils;
+const {
   formatPartyComp: formatPartyCompShared,
   getPlayersFromFight: getPlayersFromFightShared,
 } = globalThis.PlayerUtils;
@@ -330,6 +333,9 @@ function getEncounterDisplayName(reportJson, fight) {
 function shouldShowUltimatePhaseSelector(reportJson, fight) {
   return shouldShowUltimatePhaseSelectorShared(reportJson, fight);
 }
+function normalizeActionCategory(category, actionName, jobCode) {
+  return normalizeActionCategoryShared(category, actionName, jobCode);
+}
 async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode = '') {
   const all = [];
   const pendingBegincast = new Map();
@@ -373,7 +379,7 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode 
           t,
           action: String(name),
           actionId,
-          category: meta.category,
+          category: normalizeActionCategory(meta.category, name, playerJobCode),
           icon: meta.icon,
           iconCandidates: meta.iconCandidates || [],
           label: meta.label,
@@ -385,7 +391,15 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode 
         all.push({ ...startEvent, castEndT: t });
         continue;
       }
-      all.push({ t, action: String(name), actionId, category: meta.category, icon: meta.icon, iconCandidates: meta.iconCandidates || [], label: meta.label });
+      all.push({
+        t,
+        action: String(name),
+        actionId,
+        category: normalizeActionCategory(meta.category, name, playerJobCode),
+        icon: meta.icon,
+        iconCandidates: meta.iconCandidates || [],
+        label: meta.label,
+      });
     }
     if (!block?.nextPageTimestamp) break;
     startTime = block.nextPageTimestamp;

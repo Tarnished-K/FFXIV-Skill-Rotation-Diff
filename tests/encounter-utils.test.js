@@ -28,9 +28,14 @@ describe('getEncounterDisplayName', () => {
     expect(getEncounterDisplayName({}, { encounterID: 1079 }, 'en')).toBe('Futures Rewritten');
   });
 
-  it('falls back to non-generic zone names for non-ultimate fights', () => {
+  it('removes savage floor codes from encounter labels when the floor is rendered separately', () => {
     expect(getEncounterDisplayName({ zone: { name: 'AAC Light-heavyweight M1 (Savage)' } }, { name: 'Black Cat' }, 'en'))
-      .toBe('AAC Light-heavyweight M1 (Savage)');
+      .toBe('AAC Light-heavyweight (Savage)');
+  });
+
+  it('normalizes Arcadion savage code names for Japanese display', () => {
+    expect(getEncounterDisplayName({ zone: { name: 'AACHeavyWeight M4 (Savage)' } }, { name: 'Howling Blade' }, 'ja'))
+      .toBe('アルカディアヘビー級零式');
   });
 });
 

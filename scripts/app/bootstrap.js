@@ -1,6 +1,7 @@
 // UI event wiring, language application, and bootstrap
 const {
   buildSharedStateQuery,
+  formatZoomPercent,
   parseSharedState,
 } = globalThis.AppSharedUtils;
 
@@ -333,7 +334,7 @@ function setZoomLevel(zoom) {
     ? Math.max(0.5, Math.min(3, +numeric.toFixed(2)))
     : state.zoom;
   state.zoom = nextZoom;
-  if (el.zoomLabel) el.zoomLabel.textContent = `${Math.round(nextZoom * 100)}%`;
+  if (el.zoomLabel) el.zoomLabel.textContent = formatZoomPercent(nextZoom);
 }
 
 function setCurrentPhaseById(phaseId) {
@@ -490,7 +491,7 @@ async function handleLoadPlayers(options = {}) {
 }
 
 async function handleCompare(options = {}) {
-  const { skipShareUrl = false } = options;
+  const { skipShareUrl = false, deferTimelineRender = false } = options;
   state.selectedA = state.playersA.find(p => p.id === el.playerA.value);
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
   if (!state.selectedA || !state.selectedB) return false;
@@ -646,13 +647,15 @@ async function handleCompare(options = {}) {
   renderComparisonError();
   if (!state.compareError) {
     el.timelineWrap.classList.remove('hidden');
-    try {
-      renderTimeline();
-    } catch (renderErr) {
-      setComparisonError('render', renderErr.message);
-      sendAnalyticsEvent('api_error', { stage: 'render', message: renderErr.message });
-      logError('renderTimeline エラー', { error: renderErr.message, stack: renderErr.stack?.split('\n').slice(0, 3).join(' | ') });
-      el.step2Message.textContent = t('timelineRenderFailed')(renderErr.message);
+    if (!deferTimelineRender) {
+      try {
+        renderTimeline();
+      } catch (renderErr) {
+        setComparisonError('render', renderErr.message);
+        sendAnalyticsEvent('api_error', { stage: 'render', message: renderErr.message });
+        logError('renderTimeline エラー', { error: renderErr.message, stack: renderErr.stack?.split('\n').slice(0, 3).join(' | ') });
+        el.step2Message.textContent = t('timelineRenderFailed')(renderErr.message);
+      }
     }
   }
   if (!skipShareUrl) syncShareStateUrl();
@@ -686,7 +689,7 @@ async function restoreStateFromUrl() {
   if (selectHasValue(el.playerA, shareState.playerA)) el.playerA.value = shareState.playerA;
   if (selectHasValue(el.playerB, shareState.playerB)) el.playerB.value = shareState.playerB;
   if (selectHasValue(el.playerA, shareState.playerA) && selectHasValue(el.playerB, shareState.playerB)) {
-    await handleCompare({ skipShareUrl: true });
+    await handleCompare({ skipShareUrl: true, deferTimelineRender: true });
   }
   applySharedViewState(shareState, { rerender: true });
   syncShareStateUrl();

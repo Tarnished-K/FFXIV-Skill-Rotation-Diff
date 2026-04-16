@@ -5,6 +5,8 @@
     module.exports = exports;
   }
 }(typeof globalThis !== 'undefined' ? globalThis : this, function createAppSharedUtils() {
+  const DEFAULT_TIMELINE_ZOOM = 2.5;
+
   function parseFFLogsUrl(raw) {
     try {
       const url = new URL(raw);
@@ -73,9 +75,20 @@
     return query ? `?${query}` : '';
   }
 
+  function formatZoomPercent(zoom, baseline = DEFAULT_TIMELINE_ZOOM) {
+    const numericZoom = Number(zoom);
+    const numericBaseline = Number(baseline);
+    if (!Number.isFinite(numericZoom) || !Number.isFinite(numericBaseline) || numericBaseline <= 0) {
+      return '100%';
+    }
+    return `${Math.round((numericZoom / numericBaseline) * 100)}%`;
+  }
+
   return {
     buildSharedStateQuery,
     computeRollingDps,
+    DEFAULT_TIMELINE_ZOOM,
+    formatZoomPercent,
     parseFFLogsUrl,
     parseSharedState,
   };

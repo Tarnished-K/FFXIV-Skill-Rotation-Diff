@@ -618,6 +618,16 @@ button:focus-visible {
     linear-gradient(180deg, rgba(8, 18, 28, 0.94), rgba(8, 17, 27, 0.9)),
     var(--bg-surface);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  cursor: grab;
+}
+
+.timeline-wrap.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.timeline-wrap.is-dragging * {
+  cursor: grabbing;
 }
 
 .timeline {
@@ -645,6 +655,16 @@ button:focus-visible {
   font-weight: bold;
   pointer-events: none;
   white-space: nowrap;
+}
+
+.player-label-a {
+  border-color: rgba(56, 189, 248, 0.34);
+  color: #7dd3fc;
+}
+
+.player-label-b {
+  border-color: rgba(249, 115, 22, 0.34);
+  color: #fdba74;
 }
 
 .lane-label {
@@ -769,7 +789,7 @@ button:focus-visible {
 
 .boss-cast {
   position: absolute;
-  z-index: 1;
+  z-index: 2;
   height: 20px;
   overflow: hidden;
   border: 1px solid rgba(248, 113, 113, 0.36);
@@ -790,7 +810,7 @@ button:focus-visible {
 
 .debuff-bar {
   position: absolute;
-  z-index: 1;
+  z-index: 2;
   height: 18px;
   overflow: hidden;
   border-radius: 999px;
@@ -841,6 +861,40 @@ button:focus-visible {
 
 .phase-divider.b .phase-divider-label {
   color: #fb923c;
+}
+
+.kill-divider {
+  position: absolute;
+  z-index: 5;
+  width: 2px;
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.14);
+}
+
+.kill-divider-label {
+  position: absolute;
+  top: 0;
+  left: 8px;
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+}
+
+.kill-divider.a {
+  background: rgba(56, 189, 248, 0.9);
+}
+
+.kill-divider.a .kill-divider-label {
+  color: #7dd3fc;
+}
+
+.kill-divider.b {
+  background: rgba(249, 115, 22, 0.9);
+}
+
+.kill-divider.b .kill-divider-label {
+  color: #fdba74;
 }
 
 .dps-graph-svg text {

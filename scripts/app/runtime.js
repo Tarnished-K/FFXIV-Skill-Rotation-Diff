@@ -196,8 +196,6 @@ const state = {
   actionById: new Map(),
   abilityById: new Map(),
   zoom: 2.5,
-  showSynergyA: false,
-  showSynergyB: false,
   damageA: [],
   damageB: [],
   partyBuffsA: [],

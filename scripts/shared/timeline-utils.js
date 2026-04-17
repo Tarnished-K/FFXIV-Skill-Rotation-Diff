@@ -5,8 +5,8 @@
     module.exports = exports;
   }
 }(typeof globalThis !== 'undefined' ? globalThis : this, function createTimelineUtils() {
-  const NINJUTSU_KEYWORDS_JA = ['火遁', '雷遁', '氷遁', '風遁', '土遁', '水遁', '劫火滅却', '氷晶乱流', '月影'];
-  const NINJUTSU_KEYWORDS_EN = ['katon', 'raiton', 'hyoton', 'huton', 'doton', 'suiton', 'goka mekkyaku', 'hyosho ranryu', 'moonshadow'];
+  const NINJUTSU_KEYWORDS_JA = ['火遁', '雷遁', '氷遁', '風遁', '土遁', '水遁', '劫火滅却', '氷晶乱流', '月影', '風魔手裏剣'];
+  const NINJUTSU_KEYWORDS_EN = ['katon', 'raiton', 'hyoton', 'huton', 'doton', 'suiton', 'goka mekkyaku', 'hyosho ranryu', 'moonshadow', 'fuma shuriken'];
 
   function filterTimeline(records, tab) {
     if (tab === 'all') return records;

@@ -72,12 +72,6 @@ const JOB_SHORT_JA = {
 
 const ROLE_ORDER = ['T','H','D'];
 
-const DEBUFF_IDS = {
-  damageDown: { nameEn: 'Damage Down', nameJa: '与ダメージ低下', color: '#ef4444' },
-  weakness:   { nameEn: 'Weakness',    nameJa: '衰弱',         color: '#f59e0b' },
-  brink:      { nameEn: 'Brink of Death', nameJa: '衰弱[強]',  color: '#dc2626' },
-};
-
 const I18N = {
   en: {
     siteTitle: 'FFXIV Skill Rotation Diff',
@@ -101,8 +95,6 @@ const I18N = {
     tabEven: 'Even Min TL',
     laneAbility: 'Ability',
     laneGcd: 'WS / Spell',
-    laneDebuff: 'Debuff',
-    laneBoss: 'Boss Cast',
     debugNormalTitle: 'Log',
     debugErrorTitle: 'Error Log',
     tutorialBtn: 'First time here?',
@@ -158,8 +150,6 @@ const I18N = {
     tabEven: '偶数分TL',
     laneAbility: 'アビリティ',
     laneGcd: 'WS・魔法',
-    laneDebuff: 'デバフ',
-    laneBoss: 'ボス詠唱',
     debugNormalTitle: 'ログ',
     debugErrorTitle: 'エラーログ',
     publicOnlyNote: '公開ログのみ対応です。FFLogs の連携は不要です。',
@@ -209,8 +199,6 @@ Object.assign(I18N.ja, {
   tabEven: '偶数分TL',
   laneAbility: 'アビリティ',
   laneGcd: 'WS / 魔法',
-  laneDebuff: 'デバフ',
-  laneBoss: 'ボス詠唱',
   debugNormalTitle: 'ログ',
   debugErrorTitle: 'エラーログ',
   tutorialIntroTitle: 'クイックスタートガイド',

@@ -17,6 +17,21 @@
   const ULTIMATE_PHASE_ENCOUNTERS = Object.values(ULTIMATE_ENCOUNTER_INFO)
     .flatMap((info) => [info.ja, info.en, info.short]);
 
+  const SAVAGE_BOSS_INFO = [
+    { patterns: [/black cat/i, /ブラックキャット/], ja: 'ブラックキャット', en: 'Black Cat', tier: { ja: 'ライトヘビー級', en: 'Light-heavyweight' }, floor: 1 },
+    { patterns: [/honey b\.?\s*lovely/i, /ハニー[・.]?B[・.]?ラブリー/], ja: 'ハニー・B・ラブリー', en: 'Honey B. Lovely', tier: { ja: 'ライトヘビー級', en: 'Light-heavyweight' }, floor: 2 },
+    { patterns: [/brute bomber/i, /ブルートボンバー/], ja: 'ブルートボンバー', en: 'Brute Bomber', tier: { ja: 'ライトヘビー級', en: 'Light-heavyweight' }, floor: 3 },
+    { patterns: [/wicked thunder/i, /ウィケッドサンダー/], ja: 'ウィケッドサンダー', en: 'Wicked Thunder', tier: { ja: 'ライトヘビー級', en: 'Light-heavyweight' }, floor: 4 },
+    { patterns: [/dancing green/i, /ダンシング[・.]?グリーン/], ja: 'ダンシング・グリーン', en: 'Dancing Green', tier: { ja: 'クルーザー級', en: 'Cruiserweight' }, floor: 1 },
+    { patterns: [/sugar riot/i, /シュガーライオット/], ja: 'シュガーライオット', en: 'Sugar Riot', tier: { ja: 'クルーザー級', en: 'Cruiserweight' }, floor: 2 },
+    { patterns: [/brute abominator/i, /ブルートアボミネーター/], ja: 'ブルートアボミネーター', en: 'Brute Abominator', tier: { ja: 'クルーザー級', en: 'Cruiserweight' }, floor: 3 },
+    { patterns: [/howling blade/i, /ハウリングブレード/], ja: 'ハウリングブレード', en: 'Howling Blade', tier: { ja: 'クルーザー級', en: 'Cruiserweight' }, floor: 4 },
+    { patterns: [/vamp fatale/i, /ヴァンプ[・.]?ファタール/], ja: 'ヴァンプ・ファタール', en: 'Vamp Fatale', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 1 },
+    { patterns: [/the extremes?|extremes?/i, /エクストリームズ/], ja: 'エクストリームズ', en: 'The Extremes', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 2 },
+    { patterns: [/the tyrant|tyrant/i, /タイラント/], ja: 'ザ・タイラント', en: 'The Tyrant', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 3 },
+    { patterns: [/lindblum/i, /リンドブルム/], ja: 'リンドブルム', en: 'Lindblum', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4 },
+  ];
+
   const SAVAGE_ZONE_PATTERNS = [
     {
       patterns: [/aac\s*light[-\s]?heavyweight/i, /aaclightheavyweight/i],
@@ -61,6 +76,18 @@
       .trim();
   }
 
+  function getSavageBossDisplayName(fightName, lang = 'en') {
+    const name = String(fightName || '');
+    for (const boss of SAVAGE_BOSS_INFO) {
+      if (boss.patterns.some((p) => p.test(name))) {
+        return lang === 'ja'
+          ? `${boss.tier.ja}零式${boss.floor}層`
+          : `AAC ${boss.tier.en} M${boss.floor}`;
+      }
+    }
+    return null;
+  }
+
   function getSavageZoneDisplayName(zoneName, lang = 'en') {
     const rawZoneName = String(zoneName || '').trim();
     if (!rawZoneName) return '';
@@ -76,14 +103,15 @@
     const encounter = getUltimateEncounterInfo(fight);
     if (encounter) return lang === 'ja' ? encounter.ja : encounter.en;
 
+    const bossDisplay = getSavageBossDisplayName(fight?.name, lang);
+    if (bossDisplay) return bossDisplay;
+
     const zoneName = reportJson?.zone?.name || '';
     if (zoneName && !isGenericZoneName(zoneName)) {
-      const normalizedZone = zoneName.toLowerCase();
-      const isSavage = normalizedZone.includes('savage') || normalizedZone.includes('零式');
-      return isSavage ? getSavageZoneDisplayName(zoneName, lang) : zoneName;
+      return getSavageZoneDisplayName(zoneName, lang);
     }
 
-    return fight?.name || '';
+    return getSavageZoneDisplayName(fight?.name || '', lang);
   }
 
   function detectSavageFloor(zoneName, fightName, lang = 'en') {

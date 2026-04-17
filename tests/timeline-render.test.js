@@ -158,15 +158,13 @@ function loadTimelineHarness() {
 }
 
 describe('renderTimeline', () => {
-  it('renders colored player labels, boss casts, debuffs, and kill markers', () => {
+  it('renders colored player labels and kill markers', () => {
     const { renderTimeline, timelineWrap } = loadTimelineHarness();
 
     renderTimeline();
 
     expect(timelineWrap.innerHTML).toContain('player-label player-label-a');
     expect(timelineWrap.innerHTML).toContain('player-label player-label-b');
-    expect(timelineWrap.innerHTML).toContain('boss-cast');
-    expect(timelineWrap.innerHTML).toContain('debuff-bar');
     expect(timelineWrap.innerHTML).toContain('kill-divider a');
     expect(timelineWrap.innerHTML).toContain('kill-divider b');
   });

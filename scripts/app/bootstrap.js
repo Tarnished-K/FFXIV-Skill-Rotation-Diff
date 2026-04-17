@@ -255,10 +255,6 @@ function resetComparisonData() {
   state.timelineCountB = 0;
   state.damageA = [];
   state.damageB = [];
-  state.bossCastsA = [];
-  state.bossCastsB = [];
-  state.debuffsA = [];
-  state.debuffsB = [];
   state.partyBuffsA = [];
   state.partyBuffsB = [];
   state.rollingDpsA = [];
@@ -528,12 +524,11 @@ async function handleCompare(options = {}) {
 
   el.step2Message.textContent = t('tlLoading');
   try {
-    const [tlA, tlB, dmgA, dmgB, bossA, aurasA, aurasB] = await Promise.all([
+    const [tlA, tlB, dmgA, dmgB, aurasA, aurasB] = await Promise.all([
       fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job),
       fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job),
       fetchPlayerDamageV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
       fetchPlayerDamageV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
-      fetchBossCastsV2(state.urlA.reportId, fightA, state.reportA),
       fetchPlayerAurasV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
       fetchPlayerAurasV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
     ]);
@@ -541,15 +536,12 @@ async function handleCompare(options = {}) {
     state.timelineB = deduplicateTimeline(tlB);
     state.damageA = dmgA;
     state.damageB = dmgB;
-    state.bossCastsA = bossA;
-    state.debuffsA = aurasA.debuffs;
-    state.debuffsB = aurasB.debuffs;
-    state.partyBuffsA = aurasA.partyBuffs;
-    state.partyBuffsB = aurasB.partyBuffs;
+    state.partyBuffsA = aurasA;
+    state.partyBuffsB = aurasB;
     correlateDamage(state.timelineA, state.damageA);
     correlateDamage(state.timelineB, state.damageB);
     logDebug(`ダメージイベント: A=${dmgA.length}件 B=${dmgB.length}件`);
-    logDebug(`ボス詠唱: ${bossA.length}件 / デバフ: A=${aurasA.debuffs.length} B=${aurasB.debuffs.length} / PTバフ: A=${aurasA.partyBuffs.length} B=${aurasB.partyBuffs.length}`);
+    logDebug(`PTバフ: A=${aurasA.length} B=${aurasB.length}`);
 
     const maxT = Math.max(1, ...state.timelineA.map(x => x.t), ...state.timelineB.map(x => x.t));
     state.rollingDpsA = computeRollingDps(dmgA, maxT);
@@ -567,7 +559,7 @@ async function handleCompare(options = {}) {
     if (officialPhasesA.length) logDebug('FF Logs phases A', officialPhasesA.map(p => `${p.label}: ${p.startT.toFixed(1)}s-${p.endT.toFixed(1)}s`));
     if (officialPhasesB.length) logDebug('FF Logs phases B', officialPhasesB.map(p => `${p.label}: ${p.startT.toFixed(1)}s-${p.endT.toFixed(1)}s`));
     const phaseResultA = canShowPhaseSelector && !officialPhasesA.length
-      ? detectPhases(bossA, fightDurationA, fightA.lastPhase)
+      ? detectPhases([], fightDurationA, fightA.lastPhase)
       : null;
     const phaseResultB = canShowPhaseSelector && !officialPhasesB.length
       ? detectPhases([], fightDurationB, fightB.lastPhase)

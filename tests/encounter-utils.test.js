@@ -28,14 +28,22 @@ describe('getEncounterDisplayName', () => {
     expect(getEncounterDisplayName({}, { encounterID: 1079 }, 'en')).toBe('Futures Rewritten');
   });
 
-  it('removes savage floor codes from encounter labels when the floor is rendered separately', () => {
-    expect(getEncounterDisplayName({ zone: { name: 'AAC Light-heavyweight M1 (Savage)' } }, { name: 'Black Cat' }, 'en'))
-      .toBe('AAC Light-heavyweight (Savage)');
+  it('resolves display name from boss name (fight.name) for known savage bosses', () => {
+    expect(getEncounterDisplayName({}, { name: 'Black Cat' }, 'en'))
+      .toBe('AAC Light-heavyweight M1');
+    expect(getEncounterDisplayName({}, { name: 'Black Cat' }, 'ja'))
+      .toBe('ライトヘビー級零式1層');
+    expect(getEncounterDisplayName({}, { name: 'Howling Blade' }, 'en'))
+      .toBe('AAC Cruiserweight M4');
+    expect(getEncounterDisplayName({}, { name: 'Howling Blade' }, 'ja'))
+      .toBe('クルーザー級零式4層');
   });
 
-  it('normalizes Arcadion savage code names for Japanese display', () => {
-    expect(getEncounterDisplayName({ zone: { name: 'AACHeavyWeight M4 (Savage)' } }, { name: 'Howling Blade' }, 'ja'))
+  it('falls back to zone-name pattern when boss name is unknown', () => {
+    expect(getEncounterDisplayName({ zone: { name: 'AACHeavyWeight M4 (Savage)' } }, { name: 'Unknown Boss' }, 'ja'))
       .toBe('アルカディアヘビー級零式');
+    expect(getEncounterDisplayName({ zone: { name: 'AACHeavyWeight' } }, { name: 'Unknown Boss' }, 'en'))
+      .toBe('AAC Heavyweight (Savage)');
   });
 });
 

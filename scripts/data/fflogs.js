@@ -229,6 +229,15 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
       return names.includes(key);
     });
   }
+  const nm = String(actionName || '').toLowerCase();
+  if (nm.includes('sprint') || nm.includes('スプリント')) {
+    return {
+      icon: '/public/job-icons/jobs/General/sprint.png',
+      iconCandidates: ['/public/job-icons/jobs/General/sprint.png'],
+      category: 'ability',
+      label: found?.action_name_ja || found?.action_name_en || actionName,
+    };
+  }
   if (shouldSkipIconLookup(actionName) || shouldSkipIconLookup(found?.action_name_en) || shouldSkipIconLookup(found?.action_name_ja)) {
     return {
       icon: '',

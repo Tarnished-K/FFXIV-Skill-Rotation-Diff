@@ -950,6 +950,12 @@ button:focus-visible {
   background-clip: padding-box;
 }
 
+.header-ad {
+  flex: 1;
+  min-width: 0;
+  max-width: 600px;
+}
+
 .header-actions {
   display: flex;
   align-items: center;

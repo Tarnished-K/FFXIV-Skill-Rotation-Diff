@@ -34,6 +34,13 @@ function findSelfBuff(actionName) {
   }
   return null;
 }
+function findTinctureBuff(actionName) {
+  const n = String(actionName || '').toLowerCase();
+  if (n.includes('tincture') || n.includes('potion') || n.includes('薬')) {
+    return { nameEn: 'Tincture', nameJa: '薬', duration: 30, color: '#e879f9' };
+  }
+  return null;
+}
 function getActiveSynergies(t, allRecords, partyBuffRecords) {
   return globalThis.BuffUtils.getActiveSynergies(t, allRecords, partyBuffRecords, {
     burstBuffs: BURST_BUFFS,
@@ -465,7 +472,7 @@ function renderTimeline() {
     const baseTop = owner === 'a' ? trackATop : trackBTop;
     const h = owner === 'a' ? trackAHeight : trackBHeight;
     for (const r of records) {
-      const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action);
+      const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action) || findTinctureBuff(r.action);
       if (!buff) continue;
       const x = 60 + r.t * pxPerSec;
       const w = buff.duration * pxPerSec;

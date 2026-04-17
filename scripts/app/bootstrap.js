@@ -423,8 +423,6 @@ async function handleLoadReports(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step2.classList.remove('hidden');
-    el.step3.classList.add('hidden');
-    el.step4.classList.add('hidden');
     el.msg.textContent = t('killFightsLoaded')(fightsA.length, fightsB.length);
     sendAnalyticsEvent('reports_loaded', {
       reportCodeA: state.urlA.reportId,
@@ -472,7 +470,6 @@ async function handleLoadPlayers(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step3.classList.remove('hidden');
-    el.step4.classList.add('hidden');
     el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
     if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
@@ -497,8 +494,6 @@ async function handleCompare(options = {}) {
   state.fightB = fightB;
   resetComparisonData();
   clearComparisonError();
-  el.step4.classList.add('hidden');
-
   if (fightA && fightB && Number(fightA.encounterID) !== Number(fightB.encounterID)) {
     const message = t('encounterMismatch');
     setComparisonError('validation', message);

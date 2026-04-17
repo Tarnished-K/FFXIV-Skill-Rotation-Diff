@@ -1,4 +1,26 @@
-(function () {
+(function attachAnalyticsDashboard(root, factory) {
+  const exports = factory();
+  root.AnalyticsDashboard = exports;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = exports;
+  }
+
+  if (root.document) {
+    if (root.document.body?.dataset?.requiresAdminAuth === 'true') {
+      root.document.addEventListener('admin-auth:ready', (event) => {
+        exports.init({
+          document: root.document,
+          fetchImpl: event.detail.fetchImpl,
+        });
+      }, { once: true });
+    } else {
+      exports.init({
+        document: root.document,
+        fetchImpl: root.fetch.bind(root),
+      });
+    }
+  }
+}(typeof globalThis !== 'undefined' ? globalThis : this, function createAnalyticsDashboard() {
   const DEFAULT_WINDOW_DAYS = 14;
   const ALLOWED_WINDOW_DAYS = new Set([7, 14, 30]);
 
@@ -32,7 +54,7 @@
     });
   }
 
-  function setText(id, value) {
+  function setText(document, id, value) {
     const node = document.getElementById(id);
     if (node) node.textContent = value;
   }
@@ -43,13 +65,13 @@
     return normalized;
   }
 
-  function getSelectedDays() {
-    const url = new URL(window.location.href);
+  function getSelectedDays(locationObject) {
+    const url = new URL(locationObject.href);
     const days = Number(url.searchParams.get('days') || DEFAULT_WINDOW_DAYS);
     return ALLOWED_WINDOW_DAYS.has(days) ? days : DEFAULT_WINDOW_DAYS;
   }
 
-  function syncDaysButtons(days) {
+  function syncDaysButtons(document, days) {
     document.querySelectorAll('[data-analytics-days]').forEach((button) => {
       const active = Number(button.dataset.analyticsDays) === days;
       button.classList.toggle('is-active', active);
@@ -57,13 +79,13 @@
     });
   }
 
-  function syncDaysUrl(days) {
-    const url = new URL(window.location.href);
+  function syncDaysUrl(locationObject, days) {
+    const url = new URL(locationObject.href);
     url.searchParams.set('days', String(days));
-    window.history.replaceState({}, '', url);
+    locationObject.history?.replaceState?.({}, '', url);
   }
 
-  function renderTable(containerId, columns, rows, emptyText) {
+  function renderTable(document, containerId, columns, rows, emptyText) {
     const container = document.getElementById(containerId);
     if (!container) return;
     if (!rows || rows.length === 0) {
@@ -83,7 +105,7 @@
     `;
   }
 
-  function renderEventList(containerId, items, renderItem, emptyText) {
+  function renderEventList(document, containerId, items, renderItem, emptyText) {
     const container = document.getElementById(containerId);
     if (!container) return;
     if (!items || items.length === 0) {
@@ -93,7 +115,7 @@
     container.innerHTML = items.map(renderItem).join('');
   }
 
-  function renderDailyChart(rows) {
+  function renderDailyChart(document, rows) {
     const container = document.getElementById('analyticsDailyChart');
     if (!container) return;
     if (!rows || rows.length === 0) {
@@ -120,61 +142,67 @@
     `).join('');
   }
 
-  function renderSummary(analytics) {
+  function renderSummary(document, analytics) {
     const totals = analytics.totals || {};
-    setText('metricPageViews', formatNumber(totals.pageViews));
-    setText('metricReportsLoaded', formatNumber(totals.reportsLoaded));
-    setText('metricComparisons', formatNumber(totals.comparisons));
-    setText('metricErrors', formatNumber(totals.apiErrors));
-    setText('metricSessions', formatNumber(totals.sessions));
-    setText('metricComparePerView', formatPercent(totals.comparePerViewRate));
-    setText('metricComparePerLoad', formatPercent(totals.comparePerLoadRate));
-    setText('metricSampledEvents', formatNumber(analytics.sampledEvents));
-    setText('analyticsWindowLabel', `過去 ${analytics.windowDays} 日`);
+    setText(document, 'metricPageViews', formatNumber(totals.pageViews));
+    setText(document, 'metricReportsLoaded', formatNumber(totals.reportsLoaded));
+    setText(document, 'metricComparisons', formatNumber(totals.comparisons));
+    setText(document, 'metricErrors', formatNumber(totals.apiErrors));
+    setText(document, 'metricSessions', formatNumber(totals.sessions));
+    setText(document, 'metricComparePerView', formatPercent(totals.comparePerViewRate));
+    setText(document, 'metricComparePerLoad', formatPercent(totals.comparePerLoadRate));
+    setText(document, 'metricSampledEvents', formatNumber(analytics.sampledEvents));
+    setText(document, 'analyticsWindowLabel', `過去 ${analytics.windowDays} 日`);
 
     const summary = [
       `${formatNumber(totals.sessions)} セッション`,
       `直近 ${analytics.windowDays} 日で ${formatNumber(totals.pageViews)} PV`,
       `${formatNumber(totals.reportsLoaded)} 回の読み込み`,
-      `${formatNumber(totals.comparisons)} 回の比較完了`,
-      totals.apiErrors ? `${formatNumber(totals.apiErrors)} 件の API エラー` : 'API エラーは確認されていません',
+      `${formatNumber(totals.comparisons)} 回の比較`,
+      totals.apiErrors
+        ? `${formatNumber(totals.apiErrors)} 件の API エラー`
+        : 'API エラーは観測されていません',
       analytics.lastEventAt ? `最終イベント: ${formatDateTime(analytics.lastEventAt)}` : '',
     ].filter(Boolean).join(' / ');
-    setText('analyticsSummaryText', summary);
+    setText(document, 'analyticsSummaryText', summary);
 
-    renderDailyChart(analytics.daily || []);
+    renderDailyChart(document, analytics.daily || []);
 
     renderTable(
+      document,
       'analyticsTopJobs',
       [
         { label: 'Job', render: (row) => escapeHtml(row.job) },
         { label: 'Count', render: (row) => formatNumber(row.count) },
       ],
       analytics.topJobs || [],
-      'まだ比較完了イベントがありません。'
+      'まだ比較ジョブはありません。',
     );
 
     renderTable(
+      document,
       'analyticsTopPaths',
       [
         { label: 'Path', render: (row) => escapeHtml(row.pathname) },
         { label: 'Count', render: (row) => formatNumber(row.count) },
       ],
       analytics.topPaths || [],
-      'まだアクセス記録がありません。'
+      'まだアクセス経路はありません。',
     );
 
     renderTable(
+      document,
       'analyticsTopErrorCauses',
       [
         { label: 'Cause', render: (row) => escapeHtml(row.label) },
         { label: 'Count', render: (row) => formatNumber(row.count) },
       ],
       analytics.topErrorCauses || [],
-      '直近の api_error はありません。'
+      'まだ API エラーはありません。',
     );
 
     renderEventList(
+      document,
       'analyticsRecentComparisons',
       analytics.recentComparisons || [],
       (item) => {
@@ -192,10 +220,11 @@
           </article>
         `;
       },
-      'まだ比較完了イベントはありません。'
+      'まだ比較イベントはありません。',
     );
 
     renderEventList(
+      document,
       'analyticsRecentLoads',
       analytics.recentLoads || [],
       (item) => {
@@ -211,10 +240,11 @@
           </article>
         `;
       },
-      '直近の reports_loaded はありません。'
+      'まだ読み込みイベントはありません。',
     );
 
     renderEventList(
+      document,
       'analyticsRecentErrors',
       analytics.recentErrors || [],
       (item) => {
@@ -231,55 +261,62 @@
           </article>
         `;
       },
-      '直近の api_error はありません。'
+      'まだエラーイベントはありません。',
     );
   }
 
-  async function loadAnalytics(days) {
-    const response = await fetch(`/api/analytics-summary?days=${encodeURIComponent(days)}`, {
+  async function loadAnalytics(fetchImpl, days) {
+    const response = await fetchImpl(`/api/analytics-summary?days=${encodeURIComponent(days)}`, {
       cache: 'no-store',
       headers: {
         Accept: 'application/json',
       },
     });
-    const json = await response.json();
+    const json = await response.json().catch(() => ({}));
     if (!response.ok || !json?.ok) {
       throw new Error(json?.error || 'Analytics summary request failed.');
     }
     return json.analytics;
   }
 
-  async function refreshAnalytics(days) {
+  async function refreshAnalytics({ document, fetchImpl, locationObject }, days) {
     try {
-      syncDaysButtons(days);
-      const analytics = await loadAnalytics(days);
-      renderSummary(analytics);
-      syncDaysUrl(days);
+      syncDaysButtons(document, days);
+      const analytics = await loadAnalytics(fetchImpl, days);
+      renderSummary(document, analytics);
+      syncDaysUrl(locationObject, days);
     } catch (error) {
-      setText('analyticsSummaryText', `集計の読み込みに失敗しました: ${error.message}`);
-      setText('analyticsWindowLabel', '読み込み失敗');
+      setText(document, 'analyticsSummaryText', `集計の読み込みに失敗しました: ${error.message}`);
+      setText(document, 'analyticsWindowLabel', '読み込み失敗');
     }
   }
 
-  function bindDaysButtons() {
-    document.querySelectorAll('[data-analytics-days]').forEach((button) => {
+  function bindDaysButtons(context) {
+    context.document.querySelectorAll('[data-analytics-days]').forEach((button) => {
       button.addEventListener('click', () => {
         const days = Number(button.dataset.analyticsDays);
         if (!ALLOWED_WINDOW_DAYS.has(days)) return;
-        refreshAnalytics(days);
+        refreshAnalytics(context, days);
       });
     });
   }
 
-  async function initAnalyticsDashboard() {
-    if (!document.body.classList.contains('analytics-page')) return;
-    bindDaysButtons();
-    await refreshAnalytics(getSelectedDays());
+  function init({ document, fetchImpl }) {
+    if (!document.body.classList.contains('analytics-page')) {
+      return;
+    }
+
+    const locationObject = {
+      href: globalThis.location.href,
+      history: globalThis.history,
+    };
+    const context = { document, fetchImpl, locationObject };
+    bindDaysButtons(context);
+    return refreshAnalytics(context, getSelectedDays(locationObject));
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAnalyticsDashboard, { once: true });
-  } else {
-    initAnalyticsDashboard();
-  }
-})();
+  return {
+    init,
+    renderSummary,
+  };
+}));

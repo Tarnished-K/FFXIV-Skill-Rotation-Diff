@@ -4,136 +4,157 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Analytics | FFXIV Skill Rotation Diff</title>
-    <meta name="description" content="FFXIV Skill Rotation Diff の簡易利用状況ダッシュボード" />
+    <meta name="description" content="FFXIV Skill Rotation Diff の利用状況ダッシュボード" />
     <link rel="canonical" href="https://xiv-srd.com/analytics.html" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body class="guide-page analytics-page">
+  <body class="guide-page analytics-page" data-requires-admin-auth="true">
     <header>
       <div class="header-row">
         <div>
           <h1>利用状況ダッシュボード</h1>
-          <p>公開ログ比較の直近利用状況をざっくり確認するための簡易ページです。</p>
+          <p>公開ログから集計した利用状況を確認するための運用ページです。</p>
         </div>
         <div class="header-actions">
-          <a class="button-link ghost tutorial-launch-btn" href="/">比較ページへ戻る</a>
+          <span id="adminAuthStatus" class="submessage admin-auth-status hidden"></span>
+          <button id="adminSignOutBtn" class="button-link ghost admin-signout-btn hidden" type="button">ログアウト</button>
+          <a class="button-link ghost tutorial-launch-btn" href="/">トップへ戻る</a>
         </div>
       </div>
     </header>
 
     <main class="analytics-main">
-      <section class="card analytics-hero">
-        <div class="guide-kicker">Operations</div>
-        <h2>直近の利用状況</h2>
-        <p id="analyticsSummaryText" class="analytics-summary-text">集計を読み込み中です。</p>
-      </section>
+      <section class="card admin-auth-card" id="adminAuthCard">
+        <div class="guide-kicker">Admin Access</div>
+        <h2>ログイン</h2>
+        <p id="adminAuthMessage" class="submessage admin-auth-message">管理者メールアドレスでログインしてください。</p>
+        <form id="adminAuthForm" class="admin-auth-form">
+          <label for="adminEmail">メールアドレス</label>
+          <input id="adminEmail" name="email" type="email" autocomplete="username" required />
 
-      <section class="analytics-metric-grid">
-        <article class="card analytics-metric-card">
-          <div class="analytics-metric-label">Page Views</div>
-          <div id="metricPageViews" class="analytics-metric-value">-</div>
-        </article>
-        <article class="card analytics-metric-card">
-          <div class="analytics-metric-label">Reports Loaded</div>
-          <div id="metricReportsLoaded" class="analytics-metric-value">-</div>
-        </article>
-        <article class="card analytics-metric-card">
-          <div class="analytics-metric-label">Comparisons</div>
-          <div id="metricComparisons" class="analytics-metric-value">-</div>
-        </article>
-        <article class="card analytics-metric-card">
-          <div class="analytics-metric-label">API Errors</div>
-          <div id="metricErrors" class="analytics-metric-value">-</div>
-        </article>
-      </section>
+          <label for="adminPassword">パスワード</label>
+          <input id="adminPassword" name="password" type="password" autocomplete="current-password" required />
 
-      <section class="analytics-metric-grid analytics-secondary-grid">
-        <article class="card analytics-metric-card analytics-secondary-card">
-          <div class="analytics-metric-label">Sessions</div>
-          <div id="metricSessions" class="analytics-metric-value analytics-secondary-value">-</div>
-        </article>
-        <article class="card analytics-metric-card analytics-secondary-card">
-          <div class="analytics-metric-label">Compare / View</div>
-          <div id="metricComparePerView" class="analytics-metric-value analytics-secondary-value">-</div>
-        </article>
-        <article class="card analytics-metric-card analytics-secondary-card">
-          <div class="analytics-metric-label">Compare / Load</div>
-          <div id="metricComparePerLoad" class="analytics-metric-value analytics-secondary-value">-</div>
-        </article>
-        <article class="card analytics-metric-card analytics-secondary-card">
-          <div class="analytics-metric-label">Sampled Events</div>
-          <div id="metricSampledEvents" class="analytics-metric-value analytics-secondary-value">-</div>
-        </article>
-      </section>
-
-      <section class="card analytics-chart-card">
-        <div class="analytics-section-head">
-          <div>
-            <h2>日次推移</h2>
-            <p id="analyticsWindowLabel" class="submessage">過去 14 日</p>
+          <div class="feedback-form-actions">
+            <button type="submit">ログイン</button>
           </div>
-          <div class="analytics-range-group" role="group" aria-label="集計期間">
-            <button type="button" class="analytics-range-btn" data-analytics-days="7">7日</button>
-            <button type="button" class="analytics-range-btn is-active" data-analytics-days="14">14日</button>
-            <button type="button" class="analytics-range-btn" data-analytics-days="30">30日</button>
-          </div>
-        </div>
-        <div id="analyticsDailyChart" class="analytics-bar-chart"></div>
+        </form>
       </section>
 
-      <section class="analytics-split-grid">
-        <section class="card analytics-table-card">
-          <div class="analytics-section-head">
-            <h2>よく使われるジョブ</h2>
-            <p class="submessage">comparison_completed から集計</p>
-          </div>
-          <div id="analyticsTopJobs" class="analytics-table-wrap"></div>
+      <div id="adminProtectedContent" class="hidden analytics-protected-content">
+        <section class="card analytics-hero">
+          <div class="guide-kicker">Operations</div>
+          <h2>直近の利用状況</h2>
+          <p id="analyticsSummaryText" class="analytics-summary-text">集計を読み込み中です。</p>
         </section>
 
-        <section class="card analytics-table-card">
-          <div class="analytics-section-head">
-            <h2>アクセスの多いパス</h2>
-            <p class="submessage">直近イベントの pathname 集計</p>
-          </div>
-          <div id="analyticsTopPaths" class="analytics-table-wrap"></div>
-        </section>
-      </section>
-
-      <section class="analytics-split-grid">
-        <section class="card analytics-table-card">
-          <div class="analytics-section-head">
-            <h2>上位の失敗要因</h2>
-            <p class="submessage">api_error の stage / reason 集計</p>
-          </div>
-          <div id="analyticsTopErrorCauses" class="analytics-table-wrap"></div>
-        </section>
-
-        <section class="card analytics-table-card">
-          <div class="analytics-section-head">
-            <h2>直近の読み込み</h2>
-            <p class="submessage">reports_loaded の詳細</p>
-          </div>
-          <div id="analyticsRecentLoads" class="analytics-event-list"></div>
-        </section>
-      </section>
-
-      <section class="analytics-split-grid">
-        <section class="card analytics-table-card">
-          <div class="analytics-section-head">
-            <h2>直近の比較完了</h2>
-            <p class="submessage">比較成功時の要約</p>
-          </div>
-          <div id="analyticsRecentComparisons" class="analytics-event-list"></div>
+        <section class="analytics-metric-grid">
+          <article class="card analytics-metric-card">
+            <div class="analytics-metric-label">Page Views</div>
+            <div id="metricPageViews" class="analytics-metric-value">-</div>
+          </article>
+          <article class="card analytics-metric-card">
+            <div class="analytics-metric-label">Reports Loaded</div>
+            <div id="metricReportsLoaded" class="analytics-metric-value">-</div>
+          </article>
+          <article class="card analytics-metric-card">
+            <div class="analytics-metric-label">Comparisons</div>
+            <div id="metricComparisons" class="analytics-metric-value">-</div>
+          </article>
+          <article class="card analytics-metric-card">
+            <div class="analytics-metric-label">API Errors</div>
+            <div id="metricErrors" class="analytics-metric-value">-</div>
+          </article>
         </section>
 
-        <section class="card analytics-table-card">
-          <div class="analytics-section-head">
-            <h2>直近のエラー</h2>
-            <p class="submessage">api_error の詳細</p>
-          </div>
-          <div id="analyticsRecentErrors" class="analytics-event-list"></div>
+        <section class="analytics-metric-grid analytics-secondary-grid">
+          <article class="card analytics-metric-card analytics-secondary-card">
+            <div class="analytics-metric-label">Sessions</div>
+            <div id="metricSessions" class="analytics-metric-value analytics-secondary-value">-</div>
+          </article>
+          <article class="card analytics-metric-card analytics-secondary-card">
+            <div class="analytics-metric-label">Compare / View</div>
+            <div id="metricComparePerView" class="analytics-metric-value analytics-secondary-value">-</div>
+          </article>
+          <article class="card analytics-metric-card analytics-secondary-card">
+            <div class="analytics-metric-label">Compare / Load</div>
+            <div id="metricComparePerLoad" class="analytics-metric-value analytics-secondary-value">-</div>
+          </article>
+          <article class="card analytics-metric-card analytics-secondary-card">
+            <div class="analytics-metric-label">Sampled Events</div>
+            <div id="metricSampledEvents" class="analytics-metric-value analytics-secondary-value">-</div>
+          </article>
         </section>
-      </section>
+
+        <section class="card analytics-chart-card">
+          <div class="analytics-section-head">
+            <div>
+              <h2>日次推移</h2>
+              <p id="analyticsWindowLabel" class="submessage">過去 14 日</p>
+            </div>
+            <div class="analytics-range-group" role="group" aria-label="集計期間">
+              <button type="button" class="analytics-range-btn" data-analytics-days="7">7日</button>
+              <button type="button" class="analytics-range-btn is-active" data-analytics-days="14">14日</button>
+              <button type="button" class="analytics-range-btn" data-analytics-days="30">30日</button>
+            </div>
+          </div>
+          <div id="analyticsDailyChart" class="analytics-bar-chart"></div>
+        </section>
+
+        <section class="analytics-split-grid">
+          <section class="card analytics-table-card">
+            <div class="analytics-section-head">
+              <h2>よく使われるジョブ</h2>
+              <p class="submessage">comparison_completed から集計</p>
+            </div>
+            <div id="analyticsTopJobs" class="analytics-table-wrap"></div>
+          </section>
+
+          <section class="card analytics-table-card">
+            <div class="analytics-section-head">
+              <h2>アクセスの多いパス</h2>
+              <p class="submessage">利用イベントの pathname 集計</p>
+            </div>
+            <div id="analyticsTopPaths" class="analytics-table-wrap"></div>
+          </section>
+        </section>
+
+        <section class="analytics-split-grid">
+          <section class="card analytics-table-card">
+            <div class="analytics-section-head">
+              <h2>上位エラー要因</h2>
+              <p class="submessage">api_error の stage / reason 集計</p>
+            </div>
+            <div id="analyticsTopErrorCauses" class="analytics-table-wrap"></div>
+          </section>
+
+          <section class="card analytics-table-card">
+            <div class="analytics-section-head">
+              <h2>直近の読み込み</h2>
+              <p class="submessage">reports_loaded の詳細</p>
+            </div>
+            <div id="analyticsRecentLoads" class="analytics-event-list"></div>
+          </section>
+        </section>
+
+        <section class="analytics-split-grid">
+          <section class="card analytics-table-card">
+            <div class="analytics-section-head">
+              <h2>直近の比較実行</h2>
+              <p class="submessage">比較時の入力値</p>
+            </div>
+            <div id="analyticsRecentComparisons" class="analytics-event-list"></div>
+          </section>
+
+          <section class="card analytics-table-card">
+            <div class="analytics-section-head">
+              <h2>直近のエラー</h2>
+              <p class="submessage">api_error の詳細</p>
+            </div>
+            <div id="analyticsRecentErrors" class="analytics-event-list"></div>
+          </section>
+        </section>
+      </div>
     </main>
 
     <footer>
@@ -141,6 +162,7 @@
     </footer>
 
     <script src="./scripts/shared/build-info.js"></script>
+    <script src="./scripts/shared/admin-auth.js"></script>
     <script src="./scripts/shared/analytics-dashboard.js"></script>
   </body>
 </html>

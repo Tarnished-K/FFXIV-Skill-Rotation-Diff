@@ -279,6 +279,8 @@ label {
 
 input[type="url"],
 input[type="text"],
+input[type="email"],
+input[type="password"],
 select {
   display: block;
   width: 100%;
@@ -295,6 +297,8 @@ select {
 
 input[type="url"]:focus,
 input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
 select:focus {
   transform: translateY(-1px);
   background: rgba(12, 23, 36, 0.98);
@@ -954,6 +958,15 @@ button:focus-visible {
   gap: 12px;
 }
 
+.admin-auth-status {
+  margin-right: 4px;
+  color: var(--gold-light);
+}
+
+.admin-signout-btn {
+  cursor: pointer;
+}
+
 .tutorial-launch-btn {
   display: inline-flex;
   width: auto;
@@ -1433,6 +1446,194 @@ button:focus-visible {
   font-size: 13px;
 }
 
+.feedback-page .header-row {
+  align-items: flex-start;
+}
+
+.feedback-main {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+}
+
+#adminProtectedContent {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.feedback-form-card,
+.admin-auth-card,
+.feedback-admin-summary,
+.feedback-admin-controls,
+#feedbackGeneralSections,
+#feedbackTrashSection {
+  grid-column: 1 / -1;
+}
+
+.admin-auth-card {
+  max-width: 520px;
+}
+
+.admin-auth-form {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-auth-message {
+  margin-bottom: 8px;
+}
+
+.feedback-textarea {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  margin-top: 8px;
+  padding: 13px 15px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition), transform var(--transition);
+}
+
+.feedback-textarea:focus {
+  transform: translateY(-1px);
+  background: rgba(12, 23, 36, 0.98);
+  border-color: rgba(123, 198, 255, 0.7);
+  box-shadow: 0 0 0 4px rgba(43, 134, 217, 0.16);
+}
+
+.feedback-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.feedback-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.feedback-form-actions button {
+  width: auto;
+  margin-top: 0;
+}
+
+.feedback-message {
+  margin-top: 0;
+}
+
+.feedback-admin-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.feedback-summary-item {
+  padding: 18px;
+  border: 1px solid var(--border-dim);
+  border-radius: 16px;
+  background: rgba(5, 11, 19, 0.72);
+}
+
+.feedback-summary-item span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.feedback-summary-item strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--gold-light);
+  font-size: 30px;
+}
+
+.feedback-admin-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.feedback-admin-controls .tabs {
+  flex: 0 0 auto;
+}
+
+.feedback-admin-controls .ghost {
+  margin-top: 0;
+}
+
+.feedback-category-block + .feedback-category-block {
+  margin-top: 24px;
+}
+
+.feedback-card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.feedback-entry-card {
+  padding: 16px;
+  border: 1px solid var(--border-dim);
+  border-radius: 16px;
+  background: rgba(5, 11, 19, 0.72);
+}
+
+.feedback-entry-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.feedback-entry-head strong {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.feedback-entry-head span {
+  color: var(--blue-light);
+  font-size: 12px;
+}
+
+.feedback-entry-meta {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.feedback-entry-body {
+  margin: 10px 0 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.feedback-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.feedback-entry-actions button {
+  width: auto;
+  margin-top: 0;
+}
+
 button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -1534,6 +1735,19 @@ button:disabled:hover {
   .analytics-split-grid .analytics-table-card {
     grid-column: 1 / -1;
   }
+
+  .feedback-admin-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .feedback-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .feedback-form-actions button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 560px) {
@@ -1566,5 +1780,9 @@ button:disabled:hover {
 
   .timeline-wrap {
     padding: 10px;
+  }
+
+  .feedback-admin-summary {
+    grid-template-columns: 1fr;
   }
 }

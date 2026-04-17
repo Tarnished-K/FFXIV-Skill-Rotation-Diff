@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feedback Admin | FFXIV Skill Rotation Diff</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="feedback-page" data-requires-admin-auth="true">
+    <header>
+      <div class="header-row">
+        <div>
+          <h1>Feedback Admin</h1>
+          <p>一般とゴミ箱を確認し、既読・復元・移動・期限切れ削除を操作します。</p>
+        </div>
+        <div class="header-actions">
+          <span id="adminAuthStatus" class="submessage admin-auth-status hidden"></span>
+          <button id="adminSignOutBtn" class="button-link ghost admin-signout-btn hidden" type="button">ログアウト</button>
+          <a class="button-link ghost tutorial-launch-btn" href="/">トップへ戻る</a>
+          <a class="button-link ghost tutorial-launch-btn" href="/contact.html">ご要望フォーム</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="feedback-main">
+      <section class="card admin-auth-card" id="adminAuthCard">
+        <div class="guide-kicker">Admin Access</div>
+        <h2>ログイン</h2>
+        <p id="adminAuthMessage" class="submessage admin-auth-message">管理者メールアドレスでログインしてください。</p>
+        <form id="adminAuthForm" class="admin-auth-form">
+          <label for="adminEmail">メールアドレス</label>
+          <input id="adminEmail" name="email" type="email" autocomplete="username" required />
+
+          <label for="adminPassword">パスワード</label>
+          <input id="adminPassword" name="password" type="password" autocomplete="current-password" required />
+
+          <div class="feedback-form-actions">
+            <button type="submit">ログイン</button>
+          </div>
+        </form>
+      </section>
+
+      <div id="adminProtectedContent" class="hidden">
+        <section class="card feedback-admin-summary">
+          <div class="feedback-summary-item">
+            <span>未読件数</span>
+            <strong id="feedbackUnreadCount">-</strong>
+          </div>
+          <div class="feedback-summary-item">
+            <span>一般件数</span>
+            <strong id="feedbackGeneralCount">-</strong>
+          </div>
+          <div class="feedback-summary-item">
+            <span>ゴミ箱件数</span>
+            <strong id="feedbackTrashCount">-</strong>
+          </div>
+          <div class="feedback-summary-item">
+            <span>削除待ち件数</span>
+            <strong id="feedbackPendingPurgeCount">-</strong>
+          </div>
+        </section>
+
+        <section class="card feedback-admin-controls">
+          <div class="tabs">
+            <button class="tab active" data-feedback-tab="general" type="button">一般</button>
+            <button class="tab" data-feedback-tab="trash" type="button">ゴミ箱</button>
+          </div>
+          <button id="feedbackPurgeBtn" class="ghost" type="button">期限切れ削除を実行する</button>
+          <p id="feedbackAdminMessage" class="submessage feedback-message"></p>
+        </section>
+
+        <section class="card" id="feedbackGeneralSections"></section>
+        <section class="card hidden" id="feedbackTrashSection"></section>
+      </div>
+    </main>
+
+    <footer>
+      <small>未読から既読にすると 7 日後削除予定が設定されます。</small>
+      <small class="build-info" data-build-info>Version loading...</small>
+    </footer>
+
+    <script src="./scripts/shared/build-info.js"></script>
+    <script src="./scripts/shared/admin-auth.js"></script>
+    <script src="./scripts/shared/feedback-shared.js"></script>
+    <script src="./scripts/shared/feedback-admin.js"></script>
+  </body>
+</html>

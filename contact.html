@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ご要望フォーム | FFXIV Skill Rotation Diff</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="feedback-page">
+    <header>
+      <div class="header-row">
+        <div>
+          <h1>ご要望フォーム</h1>
+          <p>改善要望や不具合報告を送信できます。</p>
+        </div>
+        <div class="header-actions">
+          <a class="button-link ghost tutorial-launch-btn" href="/">トップへ戻る</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="feedback-main">
+      <section class="card feedback-form-card">
+        <h2>送信内容</h2>
+        <label for="feedbackCategory">カテゴリ</label>
+        <select id="feedbackCategory">
+          <option value="bug_report">不具合報告</option>
+          <option value="feature_request">改善要望</option>
+          <option value="question">質問</option>
+          <option value="other">その他</option>
+        </select>
+
+        <label for="feedbackSubject">件名</label>
+        <input id="feedbackSubject" type="text" maxlength="200" />
+
+        <label for="feedbackBody">本文</label>
+        <textarea id="feedbackBody" class="feedback-textarea" maxlength="2000"></textarea>
+
+        <input
+          id="feedbackWebsite"
+          name="website"
+          class="feedback-honeypot"
+          type="text"
+          tabindex="-1"
+          autocomplete="off"
+        />
+
+        <div class="feedback-form-actions">
+          <button id="feedbackSubmitBtn" type="button">送信する</button>
+          <p id="feedbackMessage" class="submessage feedback-message"></p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <small>送信内容は確認のうえ順次対応します。</small>
+      <small class="build-info" data-build-info>Version loading...</small>
+    </footer>
+
+    <script src="./scripts/shared/build-info.js"></script>
+    <script src="./scripts/shared/feedback-shared.js"></script>
+    <script src="./scripts/shared/feedback-form.js"></script>
+  </body>
+</html>

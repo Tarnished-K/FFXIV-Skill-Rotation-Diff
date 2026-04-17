@@ -18,6 +18,46 @@
   status = 200
 
 [[redirects]]
+  from = "/api/public-config"
+  to = "/.netlify/functions/public-config"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin-session"
+  to = "/.netlify/functions/admin-session"
+  status = 200
+
+[[redirects]]
   from = "/api/analytics-summary"
   to = "/.netlify/functions/analytics-summary"
+  status = 200
+
+[[redirects]]
+  from = "/api/feedback-submit"
+  to = "/.netlify/functions/feedback-submit"
+  status = 200
+
+[[redirects]]
+  from = "/api/feedback-admin-list"
+  to = "/.netlify/functions/feedback-admin-list"
+  status = 200
+
+[[redirects]]
+  from = "/api/feedback-admin-mark-read"
+  to = "/.netlify/functions/feedback-admin-mark-read"
+  status = 200
+
+[[redirects]]
+  from = "/api/feedback-admin-restore"
+  to = "/.netlify/functions/feedback-admin-restore"
+  status = 200
+
+[[redirects]]
+  from = "/api/feedback-admin-move-to-trash"
+  to = "/.netlify/functions/feedback-admin-move-to-trash"
+  status = 200
+
+[[redirects]]
+  from = "/api/feedback-admin-purge"
+  to = "/.netlify/functions/feedback-admin-purge"
   status = 200

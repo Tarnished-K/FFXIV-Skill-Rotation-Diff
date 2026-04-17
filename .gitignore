@@ -1,0 +1,5 @@
+# Local Netlify folder
+.netlify
+node_modules/
+netlify-dev*.log
+.claude/settings.local.json

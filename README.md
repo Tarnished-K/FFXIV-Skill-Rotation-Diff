@@ -1,55 +1,77 @@
 # FFXIV Skill Rotation Diff
 
-公開 FFLogs ログを 2 件読み込み、戦闘ごとのプレイヤータイムラインを比較するツールです。
+FFLogs の公開ログを比較して、2 人のプレイヤーのタイムライン差分を確認するための静的サイトです。  
+フロントは静的 HTML / JS、API は Netlify Functions、保存先は Supabase を使います。
 
-## 現在の方針
-- 対応対象は公開ログのみ
-- ユーザーごとの FF Logs OAuth / PKCE は使わない
-- FF Logs API は Netlify Functions 経由で呼び出す
-- 利用状況分析は Supabase へ保存できる構成にする
-
-## 主な構成
+## Main files
 - `index.html`
-  比較画面
+  メイン画面
 - `tutorial.html`
-  初回ガイド
+  使い方ガイド
+- `contact.html`
+  ご要望フォーム
+- `feedback-admin.html`
+  フィードバック管理画面
+- `analytics.html`
+  利用状況ダッシュボード
 - `scripts/`
-  フロントの UI / FF Logs データ整形 / タイムライン描画
-- `netlify/functions/fflogs-proxy.js`
-  FF Logs GraphQL をサーバー側資格情報で中継
-- `netlify/functions/log-event.js`
-  利用イベント保存の入口
-- `lib/fflogs-client.js`
-  FF Logs public API 通信用の共通部品
-- `lib/db.js`
-  Supabase 保存用の共通部品
+  フロントの UI / data 処理
+- `netlify/functions/`
+  FF Logs proxy、analytics、feedback、auth 用 API
+- `lib/`
+  Functions から使う共通ロジック
 - `supabase/schema.sql`
-  最小のイベント保存テーブル定義
+  Supabase schema
 
-## 必要な環境変数
-`.env.example` を参照してください。
+## Required env
+`.env.example` をコピーして設定してください。
 
 - `FFLOGS_CLIENT_ID`
 - `FFLOGS_CLIENT_SECRET`
 - `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_EMAILS`
+- `GEMINI_API_KEY`
+- `GEMINI_FEEDBACK_MODEL`
 
-## ローカル起動
-Netlify Functions を使うため、単純な静的サーバーではなく `netlify dev` を使います。
+## Local dev
+Functions も含めて確認する前提なので、静的サーバーではなく `netlify dev` を使います。
 
 ```bash
 netlify dev
 ```
 
-起動後は通常 `http://localhost:8888` で確認できます。
+通常は `http://localhost:8888` で確認できます。
 
-## API エンドポイント
+## API routes
 - `/api/fflogs-proxy`
-  フロントから FF Logs GraphQL を呼ぶ入口
+  FF Logs GraphQL proxy
 - `/api/log-event`
-  `page_view` や `comparison_completed` などのイベント保存用
+  利用イベント保存
+- `/api/analytics-summary`
+  analytics 集計
+- `/api/feedback-submit`
+  フィードバック送信と AI 振り分け
+- `/api/feedback-admin-*`
+  フィードバック管理 API
+- `/api/public-config`
+  管理画面ログイン用の公開設定
+- `/api/admin-session`
+  管理者セッション確認
 
-## 補足
-- 非公開ログは取得できません
-- `public/job-icons/job_icon.json` と `public/job-icons/...` のアイコンを利用します
-- 将来的に利用状況分析や要望管理を追加しても、`/api/*` 経由の構成を維持できるようにしています
+## Feedback
+- `contact.html` から送信できます
+- Gemini を使う場合は `GEMINI_API_KEY` と `GEMINI_FEEDBACK_MODEL` が必要です
+
+## Admin auth
+- `feedback-admin.html` と `analytics.html` は Supabase Auth で保護されています
+- `ADMIN_EMAILS` はカンマ区切りの allowlist です
+- Supabase Dashboard の `Auth > Users` で管理者ユーザーを作成してください
+- そのメールアドレスを `ADMIN_EMAILS` に入れてください
+- ブラウザ側は `SUPABASE_ANON_KEY` を使ってログインし、Functions 側で管理者メールを再確認します
+
+## Notes
+- 本番の公開ログだけを対象にしています
+- ジョブアイコンは `public/job-icons/` を使います
+- 管理 API は UI を隠すだけでは保護にならないので、必ず auth 設定を入れてください

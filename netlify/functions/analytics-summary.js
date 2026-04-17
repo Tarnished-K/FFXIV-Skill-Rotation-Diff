@@ -1,11 +1,12 @@
 const { clamp, summarizeEvents } = require('../../lib/analytics-utils');
+const { authorizeAdminRequest } = require('../../lib/admin-auth');
 const { fetchRecentAppEvents } = require('../../lib/db');
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
   'Cache-Control': 'no-store',
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
 };
 
@@ -28,6 +29,11 @@ exports.handler = async (event) => {
 
   if (event.httpMethod !== 'GET') {
     return json(405, { error: 'Method Not Allowed' });
+  }
+
+  const auth = await authorizeAdminRequest(event);
+  if (!auth.ok) {
+    return json(auth.statusCode, auth.body);
   }
 
   const days = clamp(Number(event.queryStringParameters?.days) || 14, 3, 30);

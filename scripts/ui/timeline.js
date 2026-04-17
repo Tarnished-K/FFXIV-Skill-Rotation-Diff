@@ -41,6 +41,152 @@ function getActiveSynergies(t, allRecords, partyBuffRecords) {
     lang: state.lang,
   });
 }
+function buildFightPhasesFromFFLogs(reportJson, fight, lang = 'en') {
+  return buildFightPhasesFromFFLogsShared(reportJson, fight, {
+    getPhaseLabel(meta, fallbackIndex) {
+      return formatPhaseLabel(meta, fallbackIndex, lang);
+    },
+  });
+}
+
+const STATUS_BURST_BUFFS = {
+  1000786: 'Battle Litany',
+  1001185: 'Brotherhood',
+  1001882: 'Divination',
+  1001221: 'Chain Stratagem',
+  1001239: 'Embolden',
+  1002599: 'Arcane Circle',
+  1001822: 'Technical Finish', 1002698: 'Technical Finish',
+  1002703: 'Searing Light',
+  1002722: 'Radiant Finale', 1002964: 'Radiant Finale',
+  1003685: 'Starry Muse',
+  1004030: 'Dokumori',
+};
+const STATUS_SELF_BUFFS = {
+  1000076: 'Fight or Flight',
+  1001177: 'Inner Release', 1001303: 'Inner Release',
+  1000742: 'Blood Weapon',
+  1001624: 'Delirium', 1003836: 'Delirium',
+  1000831: 'No Mercy',
+  1001181: 'Riddle of Fire',
+  1002720: 'Lance Charge',
+  1000125: 'Raging Strikes',
+  1000861: 'Wildfire',
+  1001825: 'Devilment',
+  1000737: 'Ley Lines',
+  1001971: 'Manafication',
+  1001233: 'Meikyo Shisui',
+};
+async function fetchPlayerAurasV2(reportCode, fight, targetId) {
+  const partyBuffs = [];
+  let startTime = null;
+  const query = `
+    query PlayerAuras($code: String!, $fightID: Int!, $targetID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: Buffs, fightIDs: [$fightID], targetID: $targetID, startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  let rawTotal = 0;
+  let pageCount = 0;
+  let debugMatchCount = { burst: 0, self: 0 };
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), targetID: Number(targetId), startTime };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    rawTotal += rows.length;
+    pageCount++;
+    if (pageCount === 1) {
+      logDebug(`auras raw(target=${targetId}): page1=${rows.length}`, rows.length > 0 ? {
+        types: [...new Set(rows.slice(0, 50).map(e => e.type))],
+        sample: rows.slice(0, 5).map(e => ({
+          type: e.type,
+          name: e.ability?.name || state.abilityById.get(Number(e.abilityGameID)) || '(unknown)',
+          id: e.abilityGameID,
+          dur: e.duration,
+          src: e.sourceID,
+        }))
+      } : 'empty');
+    }
+    for (const e of rows) {
+      const type = String(e?.type || '').toLowerCase();
+      const isBuffApply = type === 'applybuff' || type === 'refreshbuff';
+      if (!isBuffApply) continue;
+      const statusId = Number(e?.abilityGameID || e?.ability?.guid || 0);
+      const abilityName = String(e?.ability?.name || state.abilityById.get(statusId) || '');
+      const ts = Number(e?.timestamp || 0);
+      const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      const dur = Number(e?.duration || 0) / 1000;
+
+      const burstName = STATUS_BURST_BUFFS[statusId];
+      if (burstName) {
+        const buff = BURST_BUFFS.find(b => b.nameEn === burstName);
+        if (buff) {
+          partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName || burstName, duration: buff.duration });
+          debugMatchCount.burst++;
+          continue;
+        }
+      }
+      const buff = findBurstBuff(statusId, abilityName);
+      if (buff) {
+        partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName || buff.nameEn, duration: buff.duration });
+        debugMatchCount.burst++;
+        continue;
+      }
+
+      const selfName = STATUS_SELF_BUFFS[statusId];
+      if (selfName) {
+        const selfBuff = SELF_BUFFS.find(b => b.nameEn === selfName);
+        if (selfBuff) {
+          partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName || selfName, duration: selfBuff.duration });
+          debugMatchCount.self++;
+          continue;
+        }
+      }
+      if (abilityName) {
+        const selfBuff = findSelfBuff(abilityName);
+        if (selfBuff) {
+          partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName, duration: selfBuff.duration });
+          debugMatchCount.self++;
+          continue;
+        }
+      }
+    }
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+  logDebug(`auras(target=${targetId}): raw=${rawTotal} pages=${pageCount} PTbuff=${partyBuffs.length}`, debugMatchCount);
+  return partyBuffs;
+}
+async function fetchFightDpsV2(reportCode, fightId) {
+  const query = `
+    query FightDps($code: String!, $fightID: [Int!]!) {
+      reportData {
+        report(code: $code) {
+          table(dataType: DamageDone, fightIDs: $fightID)
+        }
+      }
+    }
+  `;
+  try {
+    const data = await graphqlRequest(query, { code: reportCode, fightID: [Number(fightId)] });
+    const entries = data?.reportData?.report?.table?.data?.entries || [];
+    if (entries.length) {
+      const sample = entries[0];
+      logDebug('DPS table sample', { keys: Object.keys(sample), name: sample.name, total: sample.total, activeTime: sample.activeTime, rDPS: sample.rDPS, aDPS: sample.aDPS });
+    }
+    return entries;
+  } catch (e) {
+    logError('DPS table fetch failed', { error: e.message });
+    return [];
+  }
+}
 function formatJobName(jobCode) {
   if (state.lang === 'ja') return JOB_NAME_JA[jobCode] || jobCode;
   return jobCode;

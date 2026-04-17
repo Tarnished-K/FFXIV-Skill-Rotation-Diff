@@ -93,7 +93,7 @@ body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
-  font-weight: 200;
+  font-weight: 400;
   line-height: 20px;
   background: transparent;
 }
@@ -154,7 +154,7 @@ footer {
 
 h1 {
   font-size: 30px;
-  font-weight: 200;
+  font-weight: 400;
   line-height: 36px;
   letter-spacing: -0.025em;
   color: var(--text-primary);
@@ -296,7 +296,7 @@ section.card::before { display: none; }
    ============================================================ */
 h2 {
   font-size: 14px;
-  font-weight: 200;
+  font-weight: 400;
   line-height: 20px;
   color: var(--accent);
   letter-spacing: 0.05em;
@@ -305,14 +305,14 @@ h2 {
 
 h3 {
   font-size: 14px;
-  font-weight: 200;
+  font-weight: 400;
   line-height: 20px;
   color: var(--text-primary);
 }
 
 p, small {
   font-size: 12px;
-  font-weight: 200;
+  font-weight: 400;
   line-height: 16px;
   color: var(--text-secondary);
 }
@@ -320,13 +320,13 @@ p, small {
 .submessage {
   font-size: 12px;
   color: var(--text-muted);
-  font-weight: 100;
+  font-weight: 300;
 }
 
 .message {
   font-size: 12px;
   color: var(--accent);
-  font-weight: 200;
+  font-weight: 400;
   padding: var(--space-2) 0;
 }
 
@@ -343,7 +343,7 @@ select {
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
-  font-weight: 200;
+  font-weight: 400;
   line-height: 20px;
   padding: 10px var(--space-4);
   outline: none;
@@ -359,7 +359,7 @@ select:focus {
   box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
-input::placeholder { color: var(--text-muted); font-weight: 100; }
+input::placeholder { color: var(--text-muted); font-weight: 300; }
 
 select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
@@ -379,7 +379,7 @@ label {
   flex-direction: column;
   gap: var(--space-2);
   font-size: 12px;
-  font-weight: 200;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 
@@ -399,7 +399,7 @@ button,
   cursor: pointer;
   font-family: var(--font-sans);
   font-size: 14px;
-  font-weight: 300;
+  font-weight: 500;
   line-height: 20px;
   padding: 10px var(--space-6);
   transition: background var(--transition), box-shadow var(--transition), color var(--transition), border-color var(--transition);
@@ -414,7 +414,7 @@ button,
   color: var(--bg-base);
   box-shadow: var(--shadow-btn);
   width: 100%;
-  font-weight: 300;
+  font-weight: 500;
 }
 
 #loadBtn:hover,
@@ -442,7 +442,7 @@ button,
   border: 1px solid var(--border-dim);
   padding: 6px var(--space-4);
   font-size: 12px;
-  font-weight: 200;
+  font-weight: 400;
 }
 
 .lang-btn:hover,
@@ -459,7 +459,7 @@ button,
   border: 1px solid var(--border-dim);
   color: var(--text-secondary);
   font-size: 12px;
-  font-weight: 200;
+  font-weight: 400;
   padding: 6px var(--space-3);
 }
 
@@ -511,7 +511,7 @@ button,
   border-radius: calc(var(--radius-md) - 2px);
   color: var(--text-secondary);
   font-size: 12px;
-  font-weight: 200;
+  font-weight: 400;
   padding: 5px var(--space-3);
   cursor: pointer;
   transition: background var(--transition), color var(--transition);
@@ -522,7 +522,7 @@ button,
 .tab.active {
   background: var(--accent);
   color: var(--bg-base);
-  font-weight: 300;
+  font-weight: 500;
 }
 
 /* ============================================================
@@ -540,7 +540,7 @@ button,
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 200;
+  font-weight: 400;
   padding: 4px var(--space-2);
   cursor: pointer;
   transition: background var(--transition), border-color var(--transition), color var(--transition);
@@ -569,7 +569,7 @@ button,
 
 #zoomLabel {
   font-size: 12px;
-  font-weight: 200;
+  font-weight: 400;
   color: var(--text-muted);
   min-width: 40px;
   text-align: center;
@@ -632,7 +632,7 @@ button,
 .tick span {
   font-size: 9px;
   color: var(--text-muted);
-  font-weight: 100;
+  font-weight: 300;
   margin-top: 1px;
   white-space: nowrap;
 }
@@ -656,7 +656,7 @@ button,
   width: 58px;
   text-align: right;
   font-size: 9px;
-  font-weight: 100;
+  font-weight: 300;
   color: var(--text-muted);
   padding-right: 6px;
   pointer-events: none;
@@ -672,7 +672,7 @@ button,
   width: 58px;
   text-align: right;
   font-size: 10px;
-  font-weight: 200;
+  font-weight: 400;
   padding-right: 6px;
   pointer-events: none;
   white-space: nowrap;
@@ -701,7 +701,7 @@ button,
   align-items: center;
   justify-content: center;
   font-size: 8px;
-  font-weight: 300;
+  font-weight: 500;
   cursor: default;
   overflow: hidden;
   transition: transform var(--transition), box-shadow var(--transition);
@@ -752,7 +752,7 @@ button,
   top: 2px;
   left: 4px;
   font-size: 9px;
-  font-weight: 200;
+  font-weight: 400;
   white-space: nowrap;
   opacity: 0.9;
 }
@@ -776,7 +776,7 @@ button,
   position: absolute;
   top: 2px;
   font-size: 8px;
-  font-weight: 200;
+  font-weight: 400;
   color: var(--text-muted);
   white-space: nowrap;
   transform: translateX(-50%);
@@ -797,7 +797,7 @@ button,
   position: absolute;
   top: 4px;
   font-size: 8px;
-  font-weight: 200;
+  font-weight: 400;
   color: var(--text-muted);
   white-space: nowrap;
   transform: translateX(-50%);
@@ -822,7 +822,7 @@ button,
 .debug-log {
   font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
   font-size: 11px;
-  font-weight: 100;
+  font-weight: 300;
   line-height: 1.6;
   color: var(--text-muted);
   background: rgba(2, 6, 23, 0.5);
@@ -842,13 +842,13 @@ button,
    ============================================================ */
 footer small {
   font-size: 11px;
-  font-weight: 100;
+  font-weight: 300;
   color: var(--text-muted);
 }
 
 .build-info {
   font-size: 10px;
-  font-weight: 100;
+  font-weight: 300;
   color: #334155;
 }
 
@@ -899,7 +899,7 @@ footer small {
 
 .tutorial-step-meta {
   font-size: 10px;
-  font-weight: 100;
+  font-weight: 300;
   color: var(--text-muted);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -919,7 +919,7 @@ footer small {
 
 .tutorial-status {
   font-size: 11px;
-  font-weight: 100;
+  font-weight: 300;
   color: var(--accent);
   min-height: 14px;
 }
@@ -936,7 +936,7 @@ footer small {
   border: 1px solid var(--border-dim);
   color: var(--text-secondary);
   font-size: 12px;
-  font-weight: 200;
+  font-weight: 400;
   padding: 6px var(--space-3);
   border-radius: var(--radius-md);
 }
@@ -947,7 +947,7 @@ footer small {
   border: none;
   color: var(--bg-base);
   font-size: 12px;
-  font-weight: 300;
+  font-weight: 500;
   padding: 6px var(--space-4);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-btn);

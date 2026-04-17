@@ -316,15 +316,15 @@ function formatPartyComp(reportJson, fightId) {
     });
   } catch { return ''; }
 }
-function detectSavageFloor(zoneName, fightName) {
-  return detectSavageFloorShared(zoneName, fightName, state.lang);
+function detectSavageFloor(zoneName, fightName, encounterID) {
+  return detectSavageFloorShared(zoneName, fightName, state.lang, encounterID);
 }
 function fillFightSelect(select, fights, reportJson) {
   const zoneName = reportJson?.zone?.name || '';
   select.innerHTML = fights.map((f, i) => {
     const label = buildFightOptionLabel(f, i, {
       baseName: getEncounterDisplayName(reportJson, f) || `Fight ${f.id}`,
-      floorTag: detectSavageFloor(zoneName, f.name),
+      floorTag: detectSavageFloor(zoneName, f.name, f.encounterID),
       partyComp: formatPartyComp(reportJson, f.id),
       statusLabel: f.kill ? t('kill') : t('wipe'),
     });

@@ -114,12 +114,24 @@
     return getSavageZoneDisplayName(fight?.name || '', lang);
   }
 
-  function detectSavageFloor(zoneName, fightName, lang = 'en') {
+  // encounterID → 層番号マップ（確認済みIDを追加していく）
+  const SAVAGE_ENCOUNTER_FLOOR = {
+    // 例: 1082: { floor: 1, tier: 'Heavyweight' }
+  };
+
+  function detectSavageFloor(zoneName, fightName, lang = 'en', encounterID = 0) {
     const zoneText = String(zoneName || '');
     const fightText = String(fightName || '');
     const normalizedZone = zoneText.toLowerCase();
     const isSavage = normalizedZone.includes('savage') || normalizedZone.includes('零式');
     if (!isSavage) return '';
+
+    // encounterIDが既知なら層を直接返す
+    const encFloor = SAVAGE_ENCOUNTER_FLOOR[Number(encounterID || 0)];
+    if (encFloor) return lang === 'ja' ? `${encFloor.floor}層` : `F${encFloor.floor}`;
+
+    // ボス名が特定できていればbaseName側に層情報が入るのでタグ不要
+    if (SAVAGE_BOSS_INFO.some(b => b.patterns.some(p => p.test(fightText)))) return '';
 
     const zoneFloorMatch = zoneText.match(/[MEPOmepoa](\d+)/i);
     if (zoneFloorMatch) {
@@ -133,7 +145,11 @@
     const enFloorMatch = fightText.match(/floor\s*(\d+)/i);
     if (enFloorMatch) return lang === 'ja' ? `${enFloorMatch[1]}層` : `F${enFloorMatch[1]}`;
 
-    return lang === 'ja' ? '零式' : 'Savage';
+    // ゾーン名自体にボスパターンが含まれるケース（fight.nameがzone名と同一の場合）
+    const bossFromZone = SAVAGE_BOSS_INFO.find(b => b.patterns.some(p => p.test(zoneText)));
+    if (bossFromZone) return lang === 'ja' ? `${bossFromZone.floor}層` : `F${bossFromZone.floor}`;
+
+    return lang === 'ja' ? '層不明' : 'Floor ?';
   }
 
   function shouldShowUltimatePhaseSelector(reportJson, fight) {

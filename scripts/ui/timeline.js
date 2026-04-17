@@ -61,7 +61,13 @@ const STATUS_BURST_BUFFS = {
   1002722: 'Radiant Finale', 1002964: 'Radiant Finale',
   1003685: 'Starry Muse',
   1004030: 'Dokumori',
+  1000141: 'Battle Voice',
 };
+const PARTY_SYNERGY_BUFF_NAMES = new Set([
+  'Battle Litany', 'Brotherhood', 'Divination', 'Embolden',
+  'Arcane Circle', 'Technical Finish', 'Searing Light', 'Radiant Finale',
+  'Starry Muse', 'Battle Voice',
+]);
 const STATUS_SELF_BUFFS = {
   1000076: 'Fight or Flight',
   1001177: 'Inner Release', 1001303: 'Inner Release',
@@ -397,12 +403,17 @@ function renderTimeline() {
   };
   const trackATop = playerAStart;
   const trackAHeight = 110;
-  const dividerTop = trackATop + trackAHeight + 16;
+  const SYNERGY_ROW_HEIGHT = 38;
+  const synergyAHeight = state.showSynergyA ? SYNERGY_ROW_HEIGHT : 0;
+  const synergyBHeight = state.showSynergyB ? SYNERGY_ROW_HEIGHT : 0;
+  const synergyATop = trackATop + trackAHeight + 2;
+  const dividerTop = trackATop + trackAHeight + synergyAHeight + 16;
   const trackBTop = dividerTop + 30;
   const trackBHeight = 110;
+  const synergyBTop = trackBTop + trackBHeight + 2;
   laneTop.b_ogcd = trackBTop + 10;
   laneTop.b_gcd = trackBTop + 64;
-  const totalHeight = trackBTop + trackBHeight + 20;
+  const totalHeight = trackBTop + trackBHeight + synergyBHeight + 20;
 
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
 
@@ -494,6 +505,21 @@ function renderTimeline() {
     return parts.join('');
   };
 
+  const buildSynergyRow = (records, owner) => {
+    const show = owner === 'a' ? state.showSynergyA : state.showSynergyB;
+    if (!show) return '';
+    const top = owner === 'a' ? synergyATop : synergyBTop;
+    const parts = [];
+    for (const r of records) {
+      const buff = findBurstBuff(r.actionId, r.action);
+      if (!buff || !PARTY_SYNERGY_BUFF_NAMES.has(buff.nameEn)) continue;
+      const x = 60 + r.t * pxPerSec;
+      const label = state.lang === 'ja' ? buff.nameJa : buff.nameEn;
+      parts.push(`<div class="synergy-event ${owner}" style="left:${x}px; top:${top}px; border-color:${buff.color}" title="${label} ${formatTimelineTime(r.t)}"><span class="synergy-label" style="color:${buff.color}">${label}</span></div>`);
+    }
+    return parts.join('');
+  };
+
   const buildKillLines = () => {
     const markers = [];
     const rows = [
@@ -545,19 +571,23 @@ function renderTimeline() {
     <div class="timeline" style="width:${width}px; height:${totalHeight}px">
       ${buildDpsGraph()}
       ${buildRulerAtTop()}
-      <div class="player-label player-label-a" style="top:${playerAStart - 4}px">${labelA}${jobA ? ' (' + formatJobName(jobA) + ')' : ''}</div>
+      <div class="player-label player-label-a" style="top:${playerAStart - 4}px">${labelA}${jobA ? ' (' + formatJobName(jobA) + ')' : ''}<button class="synergy-toggle-btn" data-synergy-player="a" title="シナジー行">${state.showSynergyA ? '▲' : '▼'}</button></div>
       <div class="lane-label" style="top:${laneTop.a_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track a" style="top:${trackATop}px; height:${trackAHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.a_gcd + 12}px">${t('laneGcd')}</div>
       ${buildBuffOverlays(a, 'a')}
+      ${state.showSynergyA ? `<div class="synergy-track a" style="top:${synergyATop}px; height:${SYNERGY_ROW_HEIGHT - 4}px"></div><div class="lane-label synergy-lane-label" style="top:${synergyATop + 8}px">Synergy</div>` : ''}
       <div class="player-divider" style="top:${dividerTop}px"></div>
-      <div class="player-label player-label-b" style="top:${dividerTop + 10}px">${labelB}${jobB ? ' (' + formatJobName(jobB) + ')' : ''}</div>
+      <div class="player-label player-label-b" style="top:${dividerTop + 10}px">${labelB}${jobB ? ' (' + formatJobName(jobB) + ')' : ''}<button class="synergy-toggle-btn" data-synergy-player="b" title="シナジー行">${state.showSynergyB ? '▲' : '▼'}</button></div>
       <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track b" style="top:${trackBTop}px; height:${trackBHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">${t('laneGcd')}</div>
       ${buildBuffOverlays(b, 'b')}
+      ${state.showSynergyB ? `<div class="synergy-track b" style="top:${synergyBTop}px; height:${SYNERGY_ROW_HEIGHT - 4}px"></div><div class="lane-label synergy-lane-label" style="top:${synergyBTop + 8}px">Synergy</div>` : ''}
       ${buildEvents(a, 'a', state.partyBuffsA)}
       ${buildEvents(b, 'b', state.partyBuffsB)}
+      ${buildSynergyRow(a, 'a')}
+      ${buildSynergyRow(b, 'b')}
       ${buildPhaseLines()}
       ${buildKillLines()}
     </div>
@@ -575,6 +605,14 @@ function renderTimeline() {
         }
       }
       img.replaceWith(Object.assign(document.createElement('span'), { textContent: (img.alt || '?').slice(0, 2).toUpperCase() }));
+    });
+  });
+  el.timelineWrap.querySelectorAll('[data-synergy-player]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const player = btn.dataset.synergyPlayer;
+      if (player === 'a') state.showSynergyA = !state.showSynergyA;
+      else state.showSynergyB = !state.showSynergyB;
+      renderTimeline();
     });
   });
   bindTimelineInteractions();

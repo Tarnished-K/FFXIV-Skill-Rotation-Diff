@@ -657,8 +657,57 @@ button:focus-visible {
   color: #d7ecff;
   font-size: 12px;
   font-weight: bold;
-  pointer-events: none;
+  pointer-events: auto;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.synergy-toggle-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.synergy-toggle-btn:hover {
+  opacity: 1;
+}
+
+.synergy-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.synergy-lane-label {
+  font-size: 9px;
+  opacity: 0.5;
+}
+
+.synergy-event {
+  position: absolute;
+  z-index: 3;
+  height: 28px;
+  border-left: 2px solid;
+  padding-left: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.synergy-label {
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
 .player-label-a {

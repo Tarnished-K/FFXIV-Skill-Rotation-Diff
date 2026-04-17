@@ -84,9 +84,6 @@ function loadTimelineHarness() {
     },
     BURST_BUFFS: [],
     SELF_BUFFS: [],
-    DEBUFF_IDS: {
-      generic: { nameEn: 'Debuff', nameJa: 'デバフ', color: '#ef4444' },
-    },
     state: {
       lang: 'ja',
       zoom: 2.5,
@@ -97,15 +94,6 @@ function loadTimelineHarness() {
       ],
       timelineB: [
         { t: 12, action: 'Gust Slash', actionId: 2, category: 'weaponskill', label: 'Gust Slash' },
-      ],
-      bossCastsA: [
-        { t: 20, endT: 24, duration: 4, name: 'Ultimate Attack', sourceId: 99, sourceName: 'Boss' },
-      ],
-      debuffsA: [
-        { t: 15, duration: 6, kind: 'generic', name: 'Magic Vulnerability Up' },
-      ],
-      debuffsB: [
-        { t: 18, duration: 8, kind: 'generic', name: 'Bleed' },
       ],
       partyBuffsA: [],
       partyBuffsB: [],

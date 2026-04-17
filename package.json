@@ -1,6 +1,6 @@
 {
   "name": "ffxiv-skill-rotation-diff",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "公開 FFLogs ログを 2 件読み込み、戦闘ごとのプレイヤータイムラインを比較するツールです。",
   "main": "script.js",
   "directories": {

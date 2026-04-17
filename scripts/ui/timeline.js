@@ -11,7 +11,6 @@ const {
   classifyStats: classifyStatsShared,
   deduplicateTimeline: deduplicateTimelineShared,
   filterTimeline: filterTimelineShared,
-  findEnemyActors: findEnemyActorsShared,
   formatHitType: formatHitTypeShared,
   formatTimelineTime: formatTimelineTimeShared,
 } = globalThis.TimelineUtils;
@@ -41,170 +40,6 @@ function getActiveSynergies(t, allRecords, partyBuffRecords) {
     selfBuffs: SELF_BUFFS,
     lang: state.lang,
   });
-}
-function findEnemyActors(reportJson, fight) {
-  return findEnemyActorsShared(reportJson, fight, {
-    normalizeJobCode,
-    isSupportedJob(job) {
-      return !!JOB_ROLE[job];
-    },
-  });
-}
-
-function buildFightPhasesFromFFLogs(reportJson, fight, lang = 'en') {
-  return buildFightPhasesFromFFLogsShared(reportJson, fight, {
-    getPhaseLabel(meta, fallbackIndex) {
-      return formatPhaseLabel(meta, fallbackIndex, lang);
-    },
-  });
-}
-
-const STATUS_BURST_BUFFS = {
-  // 繧ｹ繝・・繧ｿ繧ｹ繧ｨ繝輔ぉ繧ｯ繝・D 竊・BURST_BUFFS蜀・・nameEn縺ｸ縺ｮ繝槭ャ繝斐Φ繧ｰ
-  1000786: 'Battle Litany',
-  1001185: 'Brotherhood',
-  1001882: 'Divination',
-  1001221: 'Chain Stratagem',
-  1001239: 'Embolden',
-  1002599: 'Arcane Circle',
-  1001822: 'Technical Finish', 1002698: 'Technical Finish',
-  1002703: 'Searing Light',
-  1002722: 'Radiant Finale', 1002964: 'Radiant Finale',
-  1003685: 'Starry Muse',
-  1004030: 'Dokumori',
-};
-const STATUS_SELF_BUFFS = {
-  1000076: 'Fight or Flight',
-  1001177: 'Inner Release', 1001303: 'Inner Release',
-  1000742: 'Blood Weapon',
-  1001624: 'Delirium', 1003836: 'Delirium',
-  1000831: 'No Mercy',
-  1001181: 'Riddle of Fire',
-  1002720: 'Lance Charge',
-  1000125: 'Raging Strikes',
-  1000861: 'Wildfire',
-  1001825: 'Devilment',
-  1000737: 'Ley Lines',
-  1001971: 'Manafication',
-  1001233: 'Meikyo Shisui',
-};
-async function fetchPlayerAurasV2(reportCode, fight, targetId) {
-  // 繝励Ξ繧､繝､繝ｼ縺ｫ驕ｩ逕ｨ縺輔ｌ縺溷・繧ｪ繝ｼ繝ｩ・医ヰ繝・繝・ヰ繝包ｼ峨ｒ蜿門ｾ励＠縲√ョ繝舌ヵ縺ｨPT繝舌ヵ縺ｫ蛻・屬
-  const partyBuffs = [];
-  let startTime = null;
-  const query = `
-    query PlayerAuras($code: String!, $fightID: Int!, $targetID: Int!, $startTime: Float) {
-      reportData {
-        report(code: $code) {
-          events(dataType: Buffs, fightIDs: [$fightID], targetID: $targetID, startTime: $startTime) {
-            data
-            nextPageTimestamp
-          }
-        }
-      }
-    }
-  `;
-  let rawTotal = 0;
-  let pageCount = 0;
-  let debugMatchCount = { burst: 0, self: 0 };
-  while (true) {
-    const vars = { code: reportCode, fightID: Number(fight.id), targetID: Number(targetId), startTime };
-    const data = await graphqlRequest(query, vars);
-    const block = data?.reportData?.report?.events;
-    const rows = block?.data || [];
-    rawTotal += rows.length;
-    pageCount++;
-    // 譛蛻昴・繝壹・繧ｸ縺ｮ隧ｳ邏ｰ繝・ヰ繝・げ
-    if (pageCount === 1) {
-      logDebug(`繧ｪ繝ｼ繝ｩ raw(target=${targetId}): page1=${rows.length}莉ｶ`, rows.length > 0 ? {
-        types: [...new Set(rows.slice(0, 50).map(e => e.type))],
-        sample: rows.slice(0, 5).map(e => ({
-          type: e.type,
-          name: e.ability?.name || state.abilityById.get(Number(e.abilityGameID)) || '(unknown)',
-          id: e.abilityGameID,
-          dur: e.duration,
-          src: e.sourceID,
-        }))
-      } : 'empty');
-    }
-    for (const e of rows) {
-      const type = String(e?.type || '').toLowerCase();
-      const isBuffApply = type === 'applybuff' || type === 'refreshbuff';
-      if (!isBuffApply) continue;
-      const statusId = Number(e?.abilityGameID || e?.ability?.guid || 0);
-      // ability蜷阪・API縺九ｉ蜿悶ｌ縺ｪ縺・ｴ蜷医′縺ゅｋ縺ｮ縺ｧ縲∥bilityById縺九ｉ繧りｧ｣豎ｺ
-      const abilityName = String(e?.ability?.name || state.abilityById.get(statusId) || '');
-      const ts = Number(e?.timestamp || 0);
-      const tSec = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
-      const dur = Number(e?.duration || 0) / 1000;
-
-
-      // 繝ｬ繧､繝峨ヰ繝募愛螳・ 繧ｹ繝・・繧ｿ繧ｹID縺ｧ蛻､螳夲ｼ域怙蜆ｪ蜈茨ｼ・
-      const burstName = STATUS_BURST_BUFFS[statusId];
-      if (burstName) {
-        const buff = BURST_BUFFS.find(b => b.nameEn === burstName);
-        if (buff) {
-          partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName || burstName, duration: buff.duration });
-          debugMatchCount.burst++;
-          continue;
-        }
-      }
-      // 繝ｬ繧､繝峨ヰ繝募愛螳・ 蜷榊燕繝輔か繝ｼ繝ｫ繝舌ャ繧ｯ
-      const buff = findBurstBuff(statusId, abilityName);
-      if (buff) {
-        partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName || buff.nameEn, duration: buff.duration });
-        debugMatchCount.burst++;
-        continue;
-      }
-
-      // 閾ｪ蟾ｱ繝舌ヵ蛻､螳・ 繧ｹ繝・・繧ｿ繧ｹID縺ｧ蛻､螳・
-      const selfName = STATUS_SELF_BUFFS[statusId];
-      if (selfName) {
-        const selfBuff = SELF_BUFFS.find(b => b.nameEn === selfName);
-        if (selfBuff) {
-          partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName || selfName, duration: selfBuff.duration });
-          debugMatchCount.self++;
-          continue;
-        }
-      }
-      // 閾ｪ蟾ｱ繝舌ヵ蛻､螳・ 蜷榊燕繝輔か繝ｼ繝ｫ繝舌ャ繧ｯ
-      if (abilityName) {
-        const selfBuff = findSelfBuff(abilityName);
-        if (selfBuff) {
-          partyBuffs.push({ t: tSec, actionId: statusId, action: abilityName, duration: selfBuff.duration });
-          debugMatchCount.self++;
-          continue;
-        }
-      }
-    }
-    if (!block?.nextPageTimestamp) break;
-    startTime = block.nextPageTimestamp;
-  }
-  logDebug(`auras(target=${targetId}): raw=${rawTotal} pages=${pageCount} PTbuff=${partyBuffs.length}`, debugMatchCount);
-  return partyBuffs;
-}
-async function fetchFightDpsV2(reportCode, fightId) {
-  const query = `
-    query FightDps($code: String!, $fightID: [Int!]!) {
-      reportData {
-        report(code: $code) {
-          table(dataType: DamageDone, fightIDs: $fightID)
-        }
-      }
-    }
-  `;
-  try {
-    const data = await graphqlRequest(query, { code: reportCode, fightID: [Number(fightId)] });
-    const entries = data?.reportData?.report?.table?.data?.entries || [];
-    if (entries.length) {
-      const sample = entries[0];
-      logDebug('DPS table sample', { keys: Object.keys(sample), name: sample.name, total: sample.total, activeTime: sample.activeTime, rDPS: sample.rDPS, aDPS: sample.aDPS });
-    }
-    return entries;
-  } catch (e) {
-    logError('DPS table fetch failed', { error: e.message });
-    return [];
-  }
 }
 function formatJobName(jobCode) {
   if (state.lang === 'ja') return JOB_NAME_JA[jobCode] || jobCode;
@@ -548,13 +383,13 @@ function renderTimeline() {
       const candidates = (r.iconCandidates || []).join('|');
       let tooltip = `${formatTimelineTime(r.t)} ${r.label || r.action}`;
       if (r.damage != null && r.damage > 0) {
-        tooltip += `\n${state.lang === 'ja' ? '繝繝｡繝ｼ繧ｸ' : 'Damage'}: ${r.damage.toLocaleString()}`;
+        tooltip += `\n${state.lang === 'ja' ? 'ダメージ' : 'Damage'}: ${r.damage.toLocaleString()}`;
         const ht = formatHitType(r.hitType, r.multistrike);
         if (ht) tooltip += ` (${ht})`;
       }
       const synergies = getActiveSynergies(r.t, records, partyBuffs);
       if (synergies.length) {
-        tooltip += `\n${state.lang === 'ja' ? '繝舌ヵ' : 'Buffs'}: ${synergies.join(', ')}`;
+        tooltip += `\n${state.lang === 'ja' ? 'バフ' : 'Buffs'}: ${synergies.join(', ')}`;
       }
       return `<div class="event ${owner} ${lane}" style="left:${x}px; top:${top}px" title="${tooltip}">${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${r.label || r.action}" />` : `<span>${fallback}</span>`}</div>`;
     }).join('');

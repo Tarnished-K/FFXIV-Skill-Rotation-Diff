@@ -3,12 +3,12 @@
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const ANALYSIS_DAYS = 7;
 
 function requireEnv() {
-  const missing = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'GEMINI_API_KEY'].filter(
+  const missing = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'GROQ_API_KEY'].filter(
     (key) => !process.env[key],
   );
   if (missing.length > 0) {
@@ -148,25 +148,29 @@ ${feedbackSummary.samples.map((s) => `[${s.category}] ${s.subject}\n  内容: ${
 ユーザーの声から見えるニーズや感情のサマリー。`;
 }
 
-async function callGemini(prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-  const response = await fetch(url, {
+async function callGroq(prompt) {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${GROQ_API_KEY}`,
+    },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.5, maxOutputTokens: 2048 },
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.5,
+      max_tokens: 2048,
     }),
   });
 
   if (!response.ok) {
     const body = await response.text().catch(() => '');
-    throw new Error(`Gemini API → ${response.status}: ${body}`);
+    throw new Error(`Groq API → ${response.status}: ${body}`);
   }
 
   const json = await response.json();
-  const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Gemini returned empty response');
+  const text = json?.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Groq returned empty response');
   return text;
 }
 
@@ -179,7 +183,7 @@ async function saveReport({ periodStart, periodEnd, reportMd, analyticsSnapshot,
       report_md: reportMd,
       analytics_snapshot: analyticsSnapshot,
       feedback_snapshot: feedbackSnapshot,
-      model: GEMINI_MODEL,
+      model: GROQ_MODEL,
     }),
   });
 }
@@ -203,8 +207,8 @@ async function main() {
   const feedbackSummary = summarizeFeedback(feedback);
   const prompt = buildPrompt(analyticsSummary, feedbackSummary, periodStart, periodEnd);
 
-  console.log('Calling Gemini...');
-  const reportMd = await callGemini(prompt);
+  console.log('Calling Groq...');
+  const reportMd = await callGroq(prompt);
 
   console.log('Saving report to Supabase...');
   await saveReport({

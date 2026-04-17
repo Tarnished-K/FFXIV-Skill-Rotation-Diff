@@ -608,7 +608,7 @@ async function handleCompare(options = {}) {
       if (unknownsA.length) logDebug('[A] 未分類サンプル', unknownsA.map(e => `${e.action}(id:${e.actionId})`));
       if (unknownsB.length) logDebug('[B] 未分類サンプル', unknownsB.map(e => `${e.action}(id:${e.actionId})`));
     }
-    el.step2Message.textContent = t('tlLoaded')(state.timelineA.length, state.timelineB.length);
+    el.step2Message.textContent = '';
     sendAnalyticsEvent('comparison_completed', {
       reportCodeA: state.urlA?.reportId || '',
       reportCodeB: state.urlB?.reportId || '',

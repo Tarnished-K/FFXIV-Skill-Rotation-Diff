@@ -131,7 +131,7 @@ const I18N = {
     phaseAll: 'All Phases',
   },
   ja: {
-    siteTitle: 'FFXIV スキル回し比較',
+    siteTitle: 'FFXIV Skill Codex',
     siteDesc: 'FFLogs の公開ログ URL 2 件からスキル回しを比較します',
     step1Title: '1. 公開 FFLogs ログを読み込む',
     logUrlA: 'ログURL A',
@@ -153,7 +153,7 @@ const I18N = {
     laneGcd: 'WS・魔法',
     debugNormalTitle: 'ログ',
     debugErrorTitle: 'エラーログ',
-    publicOnlyNote: '公開ログのみ対応です。FFLogs の連携は不要です。',
+    publicOnlyNote: '公開ログのみ対応です。',
     footerNote: '注: 公開 FFLogs ログのみ対応しています。2つのレポート URL を入力し、戦闘とプレイヤーを選択してください。',
     badUrl: 'FFLogs URL形式を確認してください。',
     loading: 'レポートを読み込み中...',

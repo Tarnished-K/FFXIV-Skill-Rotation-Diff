@@ -61,3 +61,8 @@
   from = "/api/feedback-admin-purge"
   to = "/.netlify/functions/feedback-admin-purge"
   status = 200
+
+[[redirects]]
+  from = "/api/analysis-report"
+  to = "/.netlify/functions/analysis-report"
+  status = 200

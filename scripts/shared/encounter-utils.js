@@ -27,9 +27,9 @@
     { patterns: [/brute abominator/i, /ブルートアボミネーター/], ja: 'ブルートアボミネーター', en: 'Brute Abominator', tier: { ja: 'クルーザー級', en: 'Cruiserweight' }, floor: 3 },
     { patterns: [/howling blade/i, /ハウリングブレード/], ja: 'ハウリングブレード', en: 'Howling Blade', tier: { ja: 'クルーザー級', en: 'Cruiserweight' }, floor: 4 },
     { patterns: [/vamp fatale/i, /ヴァンプ[・.]?ファタール/], ja: 'ヴァンプ・ファタール', en: 'Vamp Fatale', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 1 },
-    { patterns: [/red hot and deep blue/i, /the extremes?|extremes?/i, /エクストリームズ/], ja: 'エクストリームズ', en: 'The Extremes', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 2 },
+    { patterns: [/red hot/i, /deep blue/i, /the extremes?|extremes?/i, /エクストリームズ/], ja: 'エクストリームズ', en: 'The Extremes', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 2 },
     { patterns: [/the tyrant|tyrant/i, /タイラント/], ja: 'ザ・タイラント', en: 'The Tyrant', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 3 },
-    { patterns: [/lindblum/i, /lindwurm\s*ii?/i, /リンドブルム/, /リンドヴルム/], ja: 'リンドブルム', en: 'Lindblum', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4 },
+    { patterns: [/lindblum/i, /lindwurm/i, /リンドブルム/, /リンドヴルム/], ja: 'リンドブルム', en: 'Lindblum', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4 },
   ];
 
   const SAVAGE_ZONE_PATTERNS = [

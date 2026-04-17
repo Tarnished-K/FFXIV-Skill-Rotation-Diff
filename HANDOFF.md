@@ -1,105 +1,128 @@
 # Handoff
 
-更新日: 2026-04-15
+Updated: 2026-04-18
 
-## 現在地
+## Branches and deploys
 
-- 現在ブランチは `main`
-- `origin/main` とローカル `main` は同期済み
-- 直近の反映済みコミットは `953751c Extract shared utilities and add Vitest coverage`
-- `https://xiv-srd.com` にはこのコミット内容が反映済み
-  - `script.js` が `scripts/shared/app-utils.js` と `scripts/shared/phase-utils.js` を読み込んでいることを確認
-  - `https://xiv-srd.com/scripts/shared/app-utils.js` と `https://xiv-srd.com/scripts/shared/phase-utils.js` が `HTTP 200`
+- Active branch: `feature/feedback-intake`
+- Latest pushed commit: `61c8d70` (`Add feedback intake admin workflow`)
+- Branch pushed to: `origin/feature/feedback-intake`
+- `main` has not been pushed or modified in this handoff step
 
-## このセッションで main に入ったもの
+Preview built from the committed branch snapshot:
 
-- `Vitest` を導入して `npm test` を有効化
-- 共通ロジックを共有ファイルへ抽出
-  - `scripts/shared/app-utils.js`
-  - `scripts/shared/phase-utils.js`
-  - `lib/analytics-utils.js`
-  - `lib/fflogs-proxy-utils.js`
-- テスト追加
-  - `tests/app-utils.test.js`
-  - `tests/analytics-utils.test.js`
-  - `tests/fflogs-proxy-utils.test.js`
-  - `tests/phase-utils.test.js`
-- `scripts/data/fflogs.js` と `scripts/ui/timeline.js` を共有関数呼び出しに寄せた
+- Preview root: `https://69e2650f70810718f6db35d7--vermillion-crumble-a1f1aa.netlify.app`
+- Feedback admin: `https://69e2650f70810718f6db35d7--vermillion-crumble-a1f1aa.netlify.app/feedback-admin.html`
+- Analytics: `https://69e2650f70810718f6db35d7--vermillion-crumble-a1f1aa.netlify.app/analytics.html`
+- Build info: `https://69e2650f70810718f6db35d7--vermillion-crumble-a1f1aa.netlify.app/api/build-info`
 
-確認済み:
+## What is implemented
 
-- `npm test` -> `4 files / 19 tests passed`
-- `node --check scripts/shared/phase-utils.js`
-- `node --check scripts/ui/timeline.js`
+- Feedback intake flow with Netlify Functions + Supabase persistence
+- Gemini moderation for `general` / `trash`
+- Japanese-first moderation improvements
+  - explicit Japanese abuse phrases are rule-blocked to `trash`
+  - Gemini prompt strengthened for short Japanese abuse
+- Public feedback page
+  - no admin link exposed
+  - no "AI will sort this" wording exposed
+- Feedback admin page
+  - unread-first listing
+  - mark read
+  - move to trash
+  - restore
+  - purge expired
+- Analytics page
+  - dashboard UI still present
+  - now protected behind the same admin auth flow
+- Supabase Auth-based admin gate
+  - login form on `feedback-admin.html`
+  - login form on `analytics.html`
+  - server-side bearer token verification in admin and analytics functions
+  - allowlist via `ADMIN_EMAILS`
+- Runtime env helper for Netlify/server compatibility
+- Tests for feedback, moderation, admin auth, analytics auth, and build info
 
-## まだ main に入っていないローカル差分
+## Key files
 
-未コミット変更:
-
+- `contact.html`
+- `feedback-admin.html`
 - `analytics.html`
-  - canonical URL 追加
-- `index.html`
-  - description / canonical 追加
-  - `step4Message` 追加
-- `scripts/app/bootstrap.js`
-  - 比較失敗時のサンプルタイムライン表示を廃止
-  - compare/render エラー時は明示的なメッセージ表示に変更
-- `scripts/app/runtime.js`
-  - `compareError` 状態追加
-  - compare/render failure 文言追加
-- `supabase/config.toml`
-  - `site_url` を `https://xiv-srd.com` に変更
-  - redirect URL を本番/ローカル向けに更新
+- `lib/admin-auth.js`
+- `lib/feedback-db.js`
+- `lib/feedback-moderation.js`
+- `lib/runtime-env.js`
+- `netlify/functions/admin-session.js`
+- `netlify/functions/public-config.js`
+- `netlify/functions/feedback-submit.js`
+- `netlify/functions/feedback-admin-list.js`
+- `netlify/functions/feedback-admin-mark-read.js`
+- `netlify/functions/feedback-admin-move-to-trash.js`
+- `netlify/functions/feedback-admin-restore.js`
+- `netlify/functions/feedback-admin-purge.js`
+- `netlify/functions/analytics-summary.js`
+- `scripts/shared/admin-auth.js`
+- `scripts/shared/feedback-admin.js`
+- `scripts/shared/analytics-dashboard.js`
 
-未追跡:
+## Current env and external setup status
 
-- `ROADMAP.md`
-- `.claude/`
-- `.gitignore`
-- `netlify-dev*.log`
-- `node_modules/`
+Confirmed on Netlify:
 
-注意:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GEMINI_API_KEY`
+- `SUPABASE_ANON_KEY`
+- `ADMIN_EMAILS`
 
-- `scripts/app/bootstrap.js` と `scripts/app/runtime.js` の差分は「比較失敗時にダミー結果を見せない」ための実装で、ローカルで動作確認済み
-- ただしこの変更はまだ commit / push していない
+Likely still required or at least not confirmed complete:
 
-## 次セッションの最初にやること
+- Supabase Auth admin user creation for the exact email in `ADMIN_EMAILS`
+- The user must be able to sign in with email/password and have confirmed email status
 
-1. 未コミット差分をコミット単位で分ける
-- 候補A: compare failure UI 修正
-  - `index.html`
-  - `scripts/app/bootstrap.js`
-  - `scripts/app/runtime.js`
-- 候補B: 本番 URL / canonical / Supabase 設定
-  - `analytics.html`
-  - `index.html`
-  - `supabase/config.toml`
-- `ROADMAP.md` は必要なら別コミット
+## What still needs to be done
 
-2. `main` に新しい変更を入れる前にバージョン番号を上げる
-- 以後の方針:
-  - どんなに小さい更新でも、`main` に関わる新しい push / merge ごとにサイト下部の `Version vx.x.x` を更新する
-- 現在の表示元:
-  - `package.json` の `version`
-  - `netlify/functions/build-info.js` と `scripts/shared/build-info.js` がそれを表示に使う
+1. Create or confirm the Supabase Auth admin user
+   - Supabase Dashboard -> `Authentication` -> `Users`
+   - user email must exactly match `ADMIN_EMAILS`
+   - set or confirm password
+   - confirm email if required
 
-3. コード作業を続けるならロードマップ上の次候補へ進む
-- `timeline.js` に残っている純ロジックの追加抽出
-- もしくは compare failure UI 修正を先に main へ入れる
+2. Verify admin login end-to-end on the preview
+   - open the preview admin page
+   - confirm the login form appears
+   - sign in successfully
+   - verify list data loads
 
-## 運用メモ
+3. Verify analytics login end-to-end on the preview
+   - open the preview analytics page
+   - confirm the login form appears
+   - sign in successfully
+   - verify summary data loads
 
-- 本番反映確認は `build-info` だけでは不十分
-  - 現状 `https://xiv-srd.com/api/build-info` は `version` は返すが `commit` は空
-  - 必要なら配信中の静的ファイルも見る
-- `scripts/ui/timeline.js` は文字コードの都合で `apply_patch` が失敗することがある
-  - `invalid utf-8 sequence` が出た場合は PowerShell 経由で慎重に編集する
-- `netlify dev` のローカル確認では、FFLogs / Supabase の認証情報再現が安定しないことがある
-  - UI 単体確認と API 疎通確認は切り分けて考える
+4. If preview verification succeeds, decide the release path
+   - keep branch as-is
+   - create PR
+   - or merge later
 
-## 参照用
+## Fresh verification already run
 
-- 反映済みコミット: `953751c`
-- 直前の公開系コミット: `4e747ef`
-- ロードマップ: `ROADMAP.md`
+- `npm test`
+  - result: `21 passed files / 87 passed tests`
+- `curl` checks against preview
+  - `feedback-admin.html` -> `200`
+  - `analytics.html` -> `200`
+- deployed HTML confirmed to include login forms on both protected pages
+- preview `build-info` returned version `1.0.21`
+
+## Notes for Claude
+
+- There are two intentionally uncommitted local files:
+  - `ROADMAP.md`
+  - `deno.lock`
+- They were left out of the feature commit on purpose.
+- A local export folder was created only to make a draft deploy from the committed snapshot:
+  - `.preview-export/`
+- `.preview-export/` is now ignored and should not be committed.
+- The preview above is a manual Netlify draft deploy from the committed branch snapshot, not proof that `main` changed.
+- If another preview is needed, deploy from `feature/feedback-intake` or from the current commit, not from local dirty files.

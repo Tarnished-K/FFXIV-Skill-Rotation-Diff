@@ -128,12 +128,18 @@
 
   // encounterID → 表示名マップ（同名ボスで前後半を区別するケース用）
   const SAVAGE_ENCOUNTER_DISPLAY = {
+    101: { ja: 'ヘビー級零式1層', en: 'AAC Heavyweight M1' },
+    102: { ja: 'ヘビー級零式2層', en: 'AAC Heavyweight M2' },
+    103: { ja: 'ヘビー級零式3層', en: 'AAC Heavyweight M3' },
     104: { ja: 'ヘビー級零式4層前半', en: 'AAC Heavyweight M4 P1' },
     105: { ja: 'ヘビー級零式4層後半', en: 'AAC Heavyweight M4 P2' },
   };
 
   // encounterID → 層番号マップ（確認済みIDを追加していく）
   const SAVAGE_ENCOUNTER_FLOOR = {
+    101: { floor: 1 },
+    102: { floor: 2 },
+    103: { floor: 3 },
     104: { floor: 4 },
     105: { floor: 4 },
   };

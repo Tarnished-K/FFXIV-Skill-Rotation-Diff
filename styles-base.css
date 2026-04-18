@@ -609,3 +609,14 @@ button:focus-visible {
   text-align: center;
 }
 
+
+#step4.has-error .tabs,
+#step4.has-error .zoom-controls,
+#step4.has-error #phaseContainer {
+  display: none;
+}
+
+#step4.has-error #step4Message {
+  margin-top: 0;
+  font-size: 1rem;
+}

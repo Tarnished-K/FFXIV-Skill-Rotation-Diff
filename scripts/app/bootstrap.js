@@ -60,6 +60,7 @@ function renderComparisonError() {
 }
 
 function clearComparisonError() {
+  if (el.step4) el.step4.classList.remove('has-error');
   state.compareError = null;
   renderComparisonError();
   setComparisonControlsDisabled(false);
@@ -67,6 +68,7 @@ function clearComparisonError() {
 
 function setComparisonError(kind, message) {
   state.compareError = { kind, message };
+  if (el.step4) el.step4.classList.add('has-error');
   renderComparisonError();
   setComparisonControlsDisabled(true);
   if (el.phaseContainer) el.phaseContainer.innerHTML = '';
@@ -216,6 +218,7 @@ async function handleLoadReports(options = {}) {
 
 async function handleLoadPlayers(options = {}) {
   const { skipShareUrl = false } = options;
+  if (el.loadPlayersBtn) el.loadPlayersBtn.disabled = true;
   try {
     state.selectedFightA = Number(el.fightA.value);
     state.selectedFightB = Number(el.fightB.value);
@@ -261,6 +264,7 @@ async function handleLoadPlayers(options = {}) {
     el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
     return false;
   } finally {
+    if (el.loadPlayersBtn) el.loadPlayersBtn.disabled = false;
     if (state.tutorial.active) renderTutorial();
   }
 }
@@ -288,7 +292,6 @@ async function handleCompare(options = {}) {
       encounterB: Number(fightB.encounterID || 0),
       message,
     });
-    el.step2Message.textContent = message;
     el.step4.classList.remove('hidden');
     setActiveTab('all');
     renderPhaseButtons();
@@ -312,7 +315,6 @@ async function handleCompare(options = {}) {
         encounterB: 0,
         message,
       });
-      el.step2Message.textContent = message;
       el.step4.classList.remove('hidden');
       setActiveTab('all');
       renderPhaseButtons();
@@ -522,11 +524,36 @@ bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
 bindClick(el.compareBtn, 'compareBtn', async () => {
   logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
   el.compareBtn.disabled = true;
-  await handleCompare();
-  setTimeout(() => { el.compareBtn.disabled = false; }, 5000);
+  try {
+    await handleCompare();
+  } finally {
+    el.compareBtn.disabled = false;
+  }
 });
 el.playerA?.addEventListener('change', syncShareStateUrl);
 el.playerB?.addEventListener('change', syncShareStateUrl);
+el.fightA?.addEventListener('change', () => {
+  if (!el.step3.classList.contains('hidden')) {
+    el.step3.classList.add('hidden');
+    el.playerA.innerHTML = '';
+    el.playerB.innerHTML = '';
+    resetComparisonData();
+    clearComparisonError();
+    el.step2Message.textContent = '';
+  }
+  syncShareStateUrl();
+});
+el.fightB?.addEventListener('change', () => {
+  if (!el.step3.classList.contains('hidden')) {
+    el.step3.classList.add('hidden');
+    el.playerA.innerHTML = '';
+    el.playerB.innerHTML = '';
+    resetComparisonData();
+    clearComparisonError();
+    el.step2Message.textContent = '';
+  }
+  syncShareStateUrl();
+});
 el.phaseContainer?.addEventListener('click', (event) => {
   if (event.target.closest('.phase-btn')) syncShareStateUrl();
 });
@@ -576,7 +603,14 @@ function applyLang() {
     const key = { all: 'tabAll', odd: 'tabOdd', even: 'tabEven' }[tb.dataset.tab];
     if (key) tb.textContent = s[key];
   });
-  if (el.tutorialBtn) el.tutorialBtn.textContent = tutorialCopy.launch;
+  if (el.tutorialBtn) {
+    el.tutorialBtn.textContent = tutorialCopy.launch;
+    el.tutorialBtn.href = state.lang === 'en' ? '/tutorial.html?lang=en' : '/tutorial.html';
+  }
+  if (el.contactBtn) {
+    el.contactBtn.textContent = s.contactBtn;
+    el.contactBtn.href = state.lang === 'en' ? '/contact.html?lang=en' : '/contact.html';
+  }
   if (el.langToggle) el.langToggle.textContent = state.lang === 'ja' ? 'EN' : 'JA';
   // Re-render fight selects if data exists
   if (state.reportA) {
@@ -622,4 +656,7 @@ try {
   if (el.msg) el.msg.textContent = `初期化失敗: ${e.message}`;
   console.error(e);
 }
+
+
+
 

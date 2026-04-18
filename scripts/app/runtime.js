@@ -99,6 +99,7 @@ const I18N = {
     debugNormalTitle: 'Log',
     debugErrorTitle: 'Error Log',
     tutorialBtn: 'First time here?',
+    contactBtn: 'Feedback / Request',
     tutorialPrev: 'Back',
     tutorialNext: 'Next',
     tutorialFinish: 'Done',
@@ -167,6 +168,8 @@ const I18N = {
     wipe: 'Wipe',
     encounterMismatch: '異なるボスの戦闘は比較できません。同じ敵を選択してください。',
     phaseAll: '全フェーズ',
+    tutorialBtn: '初めての方はこちら',
+    contactBtn: 'ご要望フォーム',
   },
 };
 
@@ -218,6 +221,7 @@ const state = {
 };
 const el = {
   tutorialBtn: document.getElementById('tutorialBtn'),
+  contactBtn: document.getElementById('contactBtn'),
   publicOnlyNote: document.getElementById('publicOnlyNote'),
   urlA: document.getElementById('urlA'),
   urlB: document.getElementById('urlB'),

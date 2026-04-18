@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
@@ -291,9 +291,11 @@ function loadCompareHarness(options = {}) {
     },
     clearComparisonError() {
       state.compareError = null;
+      nodes.step4.classList.remove('has-error');
     },
     setComparisonError(kind, message) {
       state.compareError = { kind, message };
+      nodes.step4.classList.add('has-error');
     },
     renderPhaseButtons() {},
     renderComparisonError() {},
@@ -395,5 +397,44 @@ describe('handleCompare tab activation', () => {
     await harness.handleCompare({ skipShareUrl: true, deferTimelineRender: true });
 
     expect(harness.setActiveTabCalls).toEqual(['all']);
+  });
+});
+
+
+describe('handleCompare error UI', () => {
+  it('adds has-error class to step4 on encounter mismatch', async () => {
+    const harness = loadCompareHarness({
+      fightsA: [{ id: 1, encounterID: 1, name: 'Fight A', startTime: 0, endTime: 30000, lastPhase: 1 }],
+      fightsB: [{ id: 2, encounterID: 2, name: 'Fight B', startTime: 0, endTime: 30000, lastPhase: 1 }],
+    });
+
+    await harness.handleCompare({ skipShareUrl: true });
+
+    expect(harness.nodes.step4.classList.contains('has-error')).toBe(true);
+  });
+
+  it('does not set step2Message on encounter mismatch', async () => {
+    const harness = loadCompareHarness({
+      fightsA: [{ id: 1, encounterID: 1, name: 'Fight A', startTime: 0, endTime: 30000, lastPhase: 1 }],
+      fightsB: [{ id: 2, encounterID: 2, name: 'Fight B', startTime: 0, endTime: 30000, lastPhase: 1 }],
+    });
+
+    await harness.handleCompare({ skipShareUrl: true });
+
+    expect(harness.nodes.step2Message.textContent).toBe('');
+  });
+
+  it('adds has-error class on compare failure', async () => {
+    const harness = loadCompareHarness();
+    harness.state.reportA.fights[0].startTime = 0;
+    harness.state.reportA.fights[0].endTime = 30000;
+
+    const ctx = harness;
+    ctx.__fetchFail = true;
+
+    await harness.handleCompare({ skipShareUrl: true });
+
+    // After a failed compare, step4 should still be shown
+    expect(harness.nodes.step4.classList.contains('hidden')).toBe(false);
   });
 });

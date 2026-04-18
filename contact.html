@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ご要望フォーム | FFXIV Skill Rotation Diff</title>
+    <title data-i18n="pageTitle">ご要望フォーム | FFXIV Skill Rotation Diff</title>
     <link rel="stylesheet" href="styles-base.css" />
     <link rel="stylesheet" href="styles-layout.css" />
     <link rel="stylesheet" href="styles-timeline.css" />
@@ -13,30 +13,31 @@
     <header>
       <div class="header-row">
         <div>
-          <h1>ご要望フォーム</h1>
-          <p>改善要望や不具合報告を送信できます。</p>
+          <h1 data-i18n="heading">ご要望フォーム</h1>
+          <p data-i18n="subheading">改善要望や不具合報告を送信できます。</p>
         </div>
         <div class="header-actions">
-          <a class="button-link ghost tutorial-launch-btn" href="/">トップへ戻る</a>
+          <a class="button-link ghost tutorial-launch-btn" data-i18n="backBtn" data-i18n-href-ja="/" data-i18n-href-en="/?lang=en" href="/">トップへ戻る</a>
+          <button id="langToggle" type="button" class="lang-btn">EN</button>
         </div>
       </div>
     </header>
 
     <main class="feedback-main">
       <section class="card feedback-form-card">
-        <h2>送信内容</h2>
-        <label for="feedbackCategory">カテゴリ</label>
+        <h2 data-i18n="formTitle">送信内容</h2>
+        <label for="feedbackCategory" data-i18n="categoryLabel">カテゴリ</label>
         <select id="feedbackCategory">
-          <option value="bug_report">不具合報告</option>
-          <option value="feature_request">改善要望</option>
-          <option value="question">質問</option>
-          <option value="other">その他</option>
+          <option value="bug_report" data-i18n="optBug">不具合報告</option>
+          <option value="feature_request" data-i18n="optFeature">改善要望</option>
+          <option value="question" data-i18n="optQuestion">質問</option>
+          <option value="other" data-i18n="optOther">その他</option>
         </select>
 
-        <label for="feedbackSubject">件名</label>
+        <label for="feedbackSubject" data-i18n="subjectLabel">件名</label>
         <input id="feedbackSubject" type="text" maxlength="200" />
 
-        <label for="feedbackBody">本文</label>
+        <label for="feedbackBody" data-i18n="bodyLabel">本文</label>
         <textarea id="feedbackBody" class="feedback-textarea" maxlength="2000"></textarea>
 
         <input
@@ -49,19 +50,87 @@
         />
 
         <div class="feedback-form-actions">
-          <button id="feedbackSubmitBtn" type="button">送信する</button>
+          <button id="feedbackSubmitBtn" type="button" data-i18n="submitBtn">送信する</button>
           <p id="feedbackMessage" class="submessage feedback-message"></p>
         </div>
       </section>
     </main>
 
     <footer>
-      <small>送信内容は確認のうえ順次対応します。</small>
+      <small data-i18n="footerNote">送信内容は確認のうえ順次対応します。</small>
       <small class="build-info" data-build-info>Version loading...</small>
     </footer>
 
     <script src="./scripts/shared/build-info.js"></script>
     <script src="./scripts/shared/feedback-shared.js"></script>
     <script src="./scripts/shared/feedback-form.js"></script>
+    <script>
+(function () {
+  const LANG = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
+  document.documentElement.lang = LANG;
+
+  const T = {
+    ja: {
+      pageTitle: 'ご要望フォーム | FFXIV Skill Rotation Diff',
+      heading: 'ご要望フォーム',
+      subheading: '改善要望や不具合報告を送信できます。',
+      backBtn: 'トップへ戻る',
+      formTitle: '送信内容',
+      categoryLabel: 'カテゴリ',
+      optBug: '不具合報告',
+      optFeature: '改善要望',
+      optQuestion: '質問',
+      optOther: 'その他',
+      subjectLabel: '件名',
+      bodyLabel: '本文',
+      submitBtn: '送信する',
+      footerNote: '送信内容は確認のうえ順次対応します。',
+    },
+    en: {
+      pageTitle: 'Feedback / Request | FFXIV Skill Rotation Diff',
+      heading: 'Feedback / Request',
+      subheading: 'Submit a bug report, feature request, or general question.',
+      backBtn: 'Back to App',
+      formTitle: 'Submit',
+      categoryLabel: 'Category',
+      optBug: 'Bug Report',
+      optFeature: 'Feature Request',
+      optQuestion: 'Question',
+      optOther: 'Other',
+      subjectLabel: 'Subject',
+      bodyLabel: 'Message',
+      submitBtn: 'Send',
+      footerNote: 'We review all submissions and respond as soon as possible.',
+    },
+  };
+
+  const t = T[LANG];
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      const key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) {
+        if (el.tagName === 'TITLE') {
+          document.title = t[key];
+        } else {
+          el.textContent = t[key];
+        }
+      }
+      const hrefKey = 'data-i18n-href-' + LANG;
+      if (el.hasAttribute(hrefKey)) el.href = el.getAttribute(hrefKey);
+    });
+
+    const btn = document.getElementById('langToggle');
+    if (btn) {
+      btn.textContent = LANG === 'ja' ? 'EN' : 'JA';
+      btn.addEventListener('click', function () {
+        const url = new URL(location.href);
+        url.searchParams.set('lang', LANG === 'ja' ? 'en' : 'ja');
+        location.href = url.toString();
+      });
+    }
+  });
+})();
+    </script>
   </body>
 </html>

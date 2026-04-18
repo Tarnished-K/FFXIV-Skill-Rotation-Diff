@@ -3,6 +3,7 @@ const { parseFFLogsUrl: parseFFLogsUrlShared } = globalThis.AppSharedUtils;
 const {
   detectSavageFloor: detectSavageFloorShared,
   getEncounterDisplayName: getEncounterDisplayNameShared,
+  getSavageFloorFromName: getSavageFloorFromNameShared,
   shouldShowUltimatePhaseSelector: shouldShowUltimatePhaseSelectorShared,
 } = globalThis.EncounterUtils;
 const {
@@ -335,6 +336,9 @@ function fillPlayerSelect(select, players, dpsEntries, fightDurationMs) {
   select.innerHTML = buildPlayerSelectOptions(players, dpsEntries, fightDurationMs, { formatJobName })
     .map((player) => `<option value="${player.value}">${player.label}</option>`)
     .join('');
+}
+function getSavageFloorFromName(fightName) {
+  return getSavageFloorFromNameShared(fightName);
 }
 function getEncounterDisplayName(reportJson, fight) {
   return getEncounterDisplayNameShared(reportJson, fight, state.lang);

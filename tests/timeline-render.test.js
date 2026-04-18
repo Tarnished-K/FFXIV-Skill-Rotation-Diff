@@ -81,9 +81,14 @@ function loadTimelineHarness() {
       getActiveSynergies() {
         return [];
       },
+      findSelfBuff() {
+        return null;
+      },
     },
     BURST_BUFFS: [],
-    SELF_BUFFS: [],
+    SELF_BUFFS: [
+      { nameEn: 'Delegated Buff', nameJa: 'Delegated Buff JA', duration: 20, color: '#fff' },
+    ],
     state: {
       lang: 'ja',
       zoom: 2.5,
@@ -136,12 +141,14 @@ function loadTimelineHarness() {
   context.globalThis = context;
 
   vm.createContext(context);
-  vm.runInContext(`${source}\nmodule.exports = { renderTimeline, bindTimelineInteractions };`, context);
+  vm.runInContext(`${source}\nmodule.exports = { renderTimeline, bindTimelineInteractions, __findSelfBuff: findSelfBuff };`, context);
 
   return {
     renderTimeline: context.module.exports.renderTimeline,
     bindTimelineInteractions: context.module.exports.bindTimelineInteractions,
+    findSelfBuff: context.module.exports.__findSelfBuff,
     timelineWrap,
+    context,
   };
 }
 
@@ -200,5 +207,26 @@ describe('bindTimelineInteractions', () => {
 
     pointerUpHandler({ pointerId: 1 });
     expect(timelineWrap.classList.contains('is-dragging')).toBe(false);
+  });
+});
+
+describe('timeline helper delegation', () => {
+  it('delegates self buff lookup to BuffUtils.findSelfBuff', () => {
+    const { findSelfBuff, context } = loadTimelineHarness();
+    const sentinel = { nameEn: 'Sentinel', nameJa: 'Sentinel JA', duration: 20, color: '#000' };
+    const calls = [];
+
+    context.BuffUtils.findSelfBuff = (actionName, selfBuffs) => {
+      calls.push({ actionName, selfBuffs });
+      return sentinel;
+    };
+
+    expect(findSelfBuff('Delegated Buff')).toBe(sentinel);
+    expect(calls).toEqual([
+      {
+        actionName: 'Delegated Buff',
+        selfBuffs: context.SELF_BUFFS,
+      },
+    ]);
   });
 });

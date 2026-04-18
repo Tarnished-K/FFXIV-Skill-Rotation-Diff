@@ -20,7 +20,12 @@
   function findSelfBuff(actionName, selfBuffs = []) {
     const normalized = String(actionName || '').toLowerCase();
     for (const buff of selfBuffs) {
-      if (normalized === buff.nameEn.toLowerCase() || normalized === buff.nameJa) return buff;
+      if (
+        normalized === String(buff.nameEn || '').toLowerCase()
+        || normalized === String(buff.nameJa || '').toLowerCase()
+      ) {
+        return buff;
+      }
     }
     return null;
   }

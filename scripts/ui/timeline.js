@@ -28,11 +28,7 @@ function deduplicateTimeline(records) {
   return deduplicateTimelineShared(records);
 }
 function findSelfBuff(actionName) {
-  const n = String(actionName || '').toLowerCase();
-  for (const buff of SELF_BUFFS) {
-    if (n === buff.nameEn.toLowerCase() || n === buff.nameJa) return buff;
-  }
-  return null;
+  return globalThis.BuffUtils.findSelfBuff(actionName, SELF_BUFFS);
 }
 function findTinctureBuff(actionName) {
   const n = String(actionName || '').toLowerCase();

@@ -156,7 +156,8 @@
     if (encFloor) return lang === 'ja' ? `${encFloor.floor}層` : `F${encFloor.floor}`;
 
     // ボス名が特定できていればbaseName側に層情報が入るのでタグ不要
-    if (SAVAGE_BOSS_INFO.some(b => b.patterns.some(p => p.test(fightText)))) return '';
+    const bossFromFight = SAVAGE_BOSS_INFO.find((boss) => boss.patterns.some((pattern) => pattern.test(fightText)));
+    if (bossFromFight) return lang === 'ja' ? `${bossFromFight.floor}層` : `F${bossFromFight.floor}`;
 
     const zoneFloorMatch = zoneText.match(/[MEPOmepoa](\d+)/i);
     if (zoneFloorMatch) {
@@ -174,7 +175,7 @@
     const bossFromZone = SAVAGE_BOSS_INFO.find(b => b.patterns.some(p => p.test(zoneText)));
     if (bossFromZone) return lang === 'ja' ? `${bossFromZone.floor}層` : `F${bossFromZone.floor}`;
 
-    return lang === 'ja' ? '層不明' : 'Floor ?';
+    return lang === 'ja' ? '零式' : 'Savage';
   }
 
   function shouldShowUltimatePhaseSelector(reportJson, fight) {

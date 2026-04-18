@@ -522,8 +522,7 @@ async function handleCompare(options = {}) {
     });
     el.step2Message.textContent = message;
     el.step4.classList.remove('hidden');
-    state.currentTab = 'all';
-    el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
+    setActiveTab('all');
     renderPhaseButtons();
     renderComparisonError();
     if (!skipShareUrl) syncShareStateUrl();
@@ -547,8 +546,7 @@ async function handleCompare(options = {}) {
       });
       el.step2Message.textContent = message;
       el.step4.classList.remove('hidden');
-      state.currentTab = 'all';
-      el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
+      setActiveTab('all');
       renderPhaseButtons();
       renderComparisonError();
       if (!skipShareUrl) syncShareStateUrl();
@@ -668,8 +666,7 @@ async function handleCompare(options = {}) {
     el.step2Message.textContent = t('compareFailed')(e.message);
   }
   el.step4.classList.remove('hidden');
-  state.currentTab = 'all';
-  el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
+  setActiveTab('all');
   renderPhaseButtons();
   renderComparisonError();
   if (!state.compareError) {

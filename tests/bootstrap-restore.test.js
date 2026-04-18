@@ -79,7 +79,7 @@ function createTab(tab) {
   return node;
 }
 
-function loadBootstrapHarness(search) {
+function loadBootstrapHarness(search, options = {}) {
   const bootstrapPath = path.join(__dirname, '../scripts/app/bootstrap.js');
   const bootstrapSource = fs.readFileSync(bootstrapPath, 'utf8');
   const trimmedSource = bootstrapSource.replace(
@@ -217,6 +217,8 @@ function loadBootstrapHarness(search) {
   vm.createContext(context);
   vm.runInContext(`${trimmedSource}\nmodule.exports = { restoreStateFromUrl };`, context);
 
+  const applyLangImpl = options.applyLangImpl || (() => {});
+
   context.__mocks = {
     renderTimeline() {
       renderCalls.push({
@@ -224,7 +226,9 @@ function loadBootstrapHarness(search) {
         phase: state.currentPhase?.id || null,
       });
     },
-    applyLang() {},
+    applyLang() {
+      applyLangImpl({ state, nodes, renderTimeline: context.__mocks.renderTimeline });
+    },
     renderPhaseButtons() {},
     scrollTimelineToPhase() {},
     syncShareStateUrl() {},
@@ -293,5 +297,43 @@ describe('restoreStateFromUrl', () => {
     expect(nodes.zoomLabel.textContent).toBe('60%');
     expect(nodes.urlA.value).toBe('https://www.fflogs.com/reports/AAA');
     expect(nodes.urlB.value).toBe('https://www.fflogs.com/reports/BBB');
+  });
+
+  it('applies language before timeline data exists, so rerender still happens only once', async () => {
+    const shareQuery = buildSharedStateQuery({
+      reportA: 'AAA',
+      reportB: 'BBB',
+      fightA: '1',
+      fightB: '2',
+      playerA: '11',
+      playerB: '22',
+      phase: '3',
+      tab: 'odd',
+      zoom: 1.5,
+      lang: 'ja',
+    });
+
+    const applyLangCalls = [];
+    const { restoreStateFromUrl, renderCalls } = loadBootstrapHarness(shareQuery, {
+      applyLangImpl({ state, nodes, renderTimeline }) {
+        applyLangCalls.push({
+          timelineVisible: !nodes.timelineWrap.classList.contains('hidden'),
+          timelineLength: state.timelineA.length,
+        });
+        if (!nodes.timelineWrap.classList.contains('hidden') && state.timelineA.length) {
+          renderTimeline();
+        }
+      },
+    });
+
+    await restoreStateFromUrl();
+
+    expect(applyLangCalls).toEqual([
+      {
+        timelineVisible: true,
+        timelineLength: 0,
+      },
+    ]);
+    expect(renderCalls).toHaveLength(1);
   });
 });

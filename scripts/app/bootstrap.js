@@ -475,8 +475,6 @@ async function handleLoadPlayers(options = {}) {
     ]);
     state.dpsDataA = dpsA;
     state.dpsDataB = dpsB;
-    const fightAObj = (state.reportA?.fights || []).find(f => Number(f.id) === state.selectedFightA);
-    const fightBObj = (state.reportB?.fights || []).find(f => Number(f.id) === state.selectedFightB);
     const durA = fightAObj ? (fightAObj.endTime - fightAObj.startTime) : 1;
     const durB = fightBObj ? (fightBObj.endTime - fightBObj.startTime) : 1;
     fillPlayerSelect(el.playerA, state.playersA, dpsA, durA);

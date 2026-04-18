@@ -25,11 +25,11 @@ describe('page asset loading', () => {
     }
   });
 
-  it('loads the tutorial module before bootstrap in the script loader', () => {
-    const scriptLoader = readRootFile('script.js');
+  it('loads the tutorial module before bootstrap in the main module', () => {
+    const mainModule = readRootFile('scripts/app/main.js');
 
-    expect(scriptLoader).toContain("'./scripts/app/tutorial.js'");
-    expect(scriptLoader.indexOf("'./scripts/app/tutorial.js'"))
-      .toBeLessThan(scriptLoader.indexOf("'./scripts/app/bootstrap.js'"));
+    expect(mainModule).toContain("'./tutorial.js'");
+    expect(mainModule.indexOf("'./tutorial.js'"))
+      .toBeLessThan(mainModule.indexOf("'./bootstrap.js'"));
   });
 });

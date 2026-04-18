@@ -756,7 +756,9 @@ bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
 });
 bindClick(el.compareBtn, 'compareBtn', async () => {
   logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
+  el.compareBtn.disabled = true;
   await handleCompare();
+  setTimeout(() => { el.compareBtn.disabled = false; }, 5000);
 });
 el.playerA?.addEventListener('change', syncShareStateUrl);
 el.playerB?.addEventListener('change', syncShareStateUrl);

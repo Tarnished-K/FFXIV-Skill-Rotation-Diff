@@ -769,24 +769,24 @@ button:focus-visible {
 
 .tick.one {
   height: 6px;
-  opacity: 0.28;
+  opacity: 0.5;
 }
 
 .tick.five {
   height: 10px;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .tick.ten {
   height: 14px;
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .tick span {
   position: absolute;
   top: -1px;
   left: 6px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-size: 10px;
 }
 

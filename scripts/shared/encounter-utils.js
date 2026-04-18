@@ -29,7 +29,8 @@
     { patterns: [/vamp fatale/i, /ヴァンプ[・.]?ファタール/], ja: 'ヴァンプ・ファタール', en: 'Vamp Fatale', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 1 },
     { patterns: [/red hot/i, /deep blue/i, /the extremes?|extremes?/i, /エクストリームズ/], ja: 'エクストリームズ', en: 'The Extremes', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 2 },
     { patterns: [/the tyrant|tyrant/i, /タイラント/], ja: 'ザ・タイラント', en: 'The Tyrant', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 3 },
-    { patterns: [/lindblum/i, /lindwurm/i, /リンドブルム/, /リンドヴルム/], ja: 'リンドブルム', en: 'Lindblum', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4 },
+    { patterns: [/lindwurm\s*ii/i, /リンドヴルム\s*ii/i], ja: 'リンドヴルム II', en: 'Lindwurm II', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4, phase: { ja: '後半', en: 'P2' } },
+    { patterns: [/lindblum/i, /リンドブルム/, /lindwurm(?!\s*ii)/i, /リンドヴルム(?!\s*ii)/i], ja: 'リンドブルム', en: 'Lindblum', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4, phase: { ja: '前半', en: 'P1' } },
   ];
 
   const SAVAGE_ZONE_PATTERNS = [
@@ -80,10 +81,19 @@
     const name = String(fightName || '');
     for (const boss of SAVAGE_BOSS_INFO) {
       if (boss.patterns.some((p) => p.test(name))) {
+        const phase = boss.phase ? (lang === 'ja' ? boss.phase.ja : boss.phase.en) : '';
         return lang === 'ja'
-          ? `${boss.tier.ja}零式${boss.floor}層`
-          : `AAC ${boss.tier.en} M${boss.floor}`;
+          ? `${boss.tier.ja}零式${boss.floor}層${phase}`
+          : `AAC ${boss.tier.en} M${boss.floor}${phase ? ' ' + phase : ''}`;
       }
+    }
+    return null;
+  }
+
+  function getSavageFloorFromName(fightName) {
+    const name = String(fightName || '');
+    for (const boss of SAVAGE_BOSS_INFO) {
+      if (boss.patterns.some((p) => p.test(name))) return boss.floor;
     }
     return null;
   }
@@ -165,6 +175,7 @@
   return {
     detectSavageFloor,
     getEncounterDisplayName,
+    getSavageFloorFromName,
     getUltimateEncounterInfo,
     isGenericZoneName,
     normalizeEncounterText,

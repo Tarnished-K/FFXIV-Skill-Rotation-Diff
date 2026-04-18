@@ -420,6 +420,69 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode 
   return all.sort((a, b) => a.t - b.t);
 }
 
+async function fetchFightDpsV2(reportCode, fightId) {
+  const query = `
+    query FightDps($code: String!, $fightID: [Int!]!) {
+      reportData {
+        report(code: $code) {
+          table(dataType: DamageDone, fightIDs: $fightID)
+        }
+      }
+    }
+  `;
+  try {
+    const data = await graphqlRequest(query, { code: reportCode, fightID: [Number(fightId)] });
+    const entries = data?.reportData?.report?.table?.data?.entries || [];
+    if (entries.length) {
+      const sample = entries[0];
+      logDebug('DPS table sample', { keys: Object.keys(sample), name: sample.name, total: sample.total, activeTime: sample.activeTime, rDPS: sample.rDPS, aDPS: sample.aDPS });
+    }
+    return entries;
+  } catch (e) {
+    logError('DPS table fetch failed', { error: e.message });
+    return [];
+  }
+}
+
+async function fetchPlayerDamageV2(reportCode, fight, sourceId) {
+  const all = [];
+  let startTime = null;
+  const query = `
+    query PlayerDamage($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: DamageDone, fightIDs: [$fightID], sourceID: $sourceID, startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), sourceID: Number(sourceId), startTime };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    for (const e of rows) {
+      const actionId = Number(e?.abilityGameID || e?.ability?.guid || 0);
+      const ts = Number(e?.timestamp || 0);
+      if (!actionId || !ts) continue;
+      const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      all.push({
+        t,
+        actionId,
+        amount: Number(e?.amount || 0),
+        hitType: Number(e?.hitType || 0),
+        multistrike: !!e?.multistrike,
+      });
+    }
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+  return all;
+}
+
 Object.assign(globalThis, {
   parseFFLogsUrl,
   graphqlRequest,
@@ -433,5 +496,7 @@ Object.assign(globalThis, {
   fillPlayerSelect,
   getSavageFloorFromName,
   shouldShowUltimatePhaseSelector,
+  fetchFightDpsV2,
+  fetchPlayerDamageV2,
   fetchPlayerTimelineV2,
 });

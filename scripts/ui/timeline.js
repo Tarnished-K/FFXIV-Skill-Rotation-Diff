@@ -168,29 +168,6 @@ async function fetchPlayerAurasV2(reportCode, fight, targetId) {
   logDebug(`auras(target=${targetId}): raw=${rawTotal} pages=${pageCount} PTbuff=${partyBuffs.length}`, debugMatchCount);
   return partyBuffs;
 }
-async function fetchFightDpsV2(reportCode, fightId) {
-  const query = `
-    query FightDps($code: String!, $fightID: [Int!]!) {
-      reportData {
-        report(code: $code) {
-          table(dataType: DamageDone, fightIDs: $fightID)
-        }
-      }
-    }
-  `;
-  try {
-    const data = await graphqlRequest(query, { code: reportCode, fightID: [Number(fightId)] });
-    const entries = data?.reportData?.report?.table?.data?.entries || [];
-    if (entries.length) {
-      const sample = entries[0];
-      logDebug('DPS table sample', { keys: Object.keys(sample), name: sample.name, total: sample.total, activeTime: sample.activeTime, rDPS: sample.rDPS, aDPS: sample.aDPS });
-    }
-    return entries;
-  } catch (e) {
-    logError('DPS table fetch failed', { error: e.message });
-    return [];
-  }
-}
 function formatJobName(jobCode) {
   if (state.lang === 'ja') return JOB_NAME_JA[jobCode] || jobCode;
   return jobCode;
@@ -219,44 +196,6 @@ function formatHitType(hitType, multistrike) {
 }
 function formatTimelineTime(seconds) {
   return formatTimelineTimeShared(seconds);
-}
-async function fetchPlayerDamageV2(reportCode, fight, sourceId) {
-  const all = [];
-  let startTime = null;
-  const query = `
-    query PlayerDamage($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
-      reportData {
-        report(code: $code) {
-          events(dataType: DamageDone, fightIDs: [$fightID], sourceID: $sourceID, startTime: $startTime) {
-            data
-            nextPageTimestamp
-          }
-        }
-      }
-    }
-  `;
-  while (true) {
-    const vars = { code: reportCode, fightID: Number(fight.id), sourceID: Number(sourceId), startTime };
-    const data = await graphqlRequest(query, vars);
-    const block = data?.reportData?.report?.events;
-    const rows = block?.data || [];
-    for (const e of rows) {
-      const actionId = Number(e?.abilityGameID || e?.ability?.guid || 0);
-      const ts = Number(e?.timestamp || 0);
-      if (!actionId || !ts) continue;
-      const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
-      all.push({
-        t,
-        actionId,
-        amount: Number(e?.amount || 0),
-        hitType: Number(e?.hitType || 0),
-        multistrike: !!e?.multistrike,
-      });
-    }
-    if (!block?.nextPageTimestamp) break;
-    startTime = block.nextPageTimestamp;
-  }
-  return all;
 }
 function correlateDamage(timeline, damageEvents) {
   const dmgByAction = new Map();
@@ -626,9 +565,7 @@ Object.assign(globalThis, {
   correlateDamage,
   deduplicateTimeline,
   detectPhases,
-  fetchFightDpsV2,
   fetchPlayerAurasV2,
-  fetchPlayerDamageV2,
   mergePhaseSets,
   renderPhaseButtons,
   renderTimeline,

@@ -421,6 +421,7 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode 
 }
 
 Object.assign(globalThis, {
+  parseFFLogsUrl,
   sendAnalyticsEvent,
   fetchReportDataV2,
   loadIconMap,

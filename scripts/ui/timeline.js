@@ -619,6 +619,7 @@ function renderPhaseButtons() {
 }
 
 Object.assign(globalThis, {
+  formatJobName,
   buildFightPhasesFromFFLogs,
   classifyStats,
   computeRollingDps,

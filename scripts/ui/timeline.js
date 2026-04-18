@@ -618,4 +618,21 @@ function renderPhaseButtons() {
   }
 }
 
+Object.assign(globalThis, {
+  formatJobName,
+  buildFightPhasesFromFFLogs,
+  classifyStats,
+  computeRollingDps,
+  correlateDamage,
+  deduplicateTimeline,
+  detectPhases,
+  fetchFightDpsV2,
+  fetchPlayerAurasV2,
+  fetchPlayerDamageV2,
+  mergePhaseSets,
+  renderPhaseButtons,
+  renderTimeline,
+  scrollTimelineToPhase,
+});
+
 

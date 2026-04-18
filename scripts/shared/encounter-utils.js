@@ -29,8 +29,8 @@
     { patterns: [/vamp fatale/i, /ヴァンプ[・.]?ファタール/], ja: 'ヴァンプ・ファタール', en: 'Vamp Fatale', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 1 },
     { patterns: [/red hot/i, /deep blue/i, /the extremes?|extremes?/i, /エクストリームズ/], ja: 'エクストリームズ', en: 'The Extremes', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 2 },
     { patterns: [/the tyrant|tyrant/i, /タイラント/], ja: 'ザ・タイラント', en: 'The Tyrant', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 3 },
-    { patterns: [/lindwurm\s*ii/i, /リンドヴルム\s*ii/i], ja: 'リンドヴルム II', en: 'Lindwurm II', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4, phase: { ja: '後半', en: 'P2' } },
-    { patterns: [/lindblum/i, /リンドブルム/, /lindwurm(?!\s*ii)/i, /リンドヴルム(?!\s*ii)/i], ja: 'リンドブルム', en: 'Lindblum', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4, phase: { ja: '前半', en: 'P1' } },
+    { patterns: [/lindwurm[\s　]*(ii|ⅱ|Ⅱ|2)/i, /リンドヴルム[\s　]*(ii|ⅱ|Ⅱ|2)/i], ja: 'リンドヴルム II', en: 'Lindwurm II', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4, phase: { ja: '後半', en: 'P2' } },
+    { patterns: [/lindblum/i, /リンドブルム/, /lindwurm(?![\s　]*(ii|ⅱ|Ⅱ|2))/i, /リンドヴルム(?![\s　]*(ii|ⅱ|Ⅱ|2))/i], ja: 'リンドブルム', en: 'Lindblum', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4, phase: { ja: '前半', en: 'P1' } },
   ];
 
   const SAVAGE_ZONE_PATTERNS = [

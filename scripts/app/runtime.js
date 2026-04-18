@@ -289,3 +289,24 @@ function logError(message, payload = null) {
   el.errorLog.textContent += line + "\n";
   el.errorLog.scrollTop = el.errorLog.scrollHeight;
 }
+
+// Expose module-scoped declarations to globalThis for consuming modules.
+// Required during the side-effect module stage of the ESM migration;
+// removed once each consumer switches to explicit imports.
+Object.assign(globalThis, {
+  TUTORIAL_STATE_KEY,
+  JOB_CODE_MAP,
+  BURST_BUFFS,
+  SELF_BUFFS,
+  JOB_NAME_JA,
+  JOB_ROLE,
+  JOB_SHORT_JA,
+  ROLE_ORDER,
+  I18N,
+  t,
+  state,
+  el,
+  bindClick,
+  logDebug,
+  logError,
+});

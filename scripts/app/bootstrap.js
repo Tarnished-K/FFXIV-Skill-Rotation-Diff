@@ -516,6 +516,32 @@ async function handleCompare(options = {}) {
     syncTutorialProgress();
     return false;
   }
+  if (fightA && fightB && Number(fightA.encounterID) === 0 && Number(fightB.encounterID) === 0) {
+    const floorA = getSavageFloorFromName(fightA.name);
+    const floorB = getSavageFloorFromName(fightB.name);
+    if (floorA !== null && floorB !== null && floorA !== floorB) {
+      const message = t('encounterMismatch');
+      setComparisonError('validation', message);
+      logError('ボス名フロア不一致のため比較を中止', { nameA: fightA.name, nameB: fightB.name, floorA, floorB });
+      sendAnalyticsEvent('api_error', {
+        stage: 'compare',
+        kind: 'validation',
+        reason: 'floor_mismatch',
+        encounterA: 0,
+        encounterB: 0,
+        message,
+      });
+      el.step2Message.textContent = message;
+      el.step4.classList.remove('hidden');
+      state.currentTab = 'all';
+      el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
+      renderPhaseButtons();
+      renderComparisonError();
+      if (!skipShareUrl) syncShareStateUrl();
+      syncTutorialProgress();
+      return false;
+    }
+  }
 
   el.step2Message.textContent = t('tlLoading');
   try {

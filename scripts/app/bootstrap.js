@@ -423,8 +423,6 @@ async function handleLoadReports(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step2.classList.remove('hidden');
-    el.step3.classList.add('hidden');
-    el.step4.classList.add('hidden');
     el.msg.textContent = t('killFightsLoaded')(fightsA.length, fightsB.length);
     sendAnalyticsEvent('reports_loaded', {
       reportCodeA: state.urlA.reportId,
@@ -453,6 +451,22 @@ async function handleLoadPlayers(options = {}) {
   try {
     state.selectedFightA = Number(el.fightA.value);
     state.selectedFightB = Number(el.fightB.value);
+    const fightAObj = (state.reportA?.fights || []).find(f => Number(f.id) === state.selectedFightA);
+    const fightBObj = (state.reportB?.fights || []).find(f => Number(f.id) === state.selectedFightB);
+    if (fightAObj && fightBObj) {
+      const encA = Number(fightAObj.encounterID || 0);
+      const encB = Number(fightBObj.encounterID || 0);
+      let mismatch = encA !== encB;
+      if (!mismatch && encA === 0 && encB === 0) {
+        const floorA = getSavageFloorFromName(fightAObj.name);
+        const floorB = getSavageFloorFromName(fightBObj.name);
+        if (floorA !== null && floorB !== null && floorA !== floorB) mismatch = true;
+      }
+      if (mismatch) {
+        el.step2Message.textContent = t('encounterMismatch');
+        return false;
+      }
+    }
     state.playersA = getPlayersFromFight(state.reportA, state.selectedFightA);
     state.playersB = getPlayersFromFight(state.reportB, state.selectedFightB);
     const [dpsA, dpsB] = await Promise.all([
@@ -461,8 +475,6 @@ async function handleLoadPlayers(options = {}) {
     ]);
     state.dpsDataA = dpsA;
     state.dpsDataB = dpsB;
-    const fightAObj = (state.reportA?.fights || []).find(f => Number(f.id) === state.selectedFightA);
-    const fightBObj = (state.reportB?.fights || []).find(f => Number(f.id) === state.selectedFightB);
     const durA = fightAObj ? (fightAObj.endTime - fightAObj.startTime) : 1;
     const durB = fightBObj ? (fightBObj.endTime - fightBObj.startTime) : 1;
     fillPlayerSelect(el.playerA, state.playersA, dpsA, durA);
@@ -472,7 +484,6 @@ async function handleLoadPlayers(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step3.classList.remove('hidden');
-    el.step4.classList.add('hidden');
     el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
     if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
@@ -497,8 +508,6 @@ async function handleCompare(options = {}) {
   state.fightB = fightB;
   resetComparisonData();
   clearComparisonError();
-  el.step4.classList.add('hidden');
-
   if (fightA && fightB && Number(fightA.encounterID) !== Number(fightB.encounterID)) {
     const message = t('encounterMismatch');
     setComparisonError('validation', message);
@@ -520,6 +529,32 @@ async function handleCompare(options = {}) {
     if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
     return false;
+  }
+  if (fightA && fightB && Number(fightA.encounterID) === 0 && Number(fightB.encounterID) === 0) {
+    const floorA = getSavageFloorFromName(fightA.name);
+    const floorB = getSavageFloorFromName(fightB.name);
+    if (floorA !== null && floorB !== null && floorA !== floorB) {
+      const message = t('encounterMismatch');
+      setComparisonError('validation', message);
+      logError('ボス名フロア不一致のため比較を中止', { nameA: fightA.name, nameB: fightB.name, floorA, floorB });
+      sendAnalyticsEvent('api_error', {
+        stage: 'compare',
+        kind: 'validation',
+        reason: 'floor_mismatch',
+        encounterA: 0,
+        encounterB: 0,
+        message,
+      });
+      el.step2Message.textContent = message;
+      el.step4.classList.remove('hidden');
+      state.currentTab = 'all';
+      el.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'all'));
+      renderPhaseButtons();
+      renderComparisonError();
+      if (!skipShareUrl) syncShareStateUrl();
+      syncTutorialProgress();
+      return false;
+    }
   }
 
   el.step2Message.textContent = t('tlLoading');
@@ -721,7 +756,9 @@ bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
 });
 bindClick(el.compareBtn, 'compareBtn', async () => {
   logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
+  el.compareBtn.disabled = true;
   await handleCompare();
+  setTimeout(() => { el.compareBtn.disabled = false; }, 5000);
 });
 el.playerA?.addEventListener('change', syncShareStateUrl);
 el.playerB?.addEventListener('change', syncShareStateUrl);

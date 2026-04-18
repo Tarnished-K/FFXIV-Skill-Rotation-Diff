@@ -3,6 +3,7 @@ const { parseFFLogsUrl: parseFFLogsUrlShared } = globalThis.AppSharedUtils;
 const {
   detectSavageFloor: detectSavageFloorShared,
   getEncounterDisplayName: getEncounterDisplayNameShared,
+  getSavageFloorFromName: getSavageFloorFromNameShared,
   shouldShowUltimatePhaseSelector: shouldShowUltimatePhaseSelectorShared,
 } = globalThis.EncounterUtils;
 const {
@@ -229,6 +230,15 @@ function getActionMeta(actionName, actionId, preferredJobCode = '') {
       return names.includes(key);
     });
   }
+  const nm = String(actionName || '').toLowerCase();
+  if (nm.includes('sprint') || nm.includes('スプリント')) {
+    return {
+      icon: '/public/job-icons/jobs/General/sprint.png',
+      iconCandidates: ['/public/job-icons/jobs/General/sprint.png'],
+      category: 'ability',
+      label: found?.action_name_ja || found?.action_name_en || actionName,
+    };
+  }
   if (shouldSkipIconLookup(actionName) || shouldSkipIconLookup(found?.action_name_en) || shouldSkipIconLookup(found?.action_name_ja)) {
     return {
       icon: '',
@@ -307,15 +317,15 @@ function formatPartyComp(reportJson, fightId) {
     });
   } catch { return ''; }
 }
-function detectSavageFloor(zoneName, fightName) {
-  return detectSavageFloorShared(zoneName, fightName, state.lang);
+function detectSavageFloor(zoneName, fightName, encounterID) {
+  return detectSavageFloorShared(zoneName, fightName, state.lang, encounterID);
 }
 function fillFightSelect(select, fights, reportJson) {
   const zoneName = reportJson?.zone?.name || '';
   select.innerHTML = fights.map((f, i) => {
     const label = buildFightOptionLabel(f, i, {
       baseName: getEncounterDisplayName(reportJson, f) || `Fight ${f.id}`,
-      floorTag: detectSavageFloor(zoneName, f.name),
+      floorTag: detectSavageFloor(zoneName, f.name, f.encounterID),
       partyComp: formatPartyComp(reportJson, f.id),
       statusLabel: f.kill ? t('kill') : t('wipe'),
     });
@@ -326,6 +336,9 @@ function fillPlayerSelect(select, players, dpsEntries, fightDurationMs) {
   select.innerHTML = buildPlayerSelectOptions(players, dpsEntries, fightDurationMs, { formatJobName })
     .map((player) => `<option value="${player.value}">${player.label}</option>`)
     .join('');
+}
+function getSavageFloorFromName(fightName) {
+  return getSavageFloorFromNameShared(fightName);
 }
 function getEncounterDisplayName(reportJson, fight) {
   return getEncounterDisplayNameShared(reportJson, fight, state.lang);

@@ -34,6 +34,13 @@ function findSelfBuff(actionName) {
   }
   return null;
 }
+function findTinctureBuff(actionName) {
+  const n = String(actionName || '').toLowerCase();
+  if (n.includes('tincture') || n.includes('potion') || n.includes('薬')) {
+    return { nameEn: 'Tincture', nameJa: '薬', duration: 30, color: '#e879f9' };
+  }
+  return null;
+}
 function getActiveSynergies(t, allRecords, partyBuffRecords) {
   return globalThis.BuffUtils.getActiveSynergies(t, allRecords, partyBuffRecords, {
     burstBuffs: BURST_BUFFS,
@@ -465,7 +472,7 @@ function renderTimeline() {
     const baseTop = owner === 'a' ? trackATop : trackBTop;
     const h = owner === 'a' ? trackAHeight : trackBHeight;
     for (const r of records) {
-      const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action);
+      const buff = findBurstBuff(r.actionId, r.action) || findSelfBuff(r.action) || findTinctureBuff(r.action);
       if (!buff) continue;
       const x = 60 + r.t * pxPerSec;
       const w = buff.duration * pxPerSec;
@@ -546,13 +553,13 @@ function renderTimeline() {
     <div class="timeline" style="width:${width}px; height:${totalHeight}px">
       ${buildDpsGraph()}
       ${buildRulerAtTop()}
-      <div class="player-label player-label-a" style="top:${playerAStart - 4}px">${labelA}${jobA ? ' (' + formatJobName(jobA) + ')' : ''}</div>
+      <div class="player-label player-label-a" style="top:${playerAStart - 4}px">${labelA}</div>
       <div class="lane-label" style="top:${laneTop.a_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track a" style="top:${trackATop}px; height:${trackAHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.a_gcd + 12}px">${t('laneGcd')}</div>
       ${buildBuffOverlays(a, 'a')}
       <div class="player-divider" style="top:${dividerTop}px"></div>
-      <div class="player-label player-label-b" style="top:${dividerTop + 10}px">${labelB}${jobB ? ' (' + formatJobName(jobB) + ')' : ''}</div>
+      <div class="player-label player-label-b" style="top:${dividerTop + 10}px">${labelB}</div>
       <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track b" style="top:${trackBTop}px; height:${trackBHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">${t('laneGcd')}</div>

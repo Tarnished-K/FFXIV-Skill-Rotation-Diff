@@ -29,8 +29,7 @@
     { patterns: [/vamp fatale/i, /ヴァンプ[・.]?ファタール/], ja: 'ヴァンプ・ファタール', en: 'Vamp Fatale', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 1 },
     { patterns: [/red hot/i, /deep blue/i, /the extremes?|extremes?/i, /エクストリームズ/], ja: 'エクストリームズ', en: 'The Extremes', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 2 },
     { patterns: [/the tyrant|tyrant/i, /タイラント/], ja: 'ザ・タイラント', en: 'The Tyrant', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 3 },
-    { patterns: [/lindwurm[\s　]*(ii|ⅱ|Ⅱ|2)/i, /リンドヴルム[\s　]*(ii|ⅱ|Ⅱ|2)/i], ja: 'リンドヴルム II', en: 'Lindwurm II', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4, phase: { ja: '後半', en: 'P2' } },
-    { patterns: [/lindblum/i, /リンドブルム/, /lindwurm(?![\s　]*(ii|ⅱ|Ⅱ|2))/i, /リンドヴルム(?![\s　]*(ii|ⅱ|Ⅱ|2))/i], ja: 'リンドブルム', en: 'Lindblum', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4, phase: { ja: '前半', en: 'P1' } },
+    { patterns: [/lindblum/i, /リンドブルム/, /lindwurm/i, /リンドヴルム/], ja: 'リンドブルム', en: 'Lindblum', tier: { ja: 'ヘビー級', en: 'Heavyweight' }, floor: 4 },
   ];
 
   const SAVAGE_ZONE_PATTERNS = [
@@ -113,6 +112,9 @@
     const encounter = getUltimateEncounterInfo(fight);
     if (encounter) return lang === 'ja' ? encounter.ja : encounter.en;
 
+    const savageDisplay = SAVAGE_ENCOUNTER_DISPLAY[Number(fight?.encounterID || 0)];
+    if (savageDisplay) return lang === 'ja' ? savageDisplay.ja : savageDisplay.en;
+
     const bossDisplay = getSavageBossDisplayName(fight?.name, lang);
     if (bossDisplay) return bossDisplay;
 
@@ -124,9 +126,16 @@
     return getSavageZoneDisplayName(fight?.name || '', lang);
   }
 
+  // encounterID → 表示名マップ（同名ボスで前後半を区別するケース用）
+  const SAVAGE_ENCOUNTER_DISPLAY = {
+    104: { ja: 'ヘビー級零式4層前半', en: 'AAC Heavyweight M4 P1' },
+    105: { ja: 'ヘビー級零式4層後半', en: 'AAC Heavyweight M4 P2' },
+  };
+
   // encounterID → 層番号マップ（確認済みIDを追加していく）
   const SAVAGE_ENCOUNTER_FLOOR = {
-    // 例: 1082: { floor: 1, tier: 'Heavyweight' }
+    104: { floor: 4 },
+    105: { floor: 4 },
   };
 
   function detectSavageFloor(zoneName, fightName, lang = 'en', encounterID = 0) {

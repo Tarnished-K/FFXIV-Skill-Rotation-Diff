@@ -451,6 +451,22 @@ async function handleLoadPlayers(options = {}) {
   try {
     state.selectedFightA = Number(el.fightA.value);
     state.selectedFightB = Number(el.fightB.value);
+    const fightAObj = (state.reportA?.fights || []).find(f => Number(f.id) === state.selectedFightA);
+    const fightBObj = (state.reportB?.fights || []).find(f => Number(f.id) === state.selectedFightB);
+    if (fightAObj && fightBObj) {
+      const encA = Number(fightAObj.encounterID || 0);
+      const encB = Number(fightBObj.encounterID || 0);
+      let mismatch = encA !== encB;
+      if (!mismatch && encA === 0 && encB === 0) {
+        const floorA = getSavageFloorFromName(fightAObj.name);
+        const floorB = getSavageFloorFromName(fightBObj.name);
+        if (floorA !== null && floorB !== null && floorA !== floorB) mismatch = true;
+      }
+      if (mismatch) {
+        el.step2Message.textContent = t('encounterMismatch');
+        return false;
+      }
+    }
     state.playersA = getPlayersFromFight(state.reportA, state.selectedFightA);
     state.playersB = getPlayersFromFight(state.reportB, state.selectedFightB);
     const [dpsA, dpsB] = await Promise.all([

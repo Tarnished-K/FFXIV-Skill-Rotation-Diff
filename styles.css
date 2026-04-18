@@ -478,7 +478,6 @@ button:focus-visible {
 }
 
 .submessage {
-  min-height: 20px;
   font-size: 13px;
   color: var(--text-secondary);
 }

@@ -1,0 +1,340 @@
+﻿.timeline-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 14px;
+  border: 1px solid rgba(105, 146, 185, 0.18);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(8, 18, 28, 0.94), rgba(8, 17, 27, 0.9)),
+    var(--bg-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  cursor: grab;
+}
+
+.timeline-wrap.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.timeline-wrap.is-dragging * {
+  cursor: grabbing;
+}
+
+.timeline {
+  min-width: 1400px;
+  position: relative;
+}
+
+.track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-bottom: 1px dashed rgba(105, 146, 185, 0.24);
+}
+
+.player-label {
+  position: absolute;
+  left: 6px;
+  z-index: 2;
+  padding: 3px 8px;
+  border: 1px solid rgba(123, 198, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(18, 43, 72, 0.68);
+  color: #d7ecff;
+  font-size: 12px;
+  font-weight: bold;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.player-label-a {
+  border-color: rgba(56, 189, 248, 0.34);
+  color: #7dd3fc;
+}
+
+.player-label-b {
+  border-color: rgba(249, 115, 22, 0.34);
+  color: #fdba74;
+}
+
+.lane-label {
+  position: absolute;
+  left: 8px;
+  z-index: 2;
+  color: var(--text-muted);
+  font-size: 10px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.player-divider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(123, 198, 255, 0.34) 0%, rgba(105, 146, 185, 0.16) 50%, transparent 100%);
+}
+
+.event {
+  position: absolute;
+  z-index: 3;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(123, 198, 255, 0.2);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(15, 26, 39, 0.96), rgba(8, 15, 24, 0.96));
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.event:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(123, 198, 255, 0.42);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.32);
+}
+
+.event img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.event span {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.event[title] {
+  cursor: pointer;
+}
+
+.burst-overlay {
+  position: absolute;
+  z-index: 0;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.burst-label {
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  font-size: 9px;
+  font-weight: bold;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.legend {
+  margin-top: 10px;
+  color: var(--blue-light);
+  font-size: 12px;
+}
+
+.ruler {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+}
+
+.tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  background: var(--border-default);
+}
+
+.tick.one {
+  height: 6px;
+  opacity: 0.5;
+}
+
+.tick.five {
+  height: 10px;
+  opacity: 0.8;
+}
+
+.tick.ten {
+  height: 14px;
+  opacity: 1;
+}
+
+.tick span {
+  position: absolute;
+  top: -1px;
+  left: 6px;
+  color: var(--text-primary);
+  font-size: 10px;
+}
+
+.boss-cast {
+  position: absolute;
+  z-index: 2;
+  height: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(248, 113, 113, 0.36);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.08));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.boss-cast-name {
+  position: absolute;
+  top: 2px;
+  left: 7px;
+  color: #fecaca;
+  font-size: 9px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.debuff-bar {
+  position: absolute;
+  z-index: 2;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.debuff-label {
+  position: absolute;
+  top: 1px;
+  left: 7px;
+  color: #fff5f5;
+  font-size: 8px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.phase-divider {
+  position: absolute;
+  z-index: 4;
+  width: 2px;
+  background: rgba(168, 85, 247, 0.5);
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.18);
+}
+
+.phase-divider-label {
+  position: absolute;
+  top: 0;
+  left: 8px;
+  color: #a855f7;
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+}
+
+.phase-divider.a {
+  background: rgba(56, 189, 248, 0.65);
+}
+
+.phase-divider.a .phase-divider-label {
+  color: #38bdf8;
+}
+
+.phase-divider.b {
+  background: rgba(249, 115, 22, 0.65);
+}
+
+.phase-divider.b .phase-divider-label {
+  color: #fb923c;
+}
+
+.kill-divider {
+  position: absolute;
+  z-index: 5;
+  width: 2px;
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.14);
+}
+
+.kill-divider-label {
+  position: absolute;
+  top: 0;
+  left: 8px;
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+}
+
+.kill-divider.a {
+  background: rgba(56, 189, 248, 0.9);
+}
+
+.kill-divider.a .kill-divider-label {
+  color: #7dd3fc;
+}
+
+.kill-divider.b {
+  background: rgba(249, 115, 22, 0.9);
+}
+
+.kill-divider.b .kill-divider-label {
+  color: #fdba74;
+}
+
+.dps-graph-svg text {
+  font-family: Bahnschrift, "Yu Gothic UI", sans-serif;
+}
+
+.debug-log {
+  max-height: 220px;
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid rgba(105, 146, 185, 0.16);
+  border-radius: 14px;
+  background: rgba(5, 11, 19, 0.88);
+  color: var(--text-secondary);
+  font-family: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.error-log {
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.timeline-wrap::-webkit-scrollbar,
+.debug-log::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.timeline-wrap::-webkit-scrollbar-track,
+.debug-log::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+.timeline-wrap::-webkit-scrollbar-thumb,
+.debug-log::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(123, 198, 255, 0.24);
+  background-clip: padding-box;
+}
+
+.timeline-wrap::-webkit-scrollbar-thumb:hover,
+.debug-log::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 198, 255, 0.38);
+  background-clip: padding-box;
+}
+

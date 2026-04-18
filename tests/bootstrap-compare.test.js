@@ -235,6 +235,20 @@ function loadCompareHarness(options = {}) {
       ja: {},
     },
     TUTORIAL_STATE_KEY: 'tutorial',
+    TutorialModule: {
+      clearTutorialState() {},
+      closeTutorial() {},
+      getCurrentTutorialStep() {
+        return { step: null };
+      },
+      getTutorialCopy() {
+        return { launch: 'First time here?' };
+      },
+      moveTutorial() {},
+      positionTutorialCard() {},
+      renderTutorial() {},
+      syncTutorialProgress() {},
+    },
   };
   context.globalThis = context;
 
@@ -284,7 +298,6 @@ function loadCompareHarness(options = {}) {
     renderPhaseButtons() {},
     renderComparisonError() {},
     syncShareStateUrl() {},
-    syncTutorialProgress() {},
     renderTimeline() {},
     getSavageFloorFromName(name) {
       return (options.floorByName || {})[name] ?? null;
@@ -324,7 +337,6 @@ function loadCompareHarness(options = {}) {
     renderPhaseButtons = globalThis.__mocks.renderPhaseButtons;
     renderComparisonError = globalThis.__mocks.renderComparisonError;
     syncShareStateUrl = globalThis.__mocks.syncShareStateUrl;
-    syncTutorialProgress = globalThis.__mocks.syncTutorialProgress;
     renderTimeline = globalThis.__mocks.renderTimeline;
     getSavageFloorFromName = globalThis.__mocks.getSavageFloorFromName;
     fetchPlayerTimelineV2 = globalThis.__mocks.fetchPlayerTimelineV2;

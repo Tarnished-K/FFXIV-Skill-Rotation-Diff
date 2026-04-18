@@ -211,6 +211,20 @@ function loadBootstrapHarness(search, options = {}) {
       formatZoomPercent,
       parseSharedState,
     },
+    TutorialModule: {
+      clearTutorialState() {},
+      closeTutorial() {},
+      getCurrentTutorialStep() {
+        return { step: null };
+      },
+      getTutorialCopy() {
+        return { launch: 'First time here?' };
+      },
+      moveTutorial() {},
+      positionTutorialCard() {},
+      renderTutorial() {},
+      syncTutorialProgress() {},
+    },
   };
   context.globalThis = context;
 

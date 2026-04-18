@@ -1,5 +1,6 @@
 const SCRIPT_LOAD_ORDER = [
   './scripts/app/runtime.js',
+  './scripts/app/tutorial.js',
   './scripts/shared/app-utils.js',
   './scripts/shared/encounter-utils.js',
   './scripts/shared/player-utils.js',

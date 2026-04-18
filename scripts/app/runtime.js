@@ -222,6 +222,7 @@ const state = {
 const el = {
   tutorialBtn: document.getElementById('tutorialBtn'),
   contactBtn: document.getElementById('contactBtn'),
+  privacyLink: document.getElementById('privacyLink'),
   publicOnlyNote: document.getElementById('publicOnlyNote'),
   urlA: document.getElementById('urlA'),
   urlB: document.getElementById('urlB'),

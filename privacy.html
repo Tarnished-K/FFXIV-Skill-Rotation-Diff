@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="pageTitle">プライバシーポリシー | FFXIV Skill Rotation Diff</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="styles-base.css" />
+    <link rel="stylesheet" href="styles-layout.css" />
+    <link rel="stylesheet" href="styles-timeline.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="feedback-page">
+    <header>
+      <div class="header-row">
+        <div>
+          <h1 data-i18n="heading">プライバシーポリシー</h1>
+        </div>
+        <div class="header-actions">
+          <a class="button-link ghost" data-i18n="backBtn" data-i18n-href-ja="/" data-i18n-href-en="/?lang=en" href="/">トップへ戻る</a>
+          <button id="langToggle" type="button" class="lang-btn">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="feedback-main">
+      <section class="card feedback-form-card">
+        <h2 data-i18n="s1Title">1. 収集する情報</h2>
+        <p data-i18n="s1Body">本サービスは個人を特定する情報（氏名・メールアドレス等）を収集しません。ただし、サービス改善を目的として、以下の匿名利用データを収集する場合があります。</p>
+        <ul>
+          <li data-i18n="s1Item1">比較操作・ページ閲覧などの匿名イベントログ（Supabase に保存）</li>
+          <li data-i18n="s1Item2">エラーログ（発生した操作の種類・エラー内容のみ）</li>
+        </ul>
+
+        <h2 data-i18n="s2Title">2. FFLogs データの取り扱い</h2>
+        <p data-i18n="s2Body">本サービスは <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>（RPGLogs LLC）の公開 API を利用してログデータを取得します。取得したデータはタイムライン表示のためだけに使用され、サーバーには保存されません。</p>
+
+        <h2 data-i18n="s3Title">3. 広告について</h2>
+        <p data-i18n="s3Body">本サービスは現在、広告表示を停止しています。将来的に Google AdSense 等の広告を表示する場合は、Google のプライバシーポリシーに従った Cookie が使用されます。</p>
+
+        <h2 data-i18n="s4Title">4. Cookie</h2>
+        <p data-i18n="s4Body">現時点で本サービス独自の Cookie は使用していません。</p>
+
+        <h2 data-i18n="s5Title">5. 第三者への提供</h2>
+        <p data-i18n="s5Body">収集した情報を第三者に販売・提供することはありません。</p>
+
+        <h2 data-i18n="s6Title">6. お問い合わせ</h2>
+        <p data-i18n="s6Body">プライバシーに関するご質問は<a data-i18n-href-ja="/contact.html" data-i18n-href-en="/contact.html?lang=en" href="/contact.html">ご要望フォーム</a>よりお問い合わせください。</p>
+
+        <p class="submessage" data-i18n="updated">最終更新: 2026年4月</p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-legal">
+        <small>FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD. All Rights Reserved. This is an unofficial fan tool, not affiliated with or endorsed by Square Enix.</small>
+        <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>.</small>
+      </div>
+      <small class="build-info" data-build-info>Version loading...</small>
+    </footer>
+
+    <script src="./scripts/shared/build-info.js"></script>
+    <script>
+(function () {
+  const LANG = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
+  document.documentElement.lang = LANG;
+
+  const T = {
+    ja: {
+      pageTitle: 'プライバシーポリシー | FFXIV Skill Rotation Diff',
+      heading: 'プライバシーポリシー',
+      backBtn: 'トップへ戻る',
+      s1Title: '1. 収集する情報',
+      s1Body: '本サービスは個人を特定する情報（氏名・メールアドレス等）を収集しません。ただし、サービス改善を目的として、以下の匿名利用データを収集する場合があります。',
+      s1Item1: '比較操作・ページ閲覧などの匿名イベントログ（Supabase に保存）',
+      s1Item2: 'エラーログ（発生した操作の種類・エラー内容のみ）',
+      s2Title: '2. FFLogs データの取り扱い',
+      s2Body: '本サービスは FFLogs（RPGLogs LLC）の公開 API を利用してログデータを取得します。取得したデータはタイムライン表示のためだけに使用され、サーバーには保存されません。',
+      s3Title: '3. 広告について',
+      s3Body: '本サービスは現在、広告表示を停止しています。将来的に Google AdSense 等の広告を表示する場合は、Google のプライバシーポリシーに従った Cookie が使用されます。',
+      s4Title: '4. Cookie',
+      s4Body: '現時点で本サービス独自の Cookie は使用していません。',
+      s5Title: '5. 第三者への提供',
+      s5Body: '収集した情報を第三者に販売・提供することはありません。',
+      s6Title: '6. お問い合わせ',
+      s6Body: 'プライバシーに関するご質問はご要望フォームよりお問い合わせください。',
+      updated: '最終更新: 2026年4月',
+    },
+    en: {
+      pageTitle: 'Privacy Policy | FFXIV Skill Rotation Diff',
+      heading: 'Privacy Policy',
+      backBtn: 'Back to App',
+      s1Title: '1. Information We Collect',
+      s1Body: 'This service does not collect personally identifiable information (such as names or email addresses). For the purpose of improving the service, we may collect the following anonymous usage data:',
+      s1Item1: 'Anonymous event logs (e.g. comparison actions, page views) stored in Supabase.',
+      s1Item2: 'Error logs (action type and error content only).',
+      s2Title: '2. FFLogs Data',
+      s2Body: 'This service uses the public API provided by FFLogs (RPGLogs LLC) to fetch log data. The retrieved data is used solely for rendering the timeline comparison and is not stored on our servers.',
+      s3Title: '3. Advertising',
+      s3Body: 'Ads are currently disabled on this service. If Google AdSense or similar advertising is enabled in the future, cookies governed by Google\'s Privacy Policy may be used.',
+      s4Title: '4. Cookies',
+      s4Body: 'This service does not currently use any proprietary cookies.',
+      s5Title: '5. Data Sharing',
+      s5Body: 'We do not sell or share collected data with third parties.',
+      s6Title: '6. Contact',
+      s6Body: 'For privacy-related inquiries, please use the Feedback Form.',
+      updated: 'Last updated: April 2026',
+    },
+  };
+
+  const t = T[LANG];
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      const key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) {
+        if (el.tagName === 'TITLE') {
+          document.title = t[key];
+        } else {
+          el.textContent = t[key];
+        }
+      }
+      const hrefKey = 'data-i18n-href-' + LANG;
+      if (el.hasAttribute(hrefKey)) el.href = el.getAttribute(hrefKey);
+    });
+
+    const btn = document.getElementById('langToggle');
+    if (btn) {
+      btn.textContent = LANG === 'ja' ? 'EN' : 'JA';
+      btn.addEventListener('click', function () {
+        const url = new URL(location.href);
+        url.searchParams.set('lang', LANG === 'ja' ? 'en' : 'ja');
+        location.href = url.toString();
+      });
+    }
+  });
+})();
+    </script>
+  </body>
+</html>

@@ -168,6 +168,25 @@ footer small {
   text-align: center;
 }
 
+.footer-legal {
+  margin-bottom: 6px;
+}
+
+.footer-legal small {
+  display: block;
+  max-width: 1560px;
+  margin: 0 auto 2px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.footer-legal a {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .build-info {
   margin-top: 6px;
   color: var(--text-secondary);

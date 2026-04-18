@@ -611,6 +611,9 @@ function applyLang() {
     el.contactBtn.textContent = s.contactBtn;
     el.contactBtn.href = state.lang === 'en' ? '/contact.html?lang=en' : '/contact.html';
   }
+  if (el.privacyLink) {
+    el.privacyLink.href = state.lang === 'en' ? '/privacy.html?lang=en' : '/privacy.html';
+  }
   if (el.langToggle) el.langToggle.textContent = state.lang === 'ja' ? 'EN' : 'JA';
   // Re-render fight selects if data exists
   if (state.reportA) {

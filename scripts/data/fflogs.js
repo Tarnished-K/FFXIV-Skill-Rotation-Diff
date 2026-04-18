@@ -419,3 +419,17 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode 
   }
   return all.sort((a, b) => a.t - b.t);
 }
+
+Object.assign(globalThis, {
+  sendAnalyticsEvent,
+  fetchReportDataV2,
+  loadIconMap,
+  extractSelectableFights,
+  indexAbilities,
+  getPlayersFromFight,
+  fillFightSelect,
+  fillPlayerSelect,
+  getSavageFloorFromName,
+  shouldShowUltimatePhaseSelector,
+  fetchPlayerTimelineV2,
+});

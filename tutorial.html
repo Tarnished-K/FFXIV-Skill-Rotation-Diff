@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title data-i18n="pageTitle">初めての方向けガイド | FFXIV Skill Rotation Diff</title>
-    <meta name="description" content="FFXIV Skill Rotation Diff の初回ガイドです。公開 FFLogs ログを比較結果の表示まで読み込む流れを案内します。" />
+    <title data-guide-text="pageTitle">初めての方向けガイド | FFXIV Skill Rotation Diff</title>
+    <meta name="description" content="FFXIV Skill Rotation Diff の初回ガイドです。公開 FFLogs ログを比較結果の表示まで読み込む流れを体験できます。" />
     <link rel="canonical" href="https://xiv-srd.com/tutorial.html" />
     <link rel="stylesheet" href="styles-base.css" />
     <link rel="stylesheet" href="styles-layout.css" />
@@ -12,75 +12,45 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
-  <body class="guide-page">
+  <body class="guide-page guide-page-interactive">
     <header>
       <div class="header-row">
         <div>
-          <h1 data-i18n="heading">初めての方向けガイド</h1>
-          <p data-i18n="subheading">公開 FFLogs ログを比較表示するまでの流れを、最短手順だけに絞ってまとめています。</p>
+          <h1 data-guide-text="heading">初めての方向けガイド</h1>
+          <p data-guide-text="subheading">公開 FFLogs ログを読み込み、比較結果へ進む流れをこのページ内で体験できます。</p>
         </div>
         <div class="header-actions">
-          <a class="button-link ghost tutorial-launch-btn" data-i18n="backBtn" data-i18n-href-ja="/" data-i18n-href-en="/?lang=en" href="/">比較ページへ戻る</a>
+          <a class="button-link ghost tutorial-launch-btn" data-guide-text="backBtn" data-guide-href-ja="/" data-guide-href-en="/?lang=en" href="/">比較ページへ戻る</a>
           <button id="langToggle" type="button" class="lang-btn">EN</button>
         </div>
       </div>
     </header>
 
-    <main class="guide-main">
-      <section class="card guide-hero">
-        <div class="guide-kicker">Quick Start</div>
-        <h2 data-i18n="heroTitle">まずは 3 ステップだけ覚えれば大丈夫です</h2>
-        <p data-i18n="heroBody">
-          このツールは、2つの FFLogs 公開ログ URL を読み込み、戦闘とプレイヤーを選んでタイムライン比較を行います。
-          FFLogs の連携や API 設定は不要です。
-        </p>
-        <div class="guide-actions">
-          <a class="button-link guide-primary" data-i18n="openAppBtn" data-i18n-href-ja="/" data-i18n-href-en="/?lang=en" href="/">比較ページを開く</a>
-          <a class="button-link ghost" data-i18n="openFFlogsBtn" data-i18n-href-ja="https://ja.fflogs.com/" data-i18n-href-en="https://www.fflogs.com/" href="https://ja.fflogs.com/" target="_blank" rel="noopener noreferrer">FFLogs を開く</a>
+    <main class="guide-main guide-interactive-main" data-guide-root>
+      <section class="guide-experience" aria-labelledby="guideStageTitle">
+        <div class="guide-progress" data-guide-progress aria-label="ガイドの進行状況"></div>
+
+        <div class="guide-stage" data-guide-stage aria-live="polite">
+          <div class="guide-stage-shell">
+            <section class="guide-copy-panel" data-guide-copy>
+              <div class="guide-kicker">Quick Start</div>
+              <h2 id="guideStageTitle">ガイドを読み込み中です</h2>
+              <p>しばらくお待ちください。</p>
+            </section>
+            <section class="guide-workspace" data-guide-workspace>
+              <p class="guide-loading">Loading...</p>
+            </section>
+          </div>
         </div>
-      </section>
 
-      <section class="guide-grid">
-        <article class="card guide-step-card">
-          <div class="guide-step-no">1</div>
-          <h2 data-i18n="step1Title">公開ログ URL を 2 つ貼る</h2>
-          <p data-i18n="step1Body">トップページの <strong>ログURL A</strong> と <strong>ログURL B</strong> に、比較したい FFLogs レポート URL を 1 つずつ入力して <strong>読み込み開始</strong> を押します。</p>
-          <p class="guide-note" data-i18n="step1Note">非公開ログは取得できません。FF Logs 側で公開されているレポートのみ対応です。</p>
-        </article>
-
-        <article class="card guide-step-card">
-          <div class="guide-step-no">2</div>
-          <h2 data-i18n="step2Title">戦闘を選んでプレイヤー一覧を取得する</h2>
-          <p data-i18n="step2Body">A と B それぞれで比較したい戦闘を選び、<strong>この戦闘でプレイヤー一覧を取得</strong> を押します。</p>
-          <p class="guide-note" data-i18n="step2Note">ここでは Kill 戦闘のみ一覧に出ます。同じコンテンツ同士を選ぶと比較しやすいです。</p>
-        </article>
-
-        <article class="card guide-step-card">
-          <div class="guide-step-no">3</div>
-          <h2 data-i18n="step3Title">プレイヤーを選んで比較する</h2>
-          <p data-i18n="step3Body">A と B のプレイヤーを 1 人ずつ選び、<strong>比較を開始</strong> を押すとタイムライン比較が表示されます。</p>
-          <p class="guide-note" data-i18n="step3Note">比較後はタブ切替、フェーズ選択、ズーム、ログ確認が使えます。</p>
-        </article>
-      </section>
-
-      <section class="card guide-tips">
-        <h2 data-i18n="tipsTitle">つまずきやすい点</h2>
-        <ul class="guide-list">
-          <li data-i18n="tip1">FFLogs 側で非公開のレポートは読み込めません。</li>
-          <li data-i18n="tip2">プレイヤー一覧は、先に戦闘を選ばないと取得できません。</li>
-          <li data-i18n="tip3">異なるボス同士は比較できません。同じ encounter を選んでください。</li>
-          <li data-i18n="tip4">表示がおかしいときは Log / Error Log を確認すると原因を追いやすいです。</li>
-        </ul>
-      </section>
-
-      <section class="card guide-return-card">
-        <h2 data-i18n="returnTitle">準備できたら戻る</h2>
-        <p data-i18n="returnBody">手順を確認したら、下のボタンから比較ページに戻ってそのまま操作できます。</p>
-        <div class="guide-actions">
-          <a class="button-link guide-primary" data-i18n="backBtn" data-i18n-href-ja="/" data-i18n-href-en="/?lang=en" href="/">比較ページへ戻る</a>
+        <div class="guide-footer-actions">
+          <button class="guide-nav-button guide-nav-secondary" type="button" data-guide-prev>戻る</button>
+          <p class="guide-step-state" data-guide-state></p>
+          <button class="guide-nav-button guide-nav-primary" type="button" data-guide-next>次へ</button>
         </div>
       </section>
     </main>
+
     <footer>
       <div class="footer-legal">
         <small>FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD. All Rights Reserved. This is an unofficial fan tool, not affiliated with or endorsed by Square Enix.</small>
@@ -88,94 +58,8 @@
       </div>
       <small class="build-info" data-build-info>Version loading...</small>
     </footer>
+
     <script src="./scripts/shared/build-info.js"></script>
-    <script>
-(function () {
-  const LANG = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
-  document.documentElement.lang = LANG;
-
-  const T = {
-    ja: {
-      pageTitle: '初めての方向けガイド | FFXIV Skill Rotation Diff',
-      heading: '初めての方向けガイド',
-      subheading: '公開 FFLogs ログを比較表示するまでの流れを、最短手順だけに絞ってまとめています。',
-      backBtn: '比較ページへ戻る',
-      heroTitle: 'まずは 3 ステップだけ覚えれば大丈夫です',
-      heroBody: 'このツールは、2つの FFLogs 公開ログ URL を読み込み、戦闘とプレイヤーを選んでタイムライン比較を行います。FFLogs の連携や API 設定は不要です。',
-      openAppBtn: '比較ページを開く',
-      openFFlogsBtn: 'FFLogs を開く',
-      step1Title: '公開ログ URL を 2 つ貼る',
-      step1Body: 'トップページの ログURL A と ログURL B に、比較したい FFLogs レポート URL を 1 つずつ入力して 読み込み開始 を押します。',
-      step1Note: '非公開ログは取得できません。FF Logs 側で公開されているレポートのみ対応です。',
-      step2Title: '戦闘を選んでプレイヤー一覧を取得する',
-      step2Body: 'A と B それぞれで比較したい戦闘を選び、この戦闘でプレイヤー一覧を取得 を押します。',
-      step2Note: 'ここでは Kill 戦闘のみ一覧に出ます。同じコンテンツ同士を選ぶと比較しやすいです。',
-      step3Title: 'プレイヤーを選んで比較する',
-      step3Body: 'A と B のプレイヤーを 1 人ずつ選び、比較を開始 を押すとタイムライン比較が表示されます。',
-      step3Note: '比較後はタブ切替、フェーズ選択、ズーム、ログ確認が使えます。',
-      tipsTitle: 'つまずきやすい点',
-      tip1: 'FFLogs 側で非公開のレポートは読み込めません。',
-      tip2: 'プレイヤー一覧は、先に戦闘を選ばないと取得できません。',
-      tip3: '異なるボス同士は比較できません。同じ encounter を選んでください。',
-      tip4: '表示がおかしいときは Log / Error Log を確認すると原因を追いやすいです。',
-      returnTitle: '準備できたら戻る',
-      returnBody: '手順を確認したら、下のボタンから比較ページに戻ってそのまま操作できます。',
-    },
-    en: {
-      pageTitle: 'First-Time User Guide | FFXIV Skill Rotation Diff',
-      heading: 'First-Time User Guide',
-      subheading: 'A quick walkthrough for loading two public FFLogs reports and viewing the comparison timeline.',
-      backBtn: 'Back to App',
-      heroTitle: 'Just 3 steps to get started',
-      heroBody: 'This tool loads two public FFLogs report URLs, lets you pick a fight and players, and displays a side-by-side timeline comparison. No FFLogs account or API setup required.',
-      openAppBtn: 'Open the App',
-      openFFlogsBtn: 'Open FFLogs',
-      step1Title: 'Paste two public log URLs',
-      step1Body: 'Enter one FFLogs report URL in Log URL A and another in Log URL B on the main page, then click Load Reports.',
-      step1Note: 'Private reports cannot be loaded. Only public FFLogs reports are supported.',
-      step2Title: 'Select fights and load players',
-      step2Body: 'Choose the fight you want to compare for both A and B, then click Get Players for This Fight.',
-      step2Note: 'Only Kill fights appear in the list. Selecting the same encounter makes comparison easier.',
-      step3Title: 'Select players and compare',
-      step3Body: 'Pick one player from each log and click Start Comparison. The timeline view will appear.',
-      step3Note: 'After comparing, you can switch tabs, filter by phase, zoom, and inspect the debug log.',
-      tipsTitle: 'Common pitfalls',
-      tip1: 'Private FFLogs reports cannot be loaded.',
-      tip2: 'You must select a fight before the player list can be fetched.',
-      tip3: 'Different bosses cannot be compared. Select the same encounter on both sides.',
-      tip4: 'If something looks wrong, check the Log / Error Log panel for details.',
-      returnTitle: 'Ready to start?',
-      returnBody: 'Head back to the app and give it a try.',
-    },
-  };
-
-  const t = T[LANG];
-
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[data-i18n]').forEach(function (el) {
-      const key = el.getAttribute('data-i18n');
-      if (t[key] !== undefined) {
-        if (el.tagName === 'TITLE') {
-          document.title = t[key];
-        } else {
-          el.textContent = t[key];
-        }
-      }
-      const hrefKey = 'data-i18n-href-' + LANG;
-      if (el.hasAttribute(hrefKey)) el.href = el.getAttribute(hrefKey);
-    });
-
-    const btn = document.getElementById('langToggle');
-    if (btn) {
-      btn.textContent = LANG === 'ja' ? 'EN' : 'JA';
-      btn.addEventListener('click', function () {
-        const url = new URL(location.href);
-        url.searchParams.set('lang', LANG === 'ja' ? 'en' : 'ja');
-        location.href = url.toString();
-      });
-    }
-  });
-})();
-    </script>
+    <script src="./scripts/app/tutorial-page.js?v=20260423-4" defer></script>
   </body>
 </html>

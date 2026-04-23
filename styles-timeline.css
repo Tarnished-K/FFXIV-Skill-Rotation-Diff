@@ -32,6 +32,41 @@
   left: 0;
   right: 0;
   border-bottom: 1px dashed rgba(105, 146, 185, 0.24);
+  z-index: 0;
+}
+
+.timeline-grid-line {
+  position: absolute;
+  z-index: 0;
+  width: 1px;
+  background: rgba(105, 146, 185, 0.08);
+  pointer-events: none;
+}
+
+.timeline-grid-line.five {
+  background: rgba(105, 146, 185, 0.14);
+}
+
+.timeline-grid-line.ten {
+  background: rgba(123, 198, 255, 0.2);
+}
+
+.lane-guide-line {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(105, 146, 185, 0.26), rgba(105, 146, 185, 0.16), transparent);
+  pointer-events: none;
+}
+
+.lane-guide-line.a {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.3), rgba(105, 146, 185, 0.16), transparent);
+}
+
+.lane-guide-line.b {
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.3), rgba(105, 146, 185, 0.16), transparent);
 }
 
 .player-label {
@@ -151,6 +186,7 @@
 
 .tick {
   position: absolute;
+  z-index: 2;
   top: 0;
   width: 1px;
   background: var(--border-default);

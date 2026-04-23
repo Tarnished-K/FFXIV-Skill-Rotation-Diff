@@ -402,6 +402,29 @@ function renderTimeline() {
     return marks.join('');
   };
 
+  const buildTimelineGrid = () => {
+    const lines = [];
+    const height = totalHeight - rulerTop;
+    for (let sec = 0; sec <= Math.ceil(maxT); sec++) {
+      const x = 60 + sec * pxPerSec;
+      const level = sec % 10 === 0 ? 'ten' : sec % 5 === 0 ? 'five' : 'one';
+      lines.push(`<div class="timeline-grid-line ${level}" style="left:${x}px; top:${rulerTop}px; height:${height}px"></div>`);
+    }
+    return lines.join('');
+  };
+
+  const buildLaneGuides = () => {
+    const lines = [
+      { key: 'a_ogcd', owner: 'a' },
+      { key: 'a_gcd', owner: 'a' },
+      { key: 'b_ogcd', owner: 'b' },
+      { key: 'b_gcd', owner: 'b' },
+    ];
+    return lines.map(({ key, owner }) => (
+      `<div class="lane-guide-line ${owner}" style="top:${laneTop[key] + 23}px"></div>`
+    )).join('');
+  };
+
   const buildBuffOverlays = (records, owner) => {
     const overlays = [];
     const baseTop = owner === 'a' ? trackATop : trackBTop;
@@ -487,6 +510,7 @@ function renderTimeline() {
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px; height:${totalHeight}px">
       ${buildDpsGraph()}
+      ${buildTimelineGrid()}
       ${buildRulerAtTop()}
       <div class="player-label player-label-a" style="top:${playerAStart - 4}px">${labelA}</div>
       <div class="lane-label" style="top:${laneTop.a_ogcd + 12}px">${t('laneAbility')}</div>
@@ -498,6 +522,7 @@ function renderTimeline() {
       <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track b" style="top:${trackBTop}px; height:${trackBHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">${t('laneGcd')}</div>
+      ${buildLaneGuides()}
       ${buildBuffOverlays(b, 'b')}
       ${buildEvents(a, 'a', state.partyBuffsA)}
       ${buildEvents(b, 'b', state.partyBuffsB)}

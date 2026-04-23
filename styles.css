@@ -72,6 +72,69 @@
     grid-column: 1 / -1;
   }
 
+  .guide-interactive-main {
+    width: min(calc(100vw - 24px), 1180px);
+  }
+
+  .guide-experience {
+    padding: 16px;
+  }
+
+  .guide-progress {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .guide-stage {
+    min-height: 0;
+  }
+
+  .guide-stage-shell {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .guide-copy-panel {
+    min-height: 0;
+    padding: 2px 0 0;
+  }
+
+  .guide-copy-panel h2 {
+    max-width: none;
+    font-size: 25px;
+  }
+
+  .guide-copy-panel p {
+    max-width: none;
+  }
+
+  .guide-workspace,
+  .guide-sample-board,
+  .guide-result-board,
+  .guide-form-window {
+    min-height: 0;
+  }
+
+  .guide-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-pointer {
+    display: none;
+  }
+
+  .guide-footer-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-step-state {
+    order: -1;
+    text-align: left;
+  }
+
+  .guide-nav-button {
+    width: 100%;
+  }
+
   .analytics-metric-card,
   .analytics-secondary-grid .analytics-secondary-card,
   .analytics-split-grid .analytics-table-card {
@@ -113,6 +176,41 @@
 
   .tutorial-actions {
     flex-direction: column;
+  }
+
+  .guide-progress {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .guide-timeline-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .guide-mini-tabs,
+  .guide-result-controls {
+    width: 100%;
+  }
+
+  .guide-mini-tabs span,
+  .guide-result-controls span,
+  .guide-result-controls > strong {
+    flex: 1 1 auto;
+  }
+
+  .guide-zoom-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .guide-sample-board,
+  .guide-result-board,
+  .guide-form-window {
+    padding: 14px;
+  }
+
+  .guide-demo-timeline {
+    width: 760px;
   }
 
   .event {

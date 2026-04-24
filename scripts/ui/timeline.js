@@ -229,6 +229,55 @@ function correlateDamage(timeline, damageEvents) {
     }
   }
 }
+
+function correlateHealing(timeline, healingEvents) {
+  const healingByAction = new Map();
+  for (const event of healingEvents || []) {
+    const key = event.actionId;
+    if (!healingByAction.has(key)) healingByAction.set(key, []);
+    healingByAction.get(key).push(event);
+  }
+  for (const event of timeline || []) {
+    const candidates = healingByAction.get(event.actionId) || [];
+    const matches = candidates.filter((healing) => Math.abs(healing.t - event.t) < 3);
+    if (!matches.length) continue;
+    event.healing = matches.reduce((sum, healing) => sum + Number(healing.amount || 0), 0);
+    event.overheal = matches.reduce((sum, healing) => sum + Number(healing.overheal || 0), 0);
+    for (const match of matches) {
+      const index = candidates.indexOf(match);
+      if (index !== -1) candidates.splice(index, 1);
+    }
+  }
+}
+
+function removeKnownNonDamageFollowupCasts(timeline) {
+  const followupNames = new Set([
+    'starprism',
+    'スタープリズム',
+    'quadrupletechnicalfinish',
+    'quadtechnicalfinish',
+    'クワッドテクニカルフィニッシュ',
+  ]);
+  const normalize = (value) => String(value || '').toLowerCase().replace(/[・･]/g, '').replace(/[^a-z0-9぀-ヿ一-龯]/g, '');
+  const hasDamage = (record) => Number(record?.damage || 0) > 0;
+  const output = [];
+  for (const record of timeline || []) {
+    const nameKey = normalize(record.label || record.action);
+    const isTarget = followupNames.has(nameKey);
+    const previous = output[output.length - 1];
+    const previousNameKey = normalize(previous?.label || previous?.action);
+    const isNonDamageFollowup =
+      isTarget
+      && !hasDamage(record)
+      && previous
+      && previousNameKey === nameKey
+      && hasDamage(previous)
+      && Math.abs(Number(record.t || 0) - Number(previous.t || 0)) <= 1.5;
+    if (isNonDamageFollowup) continue;
+    output.push(record);
+  }
+  return output;
+}
 function mergePhaseSets(phasesA, phasesB) {
   return mergePhaseSetsShared(phasesA, phasesB);
 }
@@ -590,6 +639,12 @@ function renderTimeline() {
         const ht = formatHitType(r.hitType, r.multistrike);
         if (ht) tooltip += ` (${ht})`;
       }
+      if (r.healing != null && r.healing > 0) {
+        tooltip += `\n${state.lang === 'ja' ? '回復' : 'Healing'}: ${r.healing.toLocaleString()}`;
+        if (r.overheal != null && r.overheal > 0) {
+          tooltip += ` (${state.lang === 'ja' ? 'オーバーヒール' : 'Overheal'}: ${r.overheal.toLocaleString()})`;
+        }
+      }
       const synergies = getActiveSynergies(r.t, records, partyBuffs);
       if (synergies.length) {
         tooltip += `\n${state.lang === 'ja' ? 'バフ' : 'Buffs'}: ${synergies.join(', ')}`;
@@ -692,12 +747,14 @@ Object.assign(globalThis, {
   classifyStats,
   computeRollingDps,
   correlateDamage,
+  correlateHealing,
   deduplicateTimeline,
   detectPhases,
   fetchPlayerAurasV2,
   mergePhaseSets,
   renderPhaseButtons,
   renderTimeline,
+  removeKnownNonDamageFollowupCasts,
   scrollTimelineToPhase,
 });
 

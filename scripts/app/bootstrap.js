@@ -23,6 +23,8 @@ function resetComparisonData() {
   state.timelineCountB = 0;
   state.damageA = [];
   state.damageB = [];
+  state.healingA = [];
+  state.healingB = [];
   state.partyBuffsA = [];
   state.partyBuffsB = [];
   state.rollingDpsA = [];
@@ -441,11 +443,13 @@ async function handleCompare(options = {}) {
 
   el.step2Message.textContent = t('tlLoading');
   try {
-    const [tlA, tlB, dmgA, dmgB, synergiesA, synergiesB] = await Promise.all([
+    const [tlA, tlB, dmgA, dmgB, healA, healB, synergiesA, synergiesB] = await Promise.all([
       fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job),
       fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job),
       fetchPlayerDamageV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
       fetchPlayerDamageV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
+      fetchPlayerHealingV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
+      fetchPlayerHealingV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
       fetchPartySynergyCastsV2(state.urlA.reportId, fightA, state.playersA, Number(state.selectedA.id)),
       fetchPartySynergyCastsV2(state.urlB.reportId, fightB, state.playersB, Number(state.selectedB.id)),
     ]);
@@ -453,11 +457,18 @@ async function handleCompare(options = {}) {
     state.timelineB = deduplicateTimeline(tlB);
     state.damageA = dmgA;
     state.damageB = dmgB;
+    state.healingA = healA;
+    state.healingB = healB;
     state.partyBuffsA = synergiesA;
     state.partyBuffsB = synergiesB;
     correlateDamage(state.timelineA, state.damageA);
     correlateDamage(state.timelineB, state.damageB);
+    correlateHealing(state.timelineA, state.healingA);
+    correlateHealing(state.timelineB, state.healingB);
+    state.timelineA = removeKnownNonDamageFollowupCasts(state.timelineA);
+    state.timelineB = removeKnownNonDamageFollowupCasts(state.timelineB);
     logDebug(`ダメージイベント: A=${dmgA.length}件 B=${dmgB.length}件`);
+    logDebug(`ヒールイベント: A=${healA.length}件 B=${healB.length}件`);
     logDebug(`PTシナジー: A=${synergiesA.length} B=${synergiesB.length}`);
 
     const maxT = Math.max(1, ...state.timelineA.map(x => x.t), ...state.timelineB.map(x => x.t));

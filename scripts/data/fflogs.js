@@ -483,6 +483,44 @@ async function fetchPlayerDamageV2(reportCode, fight, sourceId) {
   return all;
 }
 
+async function fetchPlayerHealingV2(reportCode, fight, sourceId) {
+  const all = [];
+  let startTime = null;
+  const query = `
+    query PlayerHealing($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: Healing, fightIDs: [$fightID], sourceID: $sourceID, startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), sourceID: Number(sourceId), startTime };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    for (const e of rows) {
+      const actionId = Number(e?.abilityGameID || e?.ability?.guid || 0);
+      const ts = Number(e?.timestamp || 0);
+      if (!actionId || !ts) continue;
+      const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      all.push({
+        t,
+        actionId,
+        amount: Number(e?.amount || 0),
+        overheal: Number(e?.overheal || 0),
+      });
+    }
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+  return all;
+}
+
 const PARTY_SYNERGY_ACTIONS = [
   { ids: [7396], nameEn: 'Brotherhood', nameJa: '桃園結義', duration: 20, color: '#f472b6' },
   { ids: [7398], nameEn: 'Battle Litany', nameJa: 'バトルリタニー', duration: 20, color: '#60a5fa' },
@@ -499,7 +537,7 @@ const PARTY_SYNERGY_ACTIONS = [
   },
   { ids: [25801], nameEn: 'Searing Light', nameJa: 'シアリングライト', duration: 20, color: '#fcd34d' },
   { ids: [7520], nameEn: 'Embolden', nameJa: 'エンボルデン', duration: 20, color: '#f87171' },
-  { ids: [34681], nameEn: 'Starry Muse', nameJa: 'イマジンスカイ', duration: 20, color: '#38bdf8', aliases: ['Imagined Sky', 'スターリーミューズ'] },
+  { ids: [], nameEn: 'Starry Muse', nameJa: 'イマジンスカイ', duration: 20, color: '#38bdf8', aliases: ['Imagined Sky', 'スターリーミューズ'] },
   { ids: [16552], nameEn: 'Divination', nameJa: 'ディヴィネーション', duration: 20, color: '#fbbf24' },
   { ids: [36871], nameEn: 'Dokumori', nameJa: '毒盛の術', duration: 20, color: '#86efac' },
   { ids: [7436], nameEn: 'Chain Stratagem', nameJa: '連環計', duration: 20, color: '#a78bfa' },
@@ -606,6 +644,7 @@ Object.assign(globalThis, {
   shouldShowUltimatePhaseSelector,
   fetchFightDpsV2,
   fetchPlayerDamageV2,
+  fetchPlayerHealingV2,
   fetchPlayerTimelineV2,
   fetchPartySynergyCastsV2,
 });

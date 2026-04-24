@@ -27,7 +27,7 @@ const BURST_BUFFS = [
   { ids: [25801], nameEn: 'Searing Light',     nameJa: 'シアリングライト',     duration: 20, color: '#fcd34d' },
   { ids: [25785], nameEn: 'Radiant Finale',    nameJa: '光神のフィナーレ',     duration: 20, color: '#fb923c' },
   { ids: [118, 25786], nameEn: 'Battle Voice',  nameJa: 'バトルボイス',         duration: 20, color: '#a3e635' },
-  { ids: [34681], nameEn: 'Starry Muse',       nameJa: 'イマジンスカイ',       duration: 20, color: '#38bdf8' },
+  { ids: [], nameEn: 'Starry Muse',       nameJa: 'イマジンスカイ',       duration: 20, color: '#38bdf8' },
   { ids: [36871], nameEn: 'Dokumori',          nameJa: '毒盛り',             duration: 20, color: '#86efac' },
 ];
 
@@ -252,6 +252,8 @@ const state = {
   zoom: 2.5,
   damageA: [],
   damageB: [],
+  healingA: [],
+  healingB: [],
   partyBuffsA: [],
   partyBuffsB: [],
   rollingDpsA: [],

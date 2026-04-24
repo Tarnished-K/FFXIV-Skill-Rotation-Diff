@@ -358,7 +358,7 @@
   border: 1px solid var(--color-border, #333);
   border-radius: 8px;
   padding: 24px;
-  width: min(420px, 90vw);
+  width: min(460px, 92vw);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -409,6 +409,7 @@
   font-size: 1rem;
   cursor: pointer;
   font-weight: bold;
+  white-space: nowrap;
 }
 .auth-submit-btn:disabled {
   opacity: 0.6;
@@ -437,16 +438,21 @@
   font-size: 0.95rem;
   cursor: pointer;
   font-weight: bold;
+  white-space: nowrap;
 }
 .auth-switch-text {
   font-size: 0.85rem;
   text-align: center;
   color: #aaa;
   margin: 0;
+  line-height: 1.7;
 }
 .auth-switch-text a {
+  display: inline-block;
+  min-width: 4.5em;
   color: var(--color-accent, #4f8ef7);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 /* ===== サポーターページ ===== */

@@ -148,6 +148,8 @@ function loadCompareHarness(options = {}) {
     rollingDpsB: [],
     damageA: [],
     damageB: [],
+    healingA: [],
+    healingB: [],
     partyBuffsA: [],
     partyBuffsB: [],
     phases: [],
@@ -280,6 +282,8 @@ function loadCompareHarness(options = {}) {
       state.timelineB = [];
       state.damageA = [];
       state.damageB = [];
+      state.healingA = [];
+      state.healingB = [];
       state.partyBuffsA = [];
       state.partyBuffsB = [];
       state.rollingDpsA = [];
@@ -306,9 +310,11 @@ function loadCompareHarness(options = {}) {
     },
     fetchPlayerTimelineV2: async () => ([{ t: 10, action: 'Slice', actionId: 1, category: 'ability' }]),
     fetchPlayerDamageV2: async () => ([{ t: 10, amount: 100 }]),
+    fetchPlayerHealingV2: async () => ([]),
     fetchPlayerAurasV2: async () => ([]),
     deduplicateTimeline: (timeline) => timeline,
     correlateDamage() {},
+    correlateHealing() {},
     computeRollingDps() {
       return [];
     },
@@ -343,9 +349,11 @@ function loadCompareHarness(options = {}) {
     getSavageFloorFromName = globalThis.__mocks.getSavageFloorFromName;
     fetchPlayerTimelineV2 = globalThis.__mocks.fetchPlayerTimelineV2;
     fetchPlayerDamageV2 = globalThis.__mocks.fetchPlayerDamageV2;
+    fetchPlayerHealingV2 = globalThis.__mocks.fetchPlayerHealingV2;
     fetchPlayerAurasV2 = globalThis.__mocks.fetchPlayerAurasV2;
     deduplicateTimeline = globalThis.__mocks.deduplicateTimeline;
     correlateDamage = globalThis.__mocks.correlateDamage;
+    correlateHealing = globalThis.__mocks.correlateHealing;
     computeRollingDps = globalThis.__mocks.computeRollingDps;
     shouldShowUltimatePhaseSelector = globalThis.__mocks.shouldShowUltimatePhaseSelector;
     buildFightPhasesFromFFLogs = globalThis.__mocks.buildFightPhasesFromFFLogs;

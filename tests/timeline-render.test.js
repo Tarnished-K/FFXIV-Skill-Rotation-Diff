@@ -141,12 +141,14 @@ function loadTimelineHarness() {
   context.globalThis = context;
 
   vm.createContext(context);
-  vm.runInContext(`${source}\nmodule.exports = { renderTimeline, bindTimelineInteractions, __findSelfBuff: findSelfBuff };`, context);
+  vm.runInContext(`${source}\nmodule.exports = { renderTimeline, bindTimelineInteractions, __findSelfBuff: findSelfBuff, correlateHealing, removeKnownNonDamageFollowupCasts };`, context);
 
   return {
     renderTimeline: context.module.exports.renderTimeline,
     bindTimelineInteractions: context.module.exports.bindTimelineInteractions,
+    correlateHealing: context.module.exports.correlateHealing,
     findSelfBuff: context.module.exports.__findSelfBuff,
+    removeKnownNonDamageFollowupCasts: context.module.exports.removeKnownNonDamageFollowupCasts,
     timelineWrap,
     context,
   };
@@ -267,5 +269,41 @@ describe('timeline helper delegation', () => {
         selfBuffs: context.SELF_BUFFS,
       },
     ]);
+  });
+});
+
+describe('removeKnownNonDamageFollowupCasts', () => {
+  it('removes known no-damage follow-up casts after a damaging cast', () => {
+    const { removeKnownNonDamageFollowupCasts } = loadTimelineHarness();
+    const records = [
+      { t: 10, action: 'Star Prism', label: 'スタープリズム', damage: 1000 },
+      { t: 10.8, action: 'Star Prism', label: 'スタープリズム' },
+      { t: 20, action: 'Quadruple Technical Finish', label: 'クワッド・テクニカルフィニッシュ', damage: 1000 },
+      { t: 20.9, action: 'Quadruple Technical Finish', label: 'クワッド・テクニカルフィニッシュ' },
+      { t: 30, action: 'Star Prism', label: 'スタープリズム' },
+    ];
+
+    expect(removeKnownNonDamageFollowupCasts(records)).toEqual([
+      records[0],
+      records[2],
+      records[4],
+    ]);
+  });
+});
+
+describe('correlateHealing', () => {
+  it('adds nearby healing totals to matching timeline events', () => {
+    const { correlateHealing } = loadTimelineHarness();
+    const timeline = [{ t: 10, actionId: 100, action: 'Star Prism' }];
+    const healing = [
+      { t: 10.1, actionId: 100, amount: 1200, overheal: 300 },
+      { t: 10.2, actionId: 100, amount: 800, overheal: 0 },
+      { t: 15, actionId: 100, amount: 999 },
+    ];
+
+    correlateHealing(timeline, healing);
+
+    expect(timeline[0].healing).toBe(2000);
+    expect(timeline[0].overheal).toBe(300);
   });
 });

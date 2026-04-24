@@ -223,7 +223,9 @@ function buildBookmarkTitleFromData(data = {}, useCurrentFallback = false) {
 
 function getBookmarkDisplayParts(bookmark) {
   const data = bookmark?.data || {};
-  const rawTitle = String(bookmark?.title || buildBookmarkTitleFromData(data) || '比較ブックマーク');
+  const autoTitle = buildBookmarkTitleFromData(data) || '比較ブックマーク';
+  const rawTitle = String(bookmark?.title || autoTitle);
+  const hasCustomTitle = Boolean(bookmark?.title && rawTitle !== autoTitle);
   const titleParts = rawTitle.split(' / ');
   const fallbackContent = titleParts.length > 1 ? titleParts[0] : '';
   const fallbackPlayers = titleParts.length > 1 ? titleParts.slice(1).join(' / ') : rawTitle;
@@ -233,7 +235,8 @@ function getBookmarkDisplayParts(bookmark) {
     ? `${data.playerNameA || 'A'}${jobA} vs ${data.playerNameB || 'B'}${jobB}`
     : fallbackPlayers;
   return {
-    content: data.contentName || fallbackContent || rawTitle,
+    title: hasCustomTitle ? rawTitle : (data.contentName || fallbackContent || rawTitle),
+    content: hasCustomTitle ? (data.contentName || fallbackContent || '') : '',
     players,
   };
 }
@@ -596,11 +599,17 @@ async function saveCurrentBookmark() {
   if (el.saveBookmarkBtn) el.saveBookmarkBtn.disabled = true;
   try {
     const bookmarkData = buildCurrentBookmarkData();
+    const automaticTitle = buildBookmarkTitleFromData(bookmarkData, true);
+    const inputTitle = typeof window.prompt === 'function'
+      ? window.prompt(t('bookmarkNamePrompt'), automaticTitle)
+      : automaticTitle;
+    if (inputTitle === null) return;
+    const title = String(inputTitle || '').trim() || automaticTitle;
     const res = await bookmarkFetch('/api/bookmarks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: buildBookmarkTitleFromData(bookmarkData, true),
+        title,
         data: bookmarkData,
       }),
     });
@@ -650,12 +659,14 @@ function renderBookmarkList(bookmarks) {
     return `
       <div class="bookmark-item" data-bookmark-id="${bookmark.id}">
         <div class="bookmark-item-meta">
-          <strong>${escapeHtml(display.content)}</strong>
+          <strong>${escapeHtml(display.title)}</strong>
+          ${display.content ? `<span class="bookmark-content">${escapeHtml(t('bookmarkContent') + display.content)}</span>` : ''}
           <span class="bookmark-players">${escapeHtml(display.players)}</span>
           <span>${escapeHtml(t('bookmarkSavedAt') + created)}</span>
         </div>
         <div class="bookmark-item-actions">
           <a class="button-link ghost bookmark-open-link" href="${escapeHtml(href)}">${escapeHtml(t('bookmarkOpen'))}</a>
+          <button type="button" class="bookmark-edit-btn" data-edit-bookmark="${bookmark.id}" data-bookmark-title="${escapeHtml(bookmark.title || display.title)}">${escapeHtml(t('bookmarkEdit'))}</button>
           <button type="button" class="bookmark-delete-btn" data-delete-bookmark="${bookmark.id}">${escapeHtml(t('bookmarkDelete'))}</button>
         </div>
       </div>
@@ -682,6 +693,32 @@ async function loadBookmarks() {
     setBookmarkMessage('');
   } catch (error) {
     setBookmarkMessage(error.message || t('bookmarkListFailed'));
+  }
+}
+
+async function renameBookmark(id, currentTitle = '') {
+  if (!id) return;
+  const nextTitle = typeof window.prompt === 'function'
+    ? window.prompt(t('bookmarkRenamePrompt'), currentTitle)
+    : currentTitle;
+  if (nextTitle === null) return;
+  const title = String(nextTitle || '').trim();
+  if (!title) return;
+  setBookmarkMessage(t('bookmarkLoading'));
+  try {
+    const res = await bookmarkFetch('/api/bookmarks?id=' + encodeURIComponent(id), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || t('bookmarkRenameFailed'));
+    }
+    await loadBookmarks();
+    showToast(t('bookmarkRenamed'));
+  } catch (error) {
+    setBookmarkMessage(error.message || t('bookmarkRenameFailed'));
   }
 }
 
@@ -806,6 +843,11 @@ bindClick(el.showBookmarksBtn, 'showBookmarksBtn', loadBookmarks);
 bindClick(el.bookmarkModalCloseBtn, 'bookmarkModalCloseBtn', closeBookmarkModal);
 bindClick(el.bookmarkModalBackdrop, 'bookmarkModalBackdrop', closeBookmarkModal);
 el.bookmarkList?.addEventListener('click', (event) => {
+  const editButton = event.target.closest('[data-edit-bookmark]');
+  if (editButton) {
+    renameBookmark(editButton.getAttribute('data-edit-bookmark'), editButton.getAttribute('data-bookmark-title') || '');
+    return;
+  }
   const deleteButton = event.target.closest('[data-delete-bookmark]');
   if (deleteButton) {
     deleteBookmark(deleteButton.getAttribute('data-delete-bookmark'));

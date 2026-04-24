@@ -269,6 +269,19 @@
   color: var(--gold-light);
 }
 
+.status-upgrade-link {
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--teal-light);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.status-upgrade-link:hover {
+  text-decoration: underline;
+}
+
 .header-status-area:empty,
 .header-usage-area:empty {
   display: none;
@@ -366,13 +379,23 @@
 .auth-modal-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  padding-right: 34px;
 }
 .auth-modal-head h2 {
   margin: 0;
   font-size: 1.1rem;
 }
 .auth-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
   background: none;
   border: none;
   font-size: 1.4rem;
@@ -634,6 +657,10 @@
   font-size: 13px;
 }
 
+.bookmark-content {
+  color: var(--text-secondary);
+}
+
 .bookmark-item-actions {
   display: inline-flex;
   align-items: center;
@@ -642,12 +669,20 @@
 }
 
 .bookmark-open-link,
+.bookmark-edit-btn,
 .bookmark-delete-btn {
   width: auto;
   min-width: 64px;
   margin-top: 0;
   padding: 7px 10px;
   font-size: 12px;
+}
+
+.bookmark-edit-btn {
+  border: 1px solid rgba(110, 231, 216, 0.22);
+  border-radius: 999px;
+  background: rgba(45, 181, 163, 0.1);
+  color: var(--teal-light);
 }
 
 .bookmark-delete-btn {

@@ -111,8 +111,15 @@ function renderHeaderStatus(usageData) {
     container.textContent = '';
     return;
   }
-  container.textContent = authText('statusLabel', 'ステータス：') +
-    (usageData.isPremium ? authText('statusSupporter', 'サポーター') : authText('statusFree', '無料版'));
+  const label = authText('statusLabel', 'ステータス：');
+  if (usageData.isPremium) {
+    container.textContent = label + authText('statusSupporter', 'サポーター');
+    return;
+  }
+  container.innerHTML = escapeHtml(label + authText('statusFree', '無料版')) +
+    ' <a class="status-upgrade-link" href="/premium.html?feature=status">' +
+    escapeHtml(authText('statusUpgradeLink', 'サポーター登録')) +
+    '</a>';
 }
 
 function renderHeaderUsage(usageData) {

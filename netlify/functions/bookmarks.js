@@ -6,7 +6,7 @@ const JSON_HEADERS = {
   'Cache-Control': 'no-store',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
 };
 
 function json(statusCode, body) {
@@ -123,6 +123,34 @@ async function deleteBookmark(event, config, userId) {
   return json(200, { ok: true });
 }
 
+async function updateBookmark(event, config, userId) {
+  const id = event.queryStringParameters?.id || new URLSearchParams(event.rawQuery || '').get('id');
+  if (!id || !/^\d+$/.test(id)) return json(400, { ok: false, error: 'Bookmark id is required.' });
+  let payload;
+  try {
+    payload = JSON.parse(event.body || '{}');
+  } catch {
+    return json(400, { ok: false, error: 'Invalid JSON.' });
+  }
+  const title = String(payload.title || '').trim().slice(0, 120);
+  if (!title) return json(400, { ok: false, error: 'Bookmark title is required.' });
+  const url = new URL(`${config.url}/rest/v1/comparison_bookmarks`);
+  url.searchParams.set('id', `eq.${id}`);
+  url.searchParams.set('user_id', `eq.${userId}`);
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: serviceHeaders(config, {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Prefer: 'return=representation',
+    }),
+    body: JSON.stringify({ title }),
+  });
+  const rows = await res.json().catch(() => []);
+  if (!res.ok) return json(res.status, { ok: false, error: 'Failed to update bookmark.' });
+  return json(200, { ok: true, bookmark: Array.isArray(rows) ? rows[0] : null });
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: JSON_HEADERS, body: '' };
@@ -132,6 +160,7 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'GET') return listBookmarks(auth.config, auth.userId);
   if (event.httpMethod === 'POST') return createBookmark(event, auth.config, auth.userId);
+  if (event.httpMethod === 'PATCH') return updateBookmark(event, auth.config, auth.userId);
   if (event.httpMethod === 'DELETE') return deleteBookmark(event, auth.config, auth.userId);
   return json(405, { ok: false, error: 'Method Not Allowed' });
 };

@@ -310,6 +310,7 @@ function loadCompareHarness(options = {}) {
     },
     fetchPlayerTimelineV2: async () => ([{ t: 10, action: 'Slice', actionId: 1, category: 'ability' }]),
     fetchPlayerDamageV2: async () => ([{ t: 10, amount: 100 }]),
+    fetchPartyDamageV2: async () => ([{ t: 10, amount: 100 }]),
     fetchPlayerHealingV2: async () => ([]),
     fetchPlayerAurasV2: async () => ([]),
     deduplicateTimeline: (timeline) => timeline,
@@ -349,6 +350,7 @@ function loadCompareHarness(options = {}) {
     getSavageFloorFromName = globalThis.__mocks.getSavageFloorFromName;
     fetchPlayerTimelineV2 = globalThis.__mocks.fetchPlayerTimelineV2;
     fetchPlayerDamageV2 = globalThis.__mocks.fetchPlayerDamageV2;
+    fetchPartyDamageV2 = globalThis.__mocks.fetchPartyDamageV2;
     fetchPlayerHealingV2 = globalThis.__mocks.fetchPlayerHealingV2;
     fetchPlayerAurasV2 = globalThis.__mocks.fetchPlayerAurasV2;
     deduplicateTimeline = globalThis.__mocks.deduplicateTimeline;

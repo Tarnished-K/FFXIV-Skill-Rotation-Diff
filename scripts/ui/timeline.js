@@ -705,6 +705,152 @@ function renderTimeline() {
   bindTimelineInteractions();
 }
 
+function renderPartyTimeline() {
+  const wrap = el.timelineWrap;
+  if (!wrap) return;
+  const phaseA = getCurrentPhaseWindow('a');
+  const phaseB = getCurrentPhaseWindow('b');
+  const fightEndA = getFightDurationSec(state.fightA);
+  const fightEndB = getFightDurationSec(state.fightB);
+  const filterRecords = (records, owner) => {
+    let filtered = filterTimeline(records || [], state.currentTab);
+    const phase = owner === 'b' ? phaseB : phaseA;
+    if (phase) filtered = filtered.filter((record) => record.t >= phase.startT && record.t < phase.endT);
+    return filtered;
+  };
+  const rowsA = (state.partyTimelineA || []).map((row) => ({ ...row, records: filterRecords(row.records, 'a') }));
+  const rowsB = (state.partyTimelineB || []).map((row) => ({ ...row, records: filterRecords(row.records, 'b') }));
+  const maxT = Math.max(
+    1,
+    fightEndA,
+    fightEndB,
+    ...rowsA.flatMap((row) => row.records.map((record) => record.t)),
+    ...rowsB.flatMap((row) => row.records.map((record) => record.t)),
+  );
+  const pxPerSec = 16 * state.zoom;
+  const labelWidth = 118;
+  const xStart = labelWidth + 10;
+  const width = Math.max(1800, maxT * pxPerSec + xStart + 160);
+  const rulerTop = 8;
+  const groupLabelGap = 26;
+  const rowHeight = 40;
+  const graphHeight = 82;
+  const groupGap = graphHeight + 44;
+  const rowTopA = rulerTop + 28 + groupLabelGap;
+  const graphTop = rowTopA + rowsA.length * rowHeight + 24;
+  const rowTopB = graphTop + graphHeight + 34 + groupLabelGap;
+  const totalHeight = rowTopB + rowsB.length * rowHeight + 26;
+
+  const buildGrid = () => {
+    const parts = [];
+    for (let sec = 0; sec <= Math.ceil(maxT); sec++) {
+      const x = xStart + sec * pxPerSec;
+      const level = sec % 10 === 0 ? 'ten' : sec % 5 === 0 ? 'five' : 'one';
+      const label = sec % 5 === 0 ? `<span>${formatTimelineTime(sec)}</span>` : '';
+      parts.push(`<div class="timeline-grid-line ${level}" style="left:${x}px; top:${rulerTop}px; height:${totalHeight - rulerTop}px"></div>`);
+      parts.push(`<div class="tick ${level}" style="left:${x}px; top:${rulerTop}px">${label}</div>`);
+    }
+    return parts.join('');
+  };
+
+  const buildRowEvents = (records, top) => {
+    const lastBySlot = new Map();
+    const minGap = 14;
+    return records.map((record) => {
+      const baseX = xStart + record.t * pxPerSec;
+      const slot = Math.floor(record.t * 2);
+      const lastX = lastBySlot.get(slot) ?? -999;
+      const x = Math.max(baseX, lastX + minGap);
+      lastBySlot.set(slot, x);
+      const icon = record.icon || '';
+      const candidates = (record.iconCandidates || []).join('|');
+      const fallback = (record.label || record.action || '?').slice(0, 2).toUpperCase();
+      const title = `${formatTimelineTime(record.t)} ${record.label || record.action}`;
+      return `<div class="pt-event" style="left:${x}px; top:${top}px" title="${title}">${icon ? `<img class="event-icon" src="${icon}" data-fallbacks="${candidates}" alt="${record.label || record.action}" />` : `<span>${fallback}</span>`}</div>`;
+    }).join('');
+  };
+
+  const buildPartyDpsGraph = () => {
+    let dpsA = state.partyRollingDpsA || [];
+    let dpsB = state.partyRollingDpsB || [];
+    if (phaseA) dpsA = dpsA.filter((point) => point.t >= phaseA.startT && point.t <= phaseA.endT);
+    if (phaseB) dpsB = dpsB.filter((point) => point.t >= phaseB.startT && point.t <= phaseB.endT);
+    if (state.currentTab === 'odd') {
+      dpsA = dpsA.filter((point) => Math.floor(point.t / 60) % 2 === 1);
+      dpsB = dpsB.filter((point) => Math.floor(point.t / 60) % 2 === 1);
+    } else if (state.currentTab === 'even') {
+      dpsA = dpsA.filter((point) => Math.floor(point.t / 60) % 2 === 0 && point.t >= 60);
+      dpsB = dpsB.filter((point) => Math.floor(point.t / 60) % 2 === 0 && point.t >= 60);
+    }
+    if (!dpsA.length && !dpsB.length) return '';
+    const maxDps = Math.max(...dpsA.map((point) => point.dps), ...dpsB.map((point) => point.dps), 1);
+    const plotHeight = graphHeight - 18;
+    const yBase = graphTop + plotHeight + 8;
+    const points = (values) => values.map((point) => {
+      const x = xStart + point.t * pxPerSec;
+      const y = yBase - (point.dps / maxDps) * plotHeight;
+      return `${x},${y}`;
+    }).join(' ');
+    const maxLabel = maxDps >= 1000 ? `${Math.round(maxDps / 1000)}k` : String(Math.round(maxDps));
+    return `<svg class="pt-dps-graph" style="position:absolute; left:0; top:0; width:${width}px; height:${totalHeight}px; pointer-events:none; overflow:visible;">
+      <rect x="${xStart}" y="${graphTop}" width="${maxT * pxPerSec}" height="${graphHeight}" rx="6" fill="rgba(15, 23, 42, 0.48)" stroke="rgba(105, 146, 185, 0.14)" />
+      <text x="${xStart + 8}" y="${graphTop + 14}" fill="#94a3b8" font-size="10">PT DPS</text>
+      <text x="${xStart + 60}" y="${graphTop + 14}" fill="#38bdf8" font-size="10">Log A</text>
+      <text x="${xStart + 104}" y="${graphTop + 14}" fill="#f97316" font-size="10">Log B</text>
+      <text x="${xStart - 6}" y="${graphTop + 14}" text-anchor="end" fill="#64748b" font-size="9">${maxLabel}</text>
+      ${dpsA.length ? `<polyline points="${points(dpsA)}" fill="none" stroke="#38bdf8" stroke-width="1.6" opacity="0.86" />` : ''}
+      ${dpsB.length ? `<polyline points="${points(dpsB)}" fill="none" stroke="#f97316" stroke-width="1.6" opacity="0.86" />` : ''}
+    </svg>`;
+  };
+
+  const buildRows = (rows, owner, startTop) => rows.map((row, index) => {
+    const top = startTop + index * rowHeight;
+    const job = row.player?.job ? formatJobName(row.player.job) : '';
+    const label = `${job ? `${job} ` : ''}${row.player?.name || '-'}`;
+    return `
+      <div class="pt-row-label" style="top:${top + 5}px" title="${escapeHtml(label)}">${escapeHtml(label)}</div>
+      <div class="pt-row-line ${owner}" style="top:${top + 15}px"></div>
+      ${buildRowEvents(row.records, top + 2)}
+    `;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="timeline pt-timeline" style="width:${width}px; height:${totalHeight}px">
+      ${buildGrid()}
+      <div class="pt-group-label a" style="top:${rowTopA - groupLabelGap}px">Log A</div>
+      ${buildRows(rowsA, 'a', rowTopA)}
+      ${buildPartyDpsGraph()}
+      <div class="player-divider" style="top:${rowTopB - groupLabelGap - 14}px"></div>
+      <div class="pt-group-label b" style="top:${rowTopB - groupLabelGap}px">Log B</div>
+      ${buildRows(rowsB, 'b', rowTopB)}
+    </div>
+  `;
+  wrap.querySelectorAll('img.event-icon').forEach(img => {
+    const queue = (img.dataset.fallbacks || '').split('|').filter(Boolean);
+    const seen = new Set([img.getAttribute('src')]);
+    img.addEventListener('error', () => {
+      while (queue.length) {
+        const next = queue.shift();
+        if (!seen.has(next)) {
+          seen.add(next);
+          img.src = next;
+          return;
+        }
+      }
+      img.replaceWith(Object.assign(document.createElement('span'), { textContent: (img.alt || '?').slice(0, 2).toUpperCase() }));
+    });
+  });
+  bindTimelineInteractions();
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function renderPhaseButtons() {
   const container = el.phaseContainer;
   if (!container) return;
@@ -753,6 +899,7 @@ Object.assign(globalThis, {
   fetchPlayerAurasV2,
   mergePhaseSets,
   renderPhaseButtons,
+  renderPartyTimeline,
   renderTimeline,
   removeKnownNonDamageFollowupCasts,
   scrollTimelineToPhase,

@@ -104,6 +104,20 @@ function loadTimelineHarness() {
       partyBuffsB: [],
       rollingDpsA: [],
       rollingDpsB: [],
+      partyTimelineA: [
+        {
+          player: { id: '1', name: 'Alice', job: 'NIN' },
+          records: [{ t: 8, action: 'Mug', actionId: 3, category: 'ability', label: 'Mug' }],
+        },
+      ],
+      partyTimelineB: [
+        {
+          player: { id: '2', name: 'Bob', job: 'SAM' },
+          records: [{ t: 9, action: 'Meikyo Shisui', actionId: 4, category: 'ability', label: 'Meikyo Shisui' }],
+        },
+      ],
+      partyRollingDpsA: [{ t: 8, dps: 1000 }, { t: 10, dps: 1200 }],
+      partyRollingDpsB: [{ t: 8, dps: 900 }, { t: 10, dps: 1100 }],
       selectedA: { name: 'Player A', job: 'NIN' },
       selectedB: { name: 'Player B', job: 'SAM' },
       fightA: { startTime: 0, endTime: 30000 },
@@ -141,10 +155,11 @@ function loadTimelineHarness() {
   context.globalThis = context;
 
   vm.createContext(context);
-  vm.runInContext(`${source}\nmodule.exports = { renderTimeline, bindTimelineInteractions, __findSelfBuff: findSelfBuff, correlateHealing, removeKnownNonDamageFollowupCasts };`, context);
+  vm.runInContext(`${source}\nmodule.exports = { renderTimeline, renderPartyTimeline, bindTimelineInteractions, __findSelfBuff: findSelfBuff, correlateHealing, removeKnownNonDamageFollowupCasts };`, context);
 
   return {
     renderTimeline: context.module.exports.renderTimeline,
+    renderPartyTimeline: context.module.exports.renderPartyTimeline,
     bindTimelineInteractions: context.module.exports.bindTimelineInteractions,
     correlateHealing: context.module.exports.correlateHealing,
     findSelfBuff: context.module.exports.__findSelfBuff,
@@ -203,6 +218,21 @@ describe('renderTimeline', () => {
     expect(timelineWrap.innerHTML).toContain('synergy-lane-name');
     expect(timelineWrap.innerHTML).toContain('イマジンスカイ');
     expect(timelineWrap.innerHTML).toContain('バトルリタニー');
+  });
+});
+
+describe('renderPartyTimeline', () => {
+  it('renders compact party rows for both logs', () => {
+    const { renderPartyTimeline, timelineWrap } = loadTimelineHarness();
+
+    renderPartyTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('pt-group-label a');
+    expect(timelineWrap.innerHTML).toContain('pt-group-label b');
+    expect(timelineWrap.innerHTML).toContain('忍者 Alice');
+    expect(timelineWrap.innerHTML).toContain('侍 Bob');
+    expect(timelineWrap.innerHTML).toContain('pt-event');
+    expect(timelineWrap.innerHTML).toContain('PT DPS');
   });
 });
 

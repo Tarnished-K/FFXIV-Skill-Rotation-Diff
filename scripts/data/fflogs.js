@@ -483,6 +483,45 @@ async function fetchPlayerDamageV2(reportCode, fight, sourceId) {
   return all;
 }
 
+async function fetchPartyDamageV2(reportCode, fight) {
+  const all = [];
+  const friendlyIds = new Set((fight?.friendlyPlayers || []).map((id) => Number(id)));
+  let startTime = null;
+  const query = `
+    query PartyDamage($code: String!, $fightID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: DamageDone, fightIDs: [$fightID], startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), startTime };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    for (const e of rows) {
+      const sourceId = Number(e?.sourceID || e?.source?.id || 0);
+      if (friendlyIds.size && !friendlyIds.has(sourceId)) continue;
+      const actionId = Number(e?.abilityGameID || e?.ability?.guid || 0);
+      const ts = Number(e?.timestamp || 0);
+      if (!actionId || !ts) continue;
+      all.push({
+        t: Math.max(0, (ts - Number(fight.startTime || 0)) / 1000),
+        actionId,
+        amount: Number(e?.amount || 0),
+      });
+    }
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+  return all;
+}
+
 async function fetchPlayerHealingV2(reportCode, fight, sourceId) {
   const all = [];
   let startTime = null;
@@ -643,6 +682,7 @@ Object.assign(globalThis, {
   getSavageFloorFromName,
   shouldShowUltimatePhaseSelector,
   fetchFightDpsV2,
+  fetchPartyDamageV2,
   fetchPlayerDamageV2,
   fetchPlayerHealingV2,
   fetchPlayerTimelineV2,

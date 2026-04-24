@@ -416,6 +416,94 @@
   font-family: Bahnschrift, "Yu Gothic UI", sans-serif;
 }
 
+.pt-group-label {
+  position: absolute;
+  left: 6px;
+  z-index: 2;
+  padding: 3px 8px;
+  border: 1px solid rgba(123, 198, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(18, 43, 72, 0.72);
+  color: #d7ecff;
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.pt-group-label.a {
+  border-color: rgba(56, 189, 248, 0.34);
+  color: #7dd3fc;
+}
+
+.pt-group-label.b {
+  border-color: rgba(249, 115, 22, 0.34);
+  color: #fdba74;
+}
+
+.pt-row-label {
+  position: absolute;
+  left: 8px;
+  z-index: 2;
+  width: 92px;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pt-row-line {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(105, 146, 185, 0.22), rgba(105, 146, 185, 0.12), transparent);
+  pointer-events: none;
+}
+
+.pt-row-line.a {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.28), rgba(105, 146, 185, 0.12), transparent);
+}
+
+.pt-row-line.b {
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.28), rgba(105, 146, 185, 0.12), transparent);
+}
+
+.pt-event {
+  position: absolute;
+  z-index: 3;
+  width: 30px;
+  height: 30px;
+  overflow: hidden;
+  border: 1px solid rgba(123, 198, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(8, 15, 24, 0.96);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.28);
+}
+
+.pt-event img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 7px;
+}
+
+.pt-event span {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 8px;
+  font-weight: 700;
+}
+
 .debug-log {
   max-height: 220px;
   overflow: auto;

@@ -33,6 +33,13 @@ function resetComparisonData() {
   state.phasesB = [];
   state.phases = [];
   state.currentPhase = null;
+  state.timelineView = 'personal';
+  state.partyTimelineCacheKey = '';
+  state.partyTimelineA = [];
+  state.partyTimelineB = [];
+  state.partyRollingDpsA = [];
+  state.partyRollingDpsB = [];
+  state.partyTimelineLoading = false;
 }
 
 function setComparisonControlsDisabled(disabled) {
@@ -105,6 +112,14 @@ function setActiveTab(tab) {
   });
 }
 
+function setTimelineView(view) {
+  const nextView = view === 'party' ? 'party' : 'personal';
+  state.timelineView = nextView;
+  el.timelineViewBtns?.forEach((button) => {
+    button.classList.toggle('active', button.dataset.timelineView === nextView);
+  });
+}
+
 function setZoomLevel(zoom) {
   const numeric = Number(zoom);
   const nextZoom = Number.isFinite(numeric)
@@ -137,9 +152,83 @@ function applySharedViewState(shareState, options = {}) {
     renderPhaseButtons();
   }
   if (rerender && !state.compareError && !el.timelineWrap?.classList.contains('hidden') && state.timelineA.length) {
-    renderTimeline();
+    if (state.timelineView === 'party' && state.partyTimelineA.length && state.partyTimelineB.length) {
+      renderPartyTimeline();
+    } else {
+      renderTimeline();
+    }
     if (state.currentPhase) scrollTimelineToPhase(state.currentPhase);
   }
+}
+
+function buildPartyTimelineCacheKey() {
+  return [
+    state.urlA?.reportId || '',
+    state.urlB?.reportId || '',
+    state.selectedFightA || '',
+    state.selectedFightB || '',
+  ].join(':');
+}
+
+async function loadPartyTimelineComparison() {
+  if (!state.fightA || !state.fightB) return false;
+  const cacheKey = buildPartyTimelineCacheKey();
+  if (state.partyTimelineCacheKey === cacheKey && state.partyTimelineA.length && state.partyTimelineB.length) {
+    return true;
+  }
+  state.partyTimelineLoading = true;
+  if (el.step2Message) el.step2Message.textContent = t('partyTlLoading');
+  try {
+    const loadSide = async (reportId, fight, players) => Promise.all((players || []).map(async (player) => {
+      const records = await fetchPlayerTimelineV2(reportId, fight, Number(player.id), player.job);
+      return {
+        player,
+        records: deduplicateTimeline(records),
+      };
+    }));
+    const [partyA, partyB, partyDamageA, partyDamageB] = await Promise.all([
+      loadSide(state.urlA.reportId, state.fightA, state.playersA),
+      loadSide(state.urlB.reportId, state.fightB, state.playersB),
+      fetchPartyDamageV2(state.urlA.reportId, state.fightA),
+      fetchPartyDamageV2(state.urlB.reportId, state.fightB),
+    ]);
+    state.partyTimelineA = partyA;
+    state.partyTimelineB = partyB;
+    const maxT = Math.max(
+      1,
+      Math.max(0, (Number(state.fightA?.endTime || 0) - Number(state.fightA?.startTime || 0)) / 1000),
+      Math.max(0, (Number(state.fightB?.endTime || 0) - Number(state.fightB?.startTime || 0)) / 1000),
+      ...partyDamageA.map((event) => event.t),
+      ...partyDamageB.map((event) => event.t),
+    );
+    state.partyRollingDpsA = computeRollingDps(partyDamageA, maxT);
+    state.partyRollingDpsB = computeRollingDps(partyDamageB, maxT);
+    state.partyTimelineCacheKey = cacheKey;
+    if (el.step2Message) el.step2Message.textContent = t('partyTlLoaded')(partyA.length, partyB.length);
+    return true;
+  } catch (error) {
+    const formatter = t('partyTlLoadFailed');
+    if (el.step2Message) el.step2Message.textContent = typeof formatter === 'function'
+      ? formatter(error.message)
+      : error.message;
+    logError('PT比較TL取得エラー', { error: error.message });
+    return false;
+  } finally {
+    state.partyTimelineLoading = false;
+  }
+}
+
+async function activateTimelineView(view) {
+  setTimelineView(view);
+  if (!state.timelineA.length || !state.timelineB.length) return;
+  el.timelineWrap?.classList.remove('hidden');
+  if (state.timelineView === 'party') {
+    const ok = await loadPartyTimelineComparison();
+    if (!ok) return;
+    renderPartyTimeline();
+    return;
+  }
+  renderTimeline();
 }
 
 function syncShareStateUrl() {
@@ -565,6 +654,7 @@ async function handleCompare(options = {}) {
   }
   el.step4.classList.remove('hidden');
   setActiveTab('all');
+  setTimelineView('personal');
   renderPhaseButtons();
   renderComparisonError();
   if (!state.compareError) {
@@ -882,13 +972,15 @@ el.phaseContainer?.addEventListener('click', (event) => {
 });
 bindClick(el.zoomInBtn, 'zoomInBtn', () => {
   setZoomLevel(state.zoom + 0.25);
-  renderTimeline();
+  if (state.timelineView === 'party' && state.partyTimelineA.length && state.partyTimelineB.length) renderPartyTimeline();
+  else renderTimeline();
   syncShareStateUrl();
   logDebug('zoom in', {zoom: state.zoom});
 });
 bindClick(el.zoomOutBtn, 'zoomOutBtn', () => {
   setZoomLevel(state.zoom - 0.25);
-  renderTimeline();
+  if (state.timelineView === 'party' && state.partyTimelineA.length && state.partyTimelineB.length) renderPartyTimeline();
+  else renderTimeline();
   syncShareStateUrl();
   logDebug('zoom out', {zoom: state.zoom});
 });
@@ -896,8 +988,14 @@ el.tabs.forEach((tab, i) => {
   bindClick(tab, `tab-${i}`, () => {
     setActiveTab(tab.dataset.tab);
     el.timelineWrap.classList.remove('hidden');
-    renderTimeline();
+    if (state.timelineView === 'party' && state.partyTimelineA.length && state.partyTimelineB.length) renderPartyTimeline();
+    else renderTimeline();
     syncShareStateUrl();
+  });
+});
+el.timelineViewBtns?.forEach((button, i) => {
+  bindClick(button, `timeline-view-${i}`, () => {
+    activateTimelineView(button.dataset.timelineView);
   });
 });
 function applyLang() {
@@ -913,6 +1011,8 @@ function applyLang() {
   if (el.step3Title) el.step3Title.textContent = s.step3Title;
   if (el.compareBtn) el.compareBtn.textContent = s.compareBtn;
   if (el.step4Title) el.step4Title.textContent = s.step4Title;
+  if (el.personalTimelineViewBtn) el.personalTimelineViewBtn.textContent = s.personalTimelineView;
+  if (el.partyTimelineViewBtn) el.partyTimelineViewBtn.textContent = s.partyTimelineView;
   if (el.debugNormalTitle) el.debugNormalTitle.textContent = s.debugNormalTitle;
   if (el.debugErrorTitle) el.debugErrorTitle.textContent = s.debugErrorTitle;
   if (el.logUrlALabel) el.logUrlALabel.firstChild.textContent = s.logUrlA + ' ';
@@ -962,7 +1062,10 @@ function applyLang() {
     fillPlayerSelect(el.playerB, state.playersB, state.dpsDataB, fB ? (fB.endTime - fB.startTime) : 1);
   }
   renderComparisonError();
-  if (!el.timelineWrap.classList.contains('hidden') && state.timelineA.length) renderTimeline();
+  if (!el.timelineWrap.classList.contains('hidden') && state.timelineA.length) {
+    if (state.timelineView === 'party' && state.partyTimelineA.length && state.partyTimelineB.length) renderPartyTimeline();
+    else renderTimeline();
+  }
   if (state.tutorial.active) renderTutorial();
 }
 bindClick(el.langToggle, 'langToggle', () => {

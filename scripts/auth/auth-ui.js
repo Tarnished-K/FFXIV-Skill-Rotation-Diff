@@ -62,7 +62,11 @@ function renderHeaderAuth(user, usageData) {
   updateAdVisibility(Boolean(usageData?.isPremium));
   globalThis.updateBookmarkControls?.();
   if (globalThis.state?.timelineA?.length && !globalThis.el?.timelineWrap?.classList?.contains('hidden')) {
-    globalThis.renderTimeline?.();
+    if (globalThis.state.timelineView === 'party' && globalThis.state.partyTimelineA?.length && globalThis.state.partyTimelineB?.length) {
+      globalThis.renderPartyTimeline?.();
+    } else {
+      globalThis.renderTimeline?.();
+    }
   }
   if (!container) return;
 

@@ -1,6 +1,6 @@
-# Handoff Index
+# HANDOFF一覧
 
-Handoff documents are collected under `handoffs/`.
+引き継ぎメモは `handoffs/` に集約しています。
 
 - [handoffs/HANDOFF.md](handoffs/HANDOFF.md)
 - [handoffs/HANDOFF-V2.md](handoffs/HANDOFF-V2.md)

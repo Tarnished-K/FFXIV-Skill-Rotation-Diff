@@ -1,4 +1,6 @@
-# Handoff V2
+# HANDOFF V2
+
+このファイルは過去の引き継ぎ記録です。現在の要点は [HANDOFF-V4.md](HANDOFF-V4.md) を見てください。
 
 ## 前提
 

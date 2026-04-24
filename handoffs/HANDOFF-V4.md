@@ -1,34 +1,40 @@
-# Handoff V4
+# HANDOFF V4
 
-## Current State
+## 現在の状態
 
-- Branch: `feature/supporter-bookmarks-synergy-tl`
-- Latest commit: `be053e0 feat: add party timeline boss and debuff lanes`
-- Remote branch: `origin/feature/supporter-bookmarks-synergy-tl`
-- Latest preview: `https://69eba82d8f1a2232a7877e15--vermillion-crumble-a1f1aa.netlify.app`
+- ブランチ: `feature/supporter-bookmarks-synergy-tl`
+- 直近コミット: `be053e0 feat: add party timeline boss and debuff lanes`
+- リモート: `origin/feature/supporter-bookmarks-synergy-tl`
+- 直近プレビュー: `https://69eba82d8f1a2232a7877e15--vermillion-crumble-a1f1aa.netlify.app`
 
-## Completed
+## 完了した作業
 
-- PT comparison was turned into a supporter-only feature gate.
-- The PT comparison filter UI was added and moved into the dedicated custom modal.
-- Loading and compare actions are blocked during comparison startup, which prevents the null-name compare failure.
-- The PT timeline now shows boss cast lanes and player debuff lanes.
-- FFLogs fetching was fixed so boss casts use enemy hostility and debuffs are collected without the failing `targetID` filter.
-- The compare flow and timeline rendering tests were updated and `npm test` passed.
-- The branch was pushed successfully to the dedicated remote branch.
+- PT比較をサポーター専用機能にした
+- PT比較の絞り込みUIを追加し、専用カスタムモーダルへ移した
+- 比較開始中は読み込み系と比較操作をブロックし、`null.name` 系の比較失敗を防いだ
+- PTタイムラインにボス詠唱レーンとプレイヤーデバフレーンを追加した
+- FFLogs取得を修正し、ボス詠唱は敵対対象から取得、デバフは失敗していた `targetID` 条件を外して取得するようにした
+- 比較フローとタイムライン描画のテストを更新し、`npm test` を通した
+- 専用リモートブランチへの push まで完了した
 
-## Incomplete
+## 未完了の作業
 
-- Boss cast lanes are still too dense when many enemies cast at once.
-- That density issue is intentionally left for a separate pass.
+- ボス詠唱レーンは、敵対対象の詠唱数が多い戦闘ではまだ密になりやすい
+- この密度改善は別作業として切り出している
 
-## Next Planned Work
+## 今後の作業予定
 
-- Apply the separate boss cast density improvement that was identified after this change.
-- Keep the boss cast presentation scoped as a follow-up rather than widening the current fix.
-- If the next pass needs more cleanup, review whether boss cast aggregation should be compressed or visually grouped before touching the rest of the timeline.
+- ボス詠唱レーンの密度改善を別途入れる
+- 今回の修正範囲からは広げず、次の差分で詰める
+- 必要なら詠唱のまとめ方や表示圧縮を先に見直してから、タイムライン全体へ反映する
 
-## Notes
+## 必須方針
 
-- `HANDOFF.md`, `HANDOFF-V2.md`, and `HANDOFF-V3.md` now live under `handoffs/`.
-- Root `HANDOFF.md` is now only an index into this folder.
+- `main` への `git push` はしない
+- `git commit` もしない。実装だけ行い、ユーザー確認後にコミット・プッシュする
+- 変更済み・未追跡ファイルを勝手に `revert` / `cleanup` しない
+
+## 補足
+
+- `HANDOFF.md`, `HANDOFF-V2.md`, `HANDOFF-V3.md` は `handoffs/` 配下に集約済み
+- ルートの `HANDOFF.md` は、このフォルダへの案内だけを置く

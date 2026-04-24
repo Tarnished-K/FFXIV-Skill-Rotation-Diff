@@ -27,6 +27,10 @@ function resetComparisonData() {
   state.healingB = [];
   state.partyBuffsA = [];
   state.partyBuffsB = [];
+  state.bossCastsA = [];
+  state.bossCastsB = [];
+  state.playerDebuffsA = [];
+  state.playerDebuffsB = [];
   state.rollingDpsA = [];
   state.rollingDpsB = [];
   state.phasesA = [];
@@ -41,7 +45,6 @@ function resetComparisonData() {
   state.partyRollingDpsB = [];
   state.partyDamageA = [];
   state.partyDamageB = [];
-  state.partyGraphMode = 'dps';
   state.partyTimelineFilter = 'all';
   state.partyTimelineCustomPlayerIdsA = [];
   state.partyTimelineCustomPlayerIdsB = [];
@@ -55,6 +58,27 @@ function setComparisonControlsDisabled(disabled) {
   });
   if (el.zoomInBtn) el.zoomInBtn.disabled = disabled;
   if (el.zoomOutBtn) el.zoomOutBtn.disabled = disabled;
+}
+
+function setLoadingWorkflowDisabled(disabled) {
+  state.isLoadingWorkflow = Boolean(disabled);
+  [
+    el.loadBtn,
+    el.loadPlayersBtn,
+    el.compareBtn,
+    el.fightA,
+    el.fightB,
+    el.playerA,
+    el.playerB,
+    el.personalTimelineViewBtn,
+    el.partyTimelineViewBtn,
+  ].forEach((node) => {
+    if (node) node.disabled = Boolean(disabled);
+  });
+  el.timelineViewBtns?.forEach((button) => {
+    button.disabled = Boolean(disabled);
+  });
+  setComparisonControlsDisabled(disabled);
 }
 
 function renderComparisonError() {
@@ -79,7 +103,7 @@ function clearComparisonError() {
   if (el.step4) el.step4.classList.remove('has-error');
   state.compareError = null;
   renderComparisonError();
-  setComparisonControlsDisabled(false);
+  if (!state.isLoadingWorkflow) setComparisonControlsDisabled(false);
 }
 
 function setComparisonError(kind, message) {
@@ -228,6 +252,12 @@ async function loadPartyTimelineComparison() {
 }
 
 async function activateTimelineView(view) {
+  if (view === 'party' && !state.isPremium) {
+    showToast(t('partyTimelinePremiumOnly'));
+    setTimelineView('personal');
+    if (state.timelineA.length && state.timelineB.length) renderTimeline();
+    return;
+  }
   setTimelineView(view);
   if (!state.timelineA.length || !state.timelineB.length) return;
   el.timelineWrap?.classList.remove('hidden');
@@ -380,7 +410,7 @@ async function handleLoadReports(options = {}) {
     el.msg.textContent = t('badUrl');
     return false;
   }
-  el.loadBtn.disabled = true;
+  setLoadingWorkflowDisabled(true);
   el.msg.textContent = t('loading');
   el.step2Message.textContent = '';
   try {
@@ -428,14 +458,14 @@ async function handleLoadReports(options = {}) {
     el.msg.textContent = `取得失敗: ${e.message}`;
     return false;
   } finally {
-    el.loadBtn.disabled = false;
+    setLoadingWorkflowDisabled(false);
     if (state.tutorial.active) renderTutorial();
   }
 }
 
 async function handleLoadPlayers(options = {}) {
   const { skipShareUrl = false } = options;
-  if (el.loadPlayersBtn) el.loadPlayersBtn.disabled = true;
+  setLoadingWorkflowDisabled(true);
   try {
     state.selectedFightA = Number(el.fightA.value);
     state.selectedFightB = Number(el.fightB.value);
@@ -481,7 +511,7 @@ async function handleLoadPlayers(options = {}) {
     el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
     return false;
   } finally {
-    if (el.loadPlayersBtn) el.loadPlayersBtn.disabled = false;
+    setLoadingWorkflowDisabled(false);
     if (state.tutorial.active) renderTutorial();
   }
 }
@@ -497,6 +527,13 @@ async function handleCompare(options = {}) {
   state.fightB = fightB;
   resetComparisonData();
   clearComparisonError();
+  if (!fightA || !fightB) {
+    const message = '戦闘データの選択状態が更新されました。もう一度プレイヤー一覧を取得してください。';
+    setComparisonError('validation', message);
+    el.step4.classList.remove('hidden');
+    renderComparisonError();
+    return false;
+  }
   if (fightA && fightB && Number(fightA.encounterID) !== Number(fightB.encounterID)) {
     const message = t('encounterMismatch');
     setComparisonError('validation', message);
@@ -544,7 +581,7 @@ async function handleCompare(options = {}) {
 
   el.step2Message.textContent = t('tlLoading');
   try {
-    const [tlA, tlB, dmgA, dmgB, healA, healB, synergiesA, synergiesB] = await Promise.all([
+    const [tlA, tlB, dmgA, dmgB, healA, healB, synergiesA, synergiesB, bossCastsA, bossCastsB, debuffsA, debuffsB] = await Promise.all([
       fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job),
       fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job),
       fetchPlayerDamageV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
@@ -553,6 +590,10 @@ async function handleCompare(options = {}) {
       fetchPlayerHealingV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
       fetchPartySynergyCastsV2(state.urlA.reportId, fightA, state.playersA, Number(state.selectedA.id)),
       fetchPartySynergyCastsV2(state.urlB.reportId, fightB, state.playersB, Number(state.selectedB.id)),
+      fetchBossCastsV2(state.urlA.reportId, fightA, state.reportA),
+      fetchBossCastsV2(state.urlB.reportId, fightB, state.reportB),
+      fetchPlayerDebuffsV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
+      fetchPlayerDebuffsV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
     ]);
     state.timelineA = deduplicateTimeline(tlA);
     state.timelineB = deduplicateTimeline(tlB);
@@ -562,6 +603,10 @@ async function handleCompare(options = {}) {
     state.healingB = healB;
     state.partyBuffsA = synergiesA;
     state.partyBuffsB = synergiesB;
+    state.bossCastsA = bossCastsA;
+    state.bossCastsB = bossCastsB;
+    state.playerDebuffsA = debuffsA;
+    state.playerDebuffsB = debuffsB;
     correlateDamage(state.timelineA, state.damageA);
     correlateDamage(state.timelineB, state.damageB);
     correlateHealing(state.timelineA, state.healingA);
@@ -571,6 +616,8 @@ async function handleCompare(options = {}) {
     logDebug(`ダメージイベント: A=${dmgA.length}件 B=${dmgB.length}件`);
     logDebug(`ヒールイベント: A=${healA.length}件 B=${healB.length}件`);
     logDebug(`PTシナジー: A=${synergiesA.length} B=${synergiesB.length}`);
+    logDebug(`ボス詠唱: A=${bossCastsA.length} B=${bossCastsB.length}`);
+    logDebug(`プレイヤーデバフ: A=${debuffsA.length} B=${debuffsB.length}`);
 
     const maxT = Math.max(1, ...state.timelineA.map(x => x.t), ...state.timelineB.map(x => x.t));
     state.rollingDpsA = computeRollingDps(dmgA, maxT);
@@ -928,13 +975,13 @@ bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
 });
 bindClick(el.compareBtn, 'compareBtn', async () => {
   logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
-  el.compareBtn.disabled = true;
+  setLoadingWorkflowDisabled(true);
   try {
     const usage = await checkUsageBeforeCompare();
     if (!usage.ok) return;
     await handleCompare();
   } finally {
-    el.compareBtn.disabled = false;
+    setLoadingWorkflowDisabled(false);
   }
 });
 bindClick(el.saveBookmarkBtn, 'saveBookmarkBtn', saveCurrentBookmark);

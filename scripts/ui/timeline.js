@@ -192,29 +192,6 @@ function computeRollingDps(damageEvents, maxT, windowSec = 15) {
   return computeRollingDpsShared(damageEvents, maxT, windowSec);
 }
 
-function computeEstimatedBossHp(damageEvents, maxT) {
-  const events = (damageEvents || [])
-    .map((event) => ({
-      t: Number(event?.t || 0),
-      amount: Math.max(0, Number(event?.amount || 0)),
-    }))
-    .filter((event) => event.amount > 0 && Number.isFinite(event.t))
-    .sort((a, b) => a.t - b.t);
-  const total = events.reduce((sum, event) => sum + event.amount, 0);
-  if (!total) return [];
-  let cumulative = 0;
-  const points = [{ t: 0, hp: 100 }];
-  for (const event of events) {
-    cumulative += event.amount;
-    points.push({
-      t: event.t,
-      hp: Math.max(0, 100 - (cumulative / total) * 100),
-    });
-  }
-  if (maxT > events[events.length - 1].t) points.push({ t: maxT, hp: 0 });
-  return points;
-}
-
 function detectPhases(bossCasts, fightDurationSec, lastPhase) {
   return detectPhasesFromBossCasts(bossCasts, fightDurationSec, lastPhase);
 }
@@ -372,7 +349,7 @@ function bindTimelineInteractions() {
       event.stopPropagation?.();
       return;
     }
-    if (typeof event.target?.closest === 'function' && event.target.closest('button, a, input, select, textarea, .pt-custom-modal, .pt-custom-backdrop, .pt-filter-controls, .pt-graph-controls')) return;
+    if (typeof event.target?.closest === 'function' && event.target.closest('button, a, input, select, textarea, .pt-custom-modal, .pt-custom-backdrop, .pt-filter-controls')) return;
     dragState = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -446,20 +423,31 @@ function renderTimeline() {
   };
   const synergiesA = showSynergyLane ? filterSynergyRecordsByView(state.partyBuffsA, 'a') : [];
   const synergiesB = showSynergyLane ? filterSynergyRecordsByView(state.partyBuffsB, 'b') : [];
+  const bossCastsA = filterSynergyRecordsByView(state.bossCastsA, 'a');
+  const bossCastsB = filterSynergyRecordsByView(state.bossCastsB, 'b');
+  const playerDebuffsA = filterSynergyRecordsByView(state.playerDebuffsA, 'a');
+  const playerDebuffsB = filterSynergyRecordsByView(state.playerDebuffsB, 'b');
+  const hasBossCastLane = bossCastsA.length || bossCastsB.length;
+  const hasDebuffLaneA = playerDebuffsA.length > 0;
+  const hasDebuffLaneB = playerDebuffsB.length > 0;
   const synergyLaneDefsA = buildSynergyLaneDefs(synergiesA);
   const synergyLaneDefsB = buildSynergyLaneDefs(synergiesB);
   const synergyRowHeight = 12;
   const synergyBaseOffset = 124;
   const synergyBlockHeightA = showSynergyLane ? Math.max(22, synergyLaneDefsA.length * synergyRowHeight + 14) : 0;
   const synergyBlockHeightB = showSynergyLane ? Math.max(22, synergyLaneDefsB.length * synergyRowHeight + 14) : 0;
+  const debuffLaneHeightA = hasDebuffLaneA ? 24 : 0;
+  const debuffLaneHeightB = hasDebuffLaneB ? 24 : 0;
 
   // DPS繧ｰ繝ｩ繝輔・譛臥┌
   const hasDps = state.rollingDpsA.length > 0 || state.rollingDpsB.length > 0;
   const dpsGraphHeight = hasDps ? 80 : 0;
   const dpsGraphTop = hasDps ? 4 : 0;
+  const bossCastLaneHeight = hasBossCastLane ? 34 : 0;
+  const bossCastLaneTop = dpsGraphTop + dpsGraphHeight + (hasBossCastLane ? 8 : 0);
 
   // Layout: DPS graph -> ruler -> player A -> divider -> player B
-  const rulerTop = dpsGraphTop + dpsGraphHeight;
+  const rulerTop = dpsGraphTop + dpsGraphHeight + bossCastLaneHeight + (hasBossCastLane ? 10 : 0);
   const playerAStart = rulerTop + 18;
   const laneTop = {
     a_ogcd: playerAStart + 10,
@@ -468,15 +456,19 @@ function renderTimeline() {
     b_ogcd: 0,
     b_gcd: 0,
     b_synergy: 0,
+    a_debuff: 0,
+    b_debuff: 0,
   };
   const trackATop = playerAStart;
-  const trackAHeight = showSynergyLane ? synergyBaseOffset + synergyBlockHeightA + 8 : 110;
+  laneTop.a_debuff = laneTop.a_synergy + synergyBlockHeightA + 8;
+  const trackAHeight = Math.max(110, synergyBaseOffset + synergyBlockHeightA + debuffLaneHeightA + 14);
   const dividerTop = trackATop + trackAHeight + 16;
   const trackBTop = dividerTop + 30;
-  const trackBHeight = showSynergyLane ? synergyBaseOffset + synergyBlockHeightB + 8 : 110;
+  const trackBHeight = Math.max(110, synergyBaseOffset + synergyBlockHeightB + debuffLaneHeightB + 14);
   laneTop.b_ogcd = trackBTop + 10;
   laneTop.b_gcd = trackBTop + 64;
   laneTop.b_synergy = trackBTop + synergyBaseOffset;
+  laneTop.b_debuff = laneTop.b_synergy + synergyBlockHeightB + 8;
   const totalHeight = trackBTop + trackBHeight + 20;
 
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
@@ -560,6 +552,8 @@ function renderTimeline() {
         lines.push({ key: 'b_synergy', owner: 'b', type: 'synergy', top: laneTop.b_synergy + index * synergyRowHeight + 7 });
       });
     }
+    if (hasDebuffLaneA) lines.push({ key: 'a_debuff', owner: 'a', type: 'debuff', top: laneTop.a_debuff + 10 });
+    if (hasDebuffLaneB) lines.push({ key: 'b_debuff', owner: 'b', type: 'debuff', top: laneTop.b_debuff + 10 });
     return lines.map(({ key, owner, type, top }) => (
       `<div class="lane-guide-line ${owner} ${type}" style="top:${top ?? laneTop[key] + 23}px"></div>`
     )).join('');
@@ -617,6 +611,40 @@ function renderTimeline() {
       return `<div class="synergy-segment ${owner}" style="left:${x}px; top:${top + 2}px; width:${w}px; --synergy-color:${color};" title="${title}"></div>
         <div class="synergy-start ${owner}" style="left:${x - 6}px; top:${top - 2}px; --synergy-color:${color};" title="${title}">${icon}</div>`;
     }).join('');
+  };
+
+  const buildBossCastLane = () => {
+    if (!hasBossCastLane) return '';
+    const records = [...bossCastsA.map((record) => ({ ...record, owner: 'a' })), ...bossCastsB.map((record) => ({ ...record, owner: 'b' }))];
+    const top = bossCastLaneTop + 8;
+    return `<div class="lane-label boss-cast-lane-label" style="top:${top - 6}px">${state.lang === 'ja' ? 'ボス詠唱' : 'Boss Cast'}</div>
+      <div class="boss-cast-lane-line" style="top:${top + 12}px"></div>
+      ${records.map((record) => {
+        const start = Number(record.t || 0);
+        const end = Math.max(start + 0.1, Number(record.endT || record.castEndT || start + 2));
+        const x = 60 + start * pxPerSec;
+        const w = Math.max(18, (end - start) * pxPerSec);
+        const label = record.label || record.action || '-';
+        const source = record.sourceName ? ` / ${record.sourceName}` : '';
+        const title = `${formatTimelineTime(start)}-${formatTimelineTime(end)} ${label}${source}`;
+        return `<div class="boss-cast-bar ${record.owner}" style="left:${x}px; top:${top}px; width:${w}px" title="${escapeHtml(title)}"><span>${escapeHtml(label)}</span></div>`;
+      }).join('')}`;
+  };
+
+  const buildDebuffLane = (records, owner) => {
+    if (!records.length) return '';
+    const top = laneTop[`${owner}_debuff`];
+    return `<div class="lane-label" style="top:${top - 14}px">${state.lang === 'ja' ? 'デバフ' : 'Debuff'}</div>
+      ${records.map((record) => {
+        const start = Number(record.t || 0);
+        const end = Math.max(start + 0.1, Number(record.endT || start + 30));
+        const x = 60 + start * pxPerSec;
+        const w = Math.max(28, (end - start) * pxPerSec);
+        const label = record.label || record.action || '-';
+        const color = record.color || '#f87171';
+        const title = `${formatTimelineTime(start)}-${formatTimelineTime(end)} ${label}`;
+        return `<div class="player-debuff-segment ${owner}" style="left:${x}px; top:${top}px; width:${w}px; --debuff-color:${color};" title="${escapeHtml(title)}"><span>${escapeHtml(label)}</span></div>`;
+      }).join('')}`;
   };
 
   const buildPhaseLines = () => {
@@ -695,6 +723,7 @@ function renderTimeline() {
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px; height:${totalHeight}px">
       ${buildDpsGraph()}
+      ${buildBossCastLane()}
       ${buildTimelineGrid()}
       ${buildRulerAtTop()}
       <div class="player-label player-label-a" style="top:${playerAStart - 4}px">${labelA}</div>
@@ -705,6 +734,7 @@ function renderTimeline() {
       ${buildSynergyLaneLabels(synergyLaneDefsA, 'a')}
       ${buildBuffOverlays(a, 'a')}
       ${buildSynergyLane(synergiesA, 'a', synergyLaneDefsA)}
+      ${buildDebuffLane(playerDebuffsA, 'a')}
       <div class="player-divider" style="top:${dividerTop}px"></div>
       <div class="player-label player-label-b" style="top:${dividerTop + 10}px">${labelB}</div>
       <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">${t('laneAbility')}</div>
@@ -715,6 +745,7 @@ function renderTimeline() {
       ${buildLaneGuides()}
       ${buildBuffOverlays(b, 'b')}
       ${buildSynergyLane(synergiesB, 'b', synergyLaneDefsB)}
+      ${buildDebuffLane(playerDebuffsB, 'b')}
       ${buildEvents(a, 'a', state.partyBuffsA)}
       ${buildEvents(b, 'b', state.partyBuffsB)}
       ${buildPhaseLines()}
@@ -798,15 +829,13 @@ function renderPartyTimeline() {
   const rulerTop = 8;
   const groupLabelGap = 26;
   const rowHeight = 40;
-  const graphHeight = 132;
-  const groupGap = graphHeight + 44;
+  const graphHeight = 82;
   const rowTopA = rulerTop + 28 + groupLabelGap;
   const graphTop = rowTopA + rowsA.length * rowHeight + 24;
   const rowTopB = graphTop + graphHeight + 34 + groupLabelGap;
   const totalHeight = rowTopB + rowsB.length * rowHeight + 26;
   const controlPanelHeight = 58;
-  const controlPanelGap = 12;
-  const controlStackTop = graphTop + Math.max(0, (graphHeight - controlPanelHeight * 2 - controlPanelGap) / 2);
+  const controlStackTop = graphTop + Math.max(0, (graphHeight - controlPanelHeight) / 2);
 
   const buildGrid = () => {
     const parts = [];
@@ -880,45 +909,6 @@ function renderPartyTimeline() {
       ${dpsA.length ? `<polyline points="${points(dpsA)}" fill="none" stroke="#38bdf8" stroke-width="1.6" opacity="0.86" />` : ''}
       ${dpsB.length ? `<polyline points="${points(dpsB)}" fill="none" stroke="#f97316" stroke-width="1.6" opacity="0.86" />` : ''}
     </svg>`;
-  };
-
-  const buildBossHpGraph = () => {
-    const damageA = filterPartyDamageByVisibleRows(state.partyDamageA || [], visibleIdsA);
-    const damageB = filterPartyDamageByVisibleRows(state.partyDamageB || [], visibleIdsB);
-    const hpA = filterGraphPoints(computeEstimatedBossHp(damageA, maxT), 'hp', 'a');
-    const hpB = filterGraphPoints(computeEstimatedBossHp(damageB, maxT), 'hp', 'b');
-    if (!hpA.length && !hpB.length) return '';
-    const plotHeight = graphHeight - 18;
-    const yBase = graphTop + plotHeight + 8;
-    const points = (values) => values.map((point) => {
-      const x = xStart + point.t * pxPerSec;
-      const y = yBase - (point.hp / 100) * plotHeight;
-      return `${x},${y}`;
-    }).join(' ');
-    return `<svg class="pt-dps-graph pt-boss-hp-graph" style="position:absolute; left:0; top:0; width:${width}px; height:${totalHeight}px; pointer-events:none; overflow:visible;">
-      <rect x="${xStart}" y="${graphTop}" width="${maxT * pxPerSec}" height="${graphHeight}" rx="6" fill="rgba(15, 23, 42, 0.48)" stroke="rgba(105, 146, 185, 0.14)" />
-      <text x="${xStart + 8}" y="${graphTop + 14}" fill="#94a3b8" font-size="10">ボスHP低下</text>
-      <text x="${xStart + 76}" y="${graphTop + 14}" fill="#38bdf8" font-size="10">Log A</text>
-      <text x="${xStart + 120}" y="${graphTop + 14}" fill="#f97316" font-size="10">Log B</text>
-      <text x="${xStart - 6}" y="${graphTop + 14}" text-anchor="end" fill="#64748b" font-size="9">100%</text>
-      <text x="${xStart - 6}" y="${graphTop + graphHeight - 4}" text-anchor="end" fill="#64748b" font-size="9">0%</text>
-      ${hpA.length ? `<polyline points="${points(hpA)}" fill="none" stroke="#38bdf8" stroke-width="1.8" opacity="0.86" />` : ''}
-      ${hpB.length ? `<polyline points="${points(hpB)}" fill="none" stroke="#f97316" stroke-width="1.8" opacity="0.86" />` : ''}
-    </svg>`;
-  };
-
-  const buildPartyGraphModeControls = () => {
-    const mode = state.partyGraphMode === 'bossHp' ? 'bossHp' : 'dps';
-    return `<div class="pt-graph-controls" style="left:${controlLeft}px; top:${controlStackTop + controlPanelHeight + controlPanelGap}px; width:${controlWidth}px; height:${controlPanelHeight}px">
-      <div class="pt-control-label">グラフ</div>
-      <button type="button" class="pt-graph-btn ${mode === 'dps' ? 'active' : ''}" data-party-graph-mode="dps">PTDPS</button>
-      <button type="button" class="pt-graph-btn ${mode === 'bossHp' ? 'active' : ''}" data-party-graph-mode="bossHp">ボスHP</button>
-    </div>`;
-  };
-
-  const buildPartyGraph = () => {
-    const mode = state.partyGraphMode === 'bossHp' ? 'bossHp' : 'dps';
-    return mode === 'bossHp' ? buildBossHpGraph() : buildPartyDpsGraph();
   };
 
   const buildPartyFilterControls = () => {
@@ -1004,9 +994,8 @@ function renderPartyTimeline() {
       ${buildGrid()}
       <div class="pt-group-label a" style="top:${rowTopA - groupLabelGap}px">Log A</div>
       ${buildRows(rowsA, 'a', rowTopA)}
-      ${buildPartyGraph()}
+      ${buildPartyDpsGraph()}
       ${buildPartyFilterControls()}
-      ${buildPartyGraphModeControls()}
       <div class="player-divider" style="top:${rowTopB - groupLabelGap - 14}px"></div>
       <div class="pt-group-label b" style="top:${rowTopB - groupLabelGap}px">Log B</div>
       ${buildRows(rowsB, 'b', rowTopB)}
@@ -1026,14 +1015,6 @@ function renderPartyTimeline() {
         }
       }
       img.replaceWith(Object.assign(document.createElement('span'), { textContent: (img.alt || '?').slice(0, 2).toUpperCase() }));
-    });
-  });
-  wrap.querySelectorAll('[data-party-graph-mode]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const mode = button.dataset.partyGraphMode === 'bossHp' ? 'bossHp' : 'dps';
-      if (state.partyGraphMode === mode) return;
-      state.partyGraphMode = mode;
-      renderPartyTimeline();
     });
   });
   wrap.querySelectorAll('[data-party-filter]').forEach((button) => {

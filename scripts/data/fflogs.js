@@ -420,6 +420,172 @@ async function fetchPlayerTimelineV2(reportCode, fight, sourceId, playerJobCode 
   return all.sort((a, b) => a.t - b.t);
 }
 
+function getEnemyActorsForFight(reportJson, fight) {
+  const friendlyIds = new Set((fight?.friendlyPlayers || []).map((id) => Number(id)));
+  const candidates = (reportJson?.masterData?.actors || []).filter((actor) => {
+    const id = Number(actor?.id || 0);
+    if (!id || friendlyIds.has(id)) return false;
+    const type = String(actor?.type || '').toLowerCase();
+    const subType = String(actor?.subType || '').toLowerCase();
+    return type === 'boss' || type === 'npc' || subType === 'boss';
+  });
+  const bosses = candidates.filter((actor) => {
+    const type = String(actor?.type || '').toLowerCase();
+    const subType = String(actor?.subType || '').toLowerCase();
+    return type === 'boss' || subType === 'boss';
+  });
+  if (bosses.length) return bosses;
+  const fightName = String(fight?.name || '').toLowerCase();
+  const named = candidates.filter((actor) => fightName && String(actor?.name || '').toLowerCase().includes(fightName));
+  return named.length ? named : candidates.slice(0, 8);
+}
+
+async function fetchBossCastsV2(reportCode, fight, reportJson) {
+  const actorsById = new Map((reportJson?.masterData?.actors || []).map((actor) => [Number(actor?.id || 0), actor]));
+  const friendlyIds = new Set((fight?.friendlyPlayers || []).map((id) => Number(id)));
+  const isFriendlySource = (sourceId) => {
+    const id = Number(sourceId || 0);
+    if (!id) return false;
+    if (friendlyIds.has(id)) return true;
+    const actor = actorsById.get(id);
+    return actor?.petOwner && friendlyIds.has(Number(actor.petOwner));
+  };
+  const query = `
+    query BossCasts($code: String!, $fightID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: Casts, fightIDs: [$fightID], hostilityType: Enemies, startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  const all = [];
+  const pending = new Map();
+  let startTime = null;
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), startTime };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    for (const event of rows) {
+      const sourceId = Number(event?.sourceID || event?.source?.id || 0);
+      if (isFriendlySource(sourceId)) continue;
+      const type = String(event?.type || '').toLowerCase();
+      const actionId = Number(event?.abilityGameID || event?.ability?.guid || 0);
+      const name = String(event?.ability?.name || event?.abilityName || state.abilityById.get(actionId) || '');
+      const ts = Number(event?.timestamp || 0);
+      if (!name || !ts) continue;
+      const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      const sourceActor = actorsById.get(sourceId);
+      const key = `${sourceId}:${actionId || name}`;
+      if (type === 'begincast') {
+        const durationMs = Number(event?.duration || 0);
+        if (!pending.has(key)) pending.set(key, []);
+        pending.get(key).push({
+          t,
+          endT: t + Math.max(0.1, durationMs / 1000),
+          action: name,
+          actionId,
+          label: name,
+          sourceId: String(sourceId || ''),
+          sourceName: event?.source?.name || sourceActor?.name || '',
+        });
+        continue;
+      }
+      if (type === 'cast' && pending.has(key) && pending.get(key).length) {
+        const start = pending.get(key).shift();
+        all.push({ ...start, endT: Math.max(t, start.t + 0.1) });
+      }
+    }
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+  for (const starts of pending.values()) all.push(...starts);
+  return all.sort((a, b) => a.t - b.t);
+}
+
+function findTrackedPlayerDebuff(actionName, actionId) {
+  const name = String(actionName || '').toLowerCase();
+  const id = Number(actionId || 0);
+  const tracked = [
+    { labelJa: '衰弱', labelEn: 'Weakness', names: ['weakness', '衰弱'], color: '#a78bfa' },
+    { labelJa: '衰弱[強]', labelEn: 'Brink of Death', names: ['brink of death', '衰弱[強]', '衰弱［強］'], color: '#c084fc' },
+    { labelJa: 'ダメージ低下', labelEn: 'Damage Down', names: ['damage down', 'ダメージ低下'], color: '#f87171' },
+  ];
+  return tracked.find((debuff) => (
+    debuff.names.some((candidate) => name.includes(candidate.toLowerCase()))
+    || (id && debuff.ids?.includes(id))
+  )) || null;
+}
+
+async function fetchPlayerDebuffsV2(reportCode, fight, targetId) {
+  const query = `
+    query PlayerDebuffs($code: String!, $fightID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: Debuffs, fightIDs: [$fightID], startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  const all = [];
+  const pending = new Map();
+  let startTime = null;
+  while (true) {
+    const vars = { code: reportCode, fightID: Number(fight.id), startTime };
+    const data = await graphqlRequest(query, vars);
+    const block = data?.reportData?.report?.events;
+    const rows = block?.data || [];
+    for (const event of rows) {
+      const eventTargetId = Number(event?.targetID || event?.target?.id || 0);
+      if (eventTargetId !== Number(targetId)) continue;
+      const type = String(event?.type || '').toLowerCase();
+      const actionId = Number(event?.abilityGameID || event?.ability?.guid || event?.status?.guid || 0);
+      const name = String(event?.ability?.name || event?.status?.name || event?.abilityName || state.abilityById.get(actionId) || '');
+      const debuff = findTrackedPlayerDebuff(name, actionId);
+      const ts = Number(event?.timestamp || 0);
+      if (!debuff || !ts) continue;
+      const t = Math.max(0, (ts - Number(fight.startTime || 0)) / 1000);
+      const durationMs = Number(event?.duration || 0);
+      const key = String(actionId || debuff.labelEn);
+      if (type.includes('remove')) {
+        const start = pending.get(key)?.shift();
+        if (start) all.push({ ...start, endT: Math.max(t, start.t + 0.1) });
+        continue;
+      }
+      if (type.includes('apply') || type.includes('refresh')) {
+        if (!pending.has(key)) pending.set(key, []);
+        pending.get(key).push({
+          t,
+          endT: t + Math.max(0.1, durationMs ? durationMs / 1000 : 30),
+          action: debuff.labelEn,
+          actionId,
+          label: state.lang === 'ja' ? debuff.labelJa : debuff.labelEn,
+          color: debuff.color,
+        });
+      }
+    }
+    if (!block?.nextPageTimestamp) break;
+    startTime = block.nextPageTimestamp;
+  }
+  for (const starts of pending.values()) all.push(...starts);
+  const seen = new Set();
+  return all
+    .filter((event) => {
+      const key = `${Math.round(event.t * 10)}:${event.actionId || event.action}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => a.t - b.t);
+}
+
 async function fetchFightDpsV2(reportCode, fightId) {
   const query = `
     query FightDps($code: String!, $fightID: [Int!]!) {
@@ -432,7 +598,7 @@ async function fetchFightDpsV2(reportCode, fightId) {
   `;
   try {
     const data = await graphqlRequest(query, { code: reportCode, fightID: [Number(fightId)] });
-    const entries = data?.reportData?.report?.table?.data?.entries || [];
+    const entries = (data?.reportData?.report?.table?.data?.entries || []).filter(Boolean);
     if (entries.length) {
       const sample = entries[0];
       logDebug('DPS table sample', { keys: Object.keys(sample), name: sample.name, total: sample.total, activeTime: sample.activeTime, rDPS: sample.rDPS, aDPS: sample.aDPS });
@@ -687,5 +853,7 @@ Object.assign(globalThis, {
   fetchPlayerDamageV2,
   fetchPlayerHealingV2,
   fetchPlayerTimelineV2,
+  fetchBossCastsV2,
+  fetchPlayerDebuffsV2,
   fetchPartySynergyCastsV2,
 });

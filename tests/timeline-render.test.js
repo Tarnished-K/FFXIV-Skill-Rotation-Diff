@@ -102,6 +102,10 @@ function loadTimelineHarness() {
       ],
       partyBuffsA: [],
       partyBuffsB: [],
+      bossCastsA: [],
+      bossCastsB: [],
+      playerDebuffsA: [],
+      playerDebuffsB: [],
       rollingDpsA: [],
       rollingDpsB: [],
       partyTimelineA: [
@@ -128,7 +132,6 @@ function loadTimelineHarness() {
       partyRollingDpsB: [{ t: 8, dps: 900 }, { t: 10, dps: 1100 }],
       partyDamageA: [{ t: 5, amount: 1000, sourceId: 1 }, { t: 20, amount: 3000, sourceId: 3 }],
       partyDamageB: [{ t: 5, amount: 1500, sourceId: 2 }, { t: 20, amount: 2500, sourceId: 4 }],
-      partyGraphMode: 'dps',
       partyTimelineFilter: 'all',
       partyTimelineCustomPlayerIdsA: [],
       partyTimelineCustomPlayerIdsB: [],
@@ -257,20 +260,22 @@ describe('renderPartyTimeline', () => {
     expect(timelineWrap.innerHTML).toContain('白魔 Dana');
     expect(timelineWrap.innerHTML).toContain('pt-event');
     expect(timelineWrap.innerHTML).toContain('PT DPS');
-    expect(timelineWrap.innerHTML).toContain('data-party-graph-mode="bossHp"');
     expect(timelineWrap.innerHTML).toContain('data-party-filter="th"');
     expect((timelineWrap.innerHTML.match(/data-party-filter="/g) || []).length).toBe(4);
+    expect(timelineWrap.innerHTML).not.toContain('data-party-graph-mode');
   });
 
-  it('switches the party comparison graph to estimated boss HP loss', () => {
+  it('renders boss casts and tracked player debuffs on the personal timeline', () => {
     const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
-    context.state.partyGraphMode = 'bossHp';
+    context.state.bossCastsA = [{ t: 14, endT: 18, action: 'Raidwide', label: 'Raidwide', sourceName: 'Boss A' }];
+    context.state.playerDebuffsA = [{ t: 20, endT: 50, action: 'Damage Down', label: 'ダメージ低下', color: '#f87171' }];
 
-    renderPartyTimeline();
+    context.module.exports.renderTimeline();
 
-    expect(timelineWrap.innerHTML).toContain('ボスHP低下');
-    expect(timelineWrap.innerHTML).toContain('pt-boss-hp-graph');
-    expect(timelineWrap.innerHTML).not.toContain('PT DPS</text>');
+    expect(timelineWrap.innerHTML).toContain('boss-cast-bar');
+    expect(timelineWrap.innerHTML).toContain('Raidwide');
+    expect(timelineWrap.innerHTML).toContain('player-debuff-segment');
+    expect(timelineWrap.innerHTML).toContain('ダメージ低下');
   });
 
   it('filters party comparison rows by tank and healer roles without deleting loaded data', () => {

@@ -313,6 +313,9 @@ function loadCompareHarness(options = {}) {
     fetchPartyDamageV2: async () => ([{ t: 10, amount: 100 }]),
     fetchPlayerHealingV2: async () => ([]),
     fetchPlayerAurasV2: async () => ([]),
+    fetchPartySynergyCastsV2: async () => ([]),
+    fetchBossCastsV2: async () => ([]),
+    fetchPlayerDebuffsV2: async () => ([]),
     deduplicateTimeline: (timeline) => timeline,
     correlateDamage() {},
     correlateHealing() {},
@@ -353,6 +356,9 @@ function loadCompareHarness(options = {}) {
     fetchPartyDamageV2 = globalThis.__mocks.fetchPartyDamageV2;
     fetchPlayerHealingV2 = globalThis.__mocks.fetchPlayerHealingV2;
     fetchPlayerAurasV2 = globalThis.__mocks.fetchPlayerAurasV2;
+    fetchPartySynergyCastsV2 = globalThis.__mocks.fetchPartySynergyCastsV2;
+    fetchBossCastsV2 = globalThis.__mocks.fetchBossCastsV2;
+    fetchPlayerDebuffsV2 = globalThis.__mocks.fetchPlayerDebuffsV2;
     deduplicateTimeline = globalThis.__mocks.deduplicateTimeline;
     correlateDamage = globalThis.__mocks.correlateDamage;
     correlateHealing = globalThis.__mocks.correlateHealing;

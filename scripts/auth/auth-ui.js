@@ -87,7 +87,7 @@ let _rogueAdObserver = null;
 
 function _removeRogueHeaderAds() {
   document.querySelectorAll('ins.adsbygoogle').forEach((el) => {
-    if (!el.closest('.header-ad')) el.remove();
+    if (!el.closest('.header-ad') && !el.closest('.footer-ad')) el.remove();
   });
 }
 
@@ -99,7 +99,7 @@ function blockHeaderAutoAds() {
 }
 
 function updateAdVisibility(isPremium) {
-  document.querySelectorAll('.header-ad').forEach((el) => {
+  document.querySelectorAll('.header-ad, .footer-ad').forEach((el) => {
     el.style.display = isPremium ? 'none' : '';
   });
 }

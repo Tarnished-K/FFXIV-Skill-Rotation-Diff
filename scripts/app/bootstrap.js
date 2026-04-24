@@ -862,7 +862,6 @@ function applyLang() {
   if (el.step4Title) el.step4Title.textContent = s.step4Title;
   if (el.debugNormalTitle) el.debugNormalTitle.textContent = s.debugNormalTitle;
   if (el.debugErrorTitle) el.debugErrorTitle.textContent = s.debugErrorTitle;
-  if (el.footerNote) el.footerNote.textContent = s.footerNote;
   if (el.logUrlALabel) el.logUrlALabel.firstChild.textContent = s.logUrlA + ' ';
   if (el.logUrlBLabel) el.logUrlBLabel.firstChild.textContent = s.logUrlB + ' ';
   if (el.logAFightLabel) el.logAFightLabel.firstChild.textContent = s.logAFight + '\n            ';

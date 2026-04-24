@@ -26,7 +26,7 @@
       document.addEventListener('DOMContentLoaded', function () {
         function removeRogueAds() {
           document.querySelectorAll('ins.adsbygoogle').forEach(function (el) {
-            if (!el.closest('.header-ad')) el.remove();
+            if (!el.closest('.header-ad') && !el.closest('.footer-ad')) el.remove();
           });
         }
         removeRogueAds();
@@ -137,7 +137,13 @@
     </main>
 
     <footer>
-      <small id="footerNote">注: 公開 FFLogs ログのみ対応しています。2つのレポート URL を入力し、戦闘とプレイヤーを選択してください。</small>
+      <div class="footer-ad">
+        <ins class="adsbygoogle"
+             style="display:inline-block;width:728px;height:90px;"
+             data-ad-client="ca-pub-1720976285558165"
+             data-ad-slot="4407635592"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
       <div class="footer-legal">
         <small>FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD. All Rights Reserved. This is an unofficial fan tool, not affiliated with or endorsed by Square Enix.</small>
         <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>. &nbsp;|&nbsp; <a id="privacyLink" href="/privacy.html">Privacy Policy</a></small>

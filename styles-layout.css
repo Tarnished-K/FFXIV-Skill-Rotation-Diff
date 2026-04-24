@@ -12,9 +12,22 @@
   overflow: hidden;
 }
 
+.footer-ad {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto 14px;
+  overflow: hidden;
+}
+
 .header-ad .adsbygoogle,
 .header-ad ins,
-.header-ad iframe {
+.header-ad iframe,
+.footer-ad .adsbygoogle,
+.footer-ad ins,
+.footer-ad iframe {
   display: inline-block !important;
   width: 728px !important;
   max-width: 100% !important;

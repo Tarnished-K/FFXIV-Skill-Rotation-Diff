@@ -269,19 +269,6 @@
   color: var(--gold-light);
 }
 
-.status-upgrade-link {
-  display: inline-block;
-  margin-left: 6px;
-  color: var(--teal-light);
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.status-upgrade-link:hover {
-  text-decoration: underline;
-}
-
 .header-status-area:empty,
 .header-usage-area:empty {
   display: none;

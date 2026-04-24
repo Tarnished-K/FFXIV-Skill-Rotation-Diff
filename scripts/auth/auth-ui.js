@@ -80,6 +80,22 @@ function renderHeaderAuth(user, usageData) {
       renderHeaderAuth(null, null);
     });
   }
+  requestAnimationFrame(_removeRogueHeaderAds);
+}
+
+let _rogueAdObserver = null;
+
+function _removeRogueHeaderAds() {
+  document.querySelectorAll('ins.adsbygoogle').forEach((el) => {
+    if (!el.closest('.header-ad')) el.remove();
+  });
+}
+
+function blockHeaderAutoAds() {
+  _removeRogueHeaderAds();
+  if (_rogueAdObserver) return;
+  _rogueAdObserver = new MutationObserver(_removeRogueHeaderAds);
+  _rogueAdObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 function updateAdVisibility(isPremium) {
@@ -197,6 +213,7 @@ async function handleAuthSubmit(e) {
 }
 
 async function initAuthUI() {
+  blockHeaderAutoAds();
   const auth = globalThis.AuthModule;
   await auth.init();
 

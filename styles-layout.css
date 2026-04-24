@@ -1,21 +1,15 @@
-﻿.header-ad {
-  flex: 1;
+﻿.site-identity {
   min-width: 0;
-  max-width: 600px;
-  overflow: hidden;
+  flex-shrink: 1;
 }
 
 .header-ad {
+  flex: 1;
   display: flex;
-  flex: 0 0 468px;
   align-items: center;
   justify-content: center;
-  width: 468px;
   min-width: 0;
-  max-width: 468px;
-  height: 60px;
   overflow: hidden;
-  position: relative;
 }
 
 .header-ad .adsbygoogle,
@@ -23,22 +17,9 @@
 .header-ad iframe {
   display: inline-block !important;
   width: 468px !important;
-  max-width: 468px !important;
+  max-width: 100% !important;
   height: 60px !important;
-  min-width: 0 !important;
-  margin: 0 auto !important;
-  position: static !important;
-}
-
-.header-row {
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) 468px max-content;
-  width: 100%;
-  max-width: none;
-}
-
-.header-row > :first-child {
-  min-width: 0;
+  margin: 0 !important;
 }
 
 .header-actions {

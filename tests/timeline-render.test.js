@@ -163,6 +163,45 @@ describe('renderTimeline', () => {
     expect(timelineWrap.innerHTML).toContain('kill-divider a');
     expect(timelineWrap.innerHTML).toContain('kill-divider b');
   });
+
+  it('renders premium synergy records as compact per-action lanes with start icons', () => {
+    const { renderTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.isPremium = true;
+    context.state.partyBuffsA = [
+      {
+        t: 8,
+        actionId: 34681,
+        action: 'Starry Muse',
+        label: 'イマジンスカイ',
+        duration: 20,
+        color: '#38bdf8',
+        icon: '/public/job-icons/jobs/PCT/Starry_Muse.png',
+        iconCandidates: ['/public/job-icons/jobs/PCT/Starry_Muse.png'],
+        sourceName: 'Painter',
+        sourceJob: 'PCT',
+      },
+      {
+        t: 18,
+        actionId: 7398,
+        action: 'Battle Litany',
+        label: 'バトルリタニー',
+        duration: 20,
+        color: '#60a5fa',
+        icon: '/public/job-icons/jobs/DRG/Battle_Litany.png',
+        iconCandidates: ['/public/job-icons/jobs/DRG/Battle_Litany.png'],
+        sourceName: 'Dragoon',
+        sourceJob: 'DRG',
+      },
+    ];
+
+    renderTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('synergy-segment a');
+    expect(timelineWrap.innerHTML).toContain('synergy-start a');
+    expect(timelineWrap.innerHTML).toContain('synergy-lane-name');
+    expect(timelineWrap.innerHTML).toContain('イマジンスカイ');
+    expect(timelineWrap.innerHTML).toContain('バトルリタニー');
+  });
 });
 
 describe('bindTimelineInteractions', () => {

@@ -330,6 +330,41 @@ function renderTimeline() {
   const jobB = state.selectedB?.job || '';
   const showSynergyLane = Boolean(state.isPremium);
 
+  const filterSynergyRecordsByView = (records, owner) => {
+    const phase = getCurrentPhaseWindow(owner);
+    return (records || []).filter((record) => {
+      if (phase && (record.t < phase.startT || record.t >= phase.endT)) return false;
+      if (state.currentTab === 'odd') return Math.floor(record.t / 60) % 2 === 1;
+      if (state.currentTab === 'even') return Math.floor(record.t / 60) % 2 === 0 && record.t >= 60;
+      return true;
+    });
+  };
+
+  const getSynergyLaneKey = (record) => String(record.laneKey || record.action || record.actionId || record.label || 'unknown');
+  const buildSynergyLaneDefs = (records) => {
+    const byKey = new Map();
+    for (const record of records || []) {
+      const key = getSynergyLaneKey(record);
+      if (byKey.has(key)) continue;
+      const buff = findBurstBuff(record.actionId, record.action);
+      byKey.set(key, {
+        key,
+        label: record.label || (buff ? (state.lang === 'ja' ? buff.nameJa : buff.nameEn) : record.action),
+        color: record.color || buff?.color || '#f2cf7a',
+        order: Number.isFinite(record.laneOrder) ? record.laneOrder : 999,
+      });
+    }
+    return [...byKey.values()].sort((a, b) => a.order - b.order || a.label.localeCompare(b.label));
+  };
+  const synergiesA = showSynergyLane ? filterSynergyRecordsByView(state.partyBuffsA, 'a') : [];
+  const synergiesB = showSynergyLane ? filterSynergyRecordsByView(state.partyBuffsB, 'b') : [];
+  const synergyLaneDefsA = buildSynergyLaneDefs(synergiesA);
+  const synergyLaneDefsB = buildSynergyLaneDefs(synergiesB);
+  const synergyRowHeight = 12;
+  const synergyBaseOffset = 124;
+  const synergyBlockHeightA = showSynergyLane ? Math.max(22, synergyLaneDefsA.length * synergyRowHeight + 14) : 0;
+  const synergyBlockHeightB = showSynergyLane ? Math.max(22, synergyLaneDefsB.length * synergyRowHeight + 14) : 0;
+
   // DPS繧ｰ繝ｩ繝輔・譛臥┌
   const hasDps = state.rollingDpsA.length > 0 || state.rollingDpsB.length > 0;
   const dpsGraphHeight = hasDps ? 80 : 0;
@@ -341,19 +376,19 @@ function renderTimeline() {
   const laneTop = {
     a_ogcd: playerAStart + 10,
     a_gcd: playerAStart + 64,
-    a_synergy: playerAStart + 132,
+    a_synergy: playerAStart + synergyBaseOffset,
     b_ogcd: 0,
     b_gcd: 0,
     b_synergy: 0,
   };
   const trackATop = playerAStart;
-  const trackAHeight = showSynergyLane ? 186 : 110;
+  const trackAHeight = showSynergyLane ? synergyBaseOffset + synergyBlockHeightA + 8 : 110;
   const dividerTop = trackATop + trackAHeight + 16;
   const trackBTop = dividerTop + 30;
-  const trackBHeight = showSynergyLane ? 186 : 110;
+  const trackBHeight = showSynergyLane ? synergyBaseOffset + synergyBlockHeightB + 8 : 110;
   laneTop.b_ogcd = trackBTop + 10;
   laneTop.b_gcd = trackBTop + 64;
-  laneTop.b_synergy = trackBTop + 132;
+  laneTop.b_synergy = trackBTop + synergyBaseOffset;
   const totalHeight = trackBTop + trackBHeight + 20;
 
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
@@ -430,13 +465,15 @@ function renderTimeline() {
       { key: 'b_gcd', owner: 'b', type: 'gcd' },
     ];
     if (showSynergyLane) {
-      lines.push(
-        { key: 'a_synergy', owner: 'a', type: 'synergy' },
-        { key: 'b_synergy', owner: 'b', type: 'synergy' },
-      );
+      synergyLaneDefsA.forEach((_, index) => {
+        lines.push({ key: 'a_synergy', owner: 'a', type: 'synergy', top: laneTop.a_synergy + index * synergyRowHeight + 7 });
+      });
+      synergyLaneDefsB.forEach((_, index) => {
+        lines.push({ key: 'b_synergy', owner: 'b', type: 'synergy', top: laneTop.b_synergy + index * synergyRowHeight + 7 });
+      });
     }
-    return lines.map(({ key, owner, type }) => (
-      `<div class="lane-guide-line ${owner} ${type}" style="top:${laneTop[key] + 23}px"></div>`
+    return lines.map(({ key, owner, type, top }) => (
+      `<div class="lane-guide-line ${owner} ${type}" style="top:${top ?? laneTop[key] + 23}px"></div>`
     )).join('');
   };
 
@@ -455,9 +492,18 @@ function renderTimeline() {
     return overlays.join('');
   };
 
-  const buildSynergyLane = (records, owner) => {
+  const buildSynergyLaneLabels = (defs, owner) => {
     if (!showSynergyLane) return '';
-    const top = laneTop[`${owner}_synergy`];
+    const baseTop = laneTop[`${owner}_synergy`];
+    return defs.map((def, index) => (
+      `<div class="synergy-lane-name" style="top:${baseTop + index * synergyRowHeight}px; color:${def.color}" title="${def.label}">${def.label}</div>`
+    )).join('');
+  };
+
+  const buildSynergyLane = (records, owner, defs) => {
+    if (!showSynergyLane) return '';
+    const baseTop = laneTop[`${owner}_synergy`];
+    const laneIndexByKey = new Map(defs.map((def, index) => [def.key, index]));
     const seen = new Set();
     return (records || []).filter((record) => {
       const key = `${Math.round(record.t * 10)}:${record.actionId || record.action}`;
@@ -471,11 +517,17 @@ function renderTimeline() {
       const w = Math.max(24, duration * pxPerSec);
       const label = record.label || (buff ? (state.lang === 'ja' ? buff.nameJa : buff.nameEn) : record.action);
       const color = record.color || buff?.color || '#f2cf7a';
+      const laneIndex = laneIndexByKey.get(getSynergyLaneKey(record)) || 0;
+      const top = baseTop + laneIndex * synergyRowHeight;
       const source = record.sourceName ? ` / ${record.sourceName}${record.sourceJob ? ` (${record.sourceJob})` : ''}` : '';
       const title = `${formatTimelineTime(record.t)} ${label}${source} (${duration}s)`;
-      return `<div class="synergy-window ${owner}" style="left:${x}px; top:${top + 2}px; width:${w}px; border-color:${color}99; background:${color}22;" title="${title}">
-        <span style="color:${color}">${label}</span>
-      </div>`;
+      const candidates = (record.iconCandidates || []).join('|');
+      const fallback = (label || record.action || '?').slice(0, 2).toUpperCase();
+      const icon = record.icon
+        ? `<img class="synergy-start-icon" src="${record.icon}" data-fallbacks="${candidates}" alt="${label}" />`
+        : `<span class="synergy-start-icon synergy-start-fallback">${fallback}</span>`;
+      return `<div class="synergy-segment ${owner}" style="left:${x}px; top:${top + 2}px; width:${w}px; --synergy-color:${color};" title="${title}"></div>
+        <div class="synergy-start ${owner}" style="left:${x - 6}px; top:${top - 2}px; --synergy-color:${color};" title="${title}">${icon}</div>`;
     }).join('');
   };
 
@@ -555,25 +607,27 @@ function renderTimeline() {
       <div class="lane-label" style="top:${laneTop.a_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track a" style="top:${trackATop}px; height:${trackAHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.a_gcd + 12}px">${t('laneGcd')}</div>
-      ${showSynergyLane ? `<div class="lane-label" style="top:${laneTop.a_synergy + 12}px">${t('laneSynergy')}</div>` : ''}
+      ${showSynergyLane ? `<div class="lane-label" style="top:${laneTop.a_synergy - 14}px">${t('laneSynergy')}</div>` : ''}
+      ${buildSynergyLaneLabels(synergyLaneDefsA, 'a')}
       ${buildBuffOverlays(a, 'a')}
-      ${buildSynergyLane(state.partyBuffsA, 'a')}
+      ${buildSynergyLane(synergiesA, 'a', synergyLaneDefsA)}
       <div class="player-divider" style="top:${dividerTop}px"></div>
       <div class="player-label player-label-b" style="top:${dividerTop + 10}px">${labelB}</div>
       <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track b" style="top:${trackBTop}px; height:${trackBHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">${t('laneGcd')}</div>
-      ${showSynergyLane ? `<div class="lane-label" style="top:${laneTop.b_synergy + 12}px">${t('laneSynergy')}</div>` : ''}
+      ${showSynergyLane ? `<div class="lane-label" style="top:${laneTop.b_synergy - 14}px">${t('laneSynergy')}</div>` : ''}
+      ${buildSynergyLaneLabels(synergyLaneDefsB, 'b')}
       ${buildLaneGuides()}
       ${buildBuffOverlays(b, 'b')}
-      ${buildSynergyLane(state.partyBuffsB, 'b')}
+      ${buildSynergyLane(synergiesB, 'b', synergyLaneDefsB)}
       ${buildEvents(a, 'a', state.partyBuffsA)}
       ${buildEvents(b, 'b', state.partyBuffsB)}
       ${buildPhaseLines()}
       ${buildKillLines()}
     </div>
   `;
-  el.timelineWrap.querySelectorAll('img.event-icon').forEach(img => {
+  el.timelineWrap.querySelectorAll('img.event-icon, img.synergy-start-icon').forEach(img => {
     const queue = (img.dataset.fallbacks || '').split('|').filter(Boolean);
     const seen = new Set([img.getAttribute('src')]);
     img.addEventListener('error', () => {
@@ -585,7 +639,12 @@ function renderTimeline() {
           return;
         }
       }
-      img.replaceWith(Object.assign(document.createElement('span'), { textContent: (img.alt || '?').slice(0, 2).toUpperCase() }));
+      const fallback = document.createElement('span');
+      fallback.textContent = (img.alt || '?').slice(0, 2).toUpperCase();
+      if (img.classList.contains('synergy-start-icon')) {
+        fallback.className = 'synergy-start-icon synergy-start-fallback';
+      }
+      img.replaceWith(fallback);
     });
   });
   bindTimelineInteractions();

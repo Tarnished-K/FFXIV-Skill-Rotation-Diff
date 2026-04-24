@@ -23,11 +23,11 @@ const BURST_BUFFS = [
   { ids: [7436],  nameEn: 'Chain Stratagem',   nameJa: '連環計',             duration: 20, color: '#a78bfa' },
   { ids: [7520],  nameEn: 'Embolden',          nameJa: 'エンボルデン',        duration: 20, color: '#f87171' },
   { ids: [24405], nameEn: 'Arcane Circle',     nameJa: 'アルケインサークル',   duration: 20, color: '#c084fc' },
-  { ids: [15998], nameEn: 'Technical Finish',  nameJa: 'テクニカルフィニッシュ', duration: 20, color: '#34d399' },
+  { ids: [], nameEn: 'Quadruple Technical Finish', nameJa: 'クワッド・テクニカルフィニッシュ', duration: 20, color: '#34d399' },
   { ids: [25801], nameEn: 'Searing Light',     nameJa: 'シアリングライト',     duration: 20, color: '#fcd34d' },
   { ids: [25785], nameEn: 'Radiant Finale',    nameJa: '光神のフィナーレ',     duration: 20, color: '#fb923c' },
   { ids: [118, 25786], nameEn: 'Battle Voice',  nameJa: 'バトルボイス',         duration: 20, color: '#a3e635' },
-  { ids: [34681], nameEn: 'Starry Muse',       nameJa: 'スターリーミューズ',    duration: 20, color: '#38bdf8' },
+  { ids: [34681], nameEn: 'Starry Muse',       nameJa: 'イマジンスカイ',       duration: 20, color: '#38bdf8' },
   { ids: [36871], nameEn: 'Dokumori',          nameJa: '毒盛り',             duration: 20, color: '#86efac' },
 ];
 

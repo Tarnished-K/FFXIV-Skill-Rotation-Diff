@@ -489,13 +489,19 @@ const PARTY_SYNERGY_ACTIONS = [
   { ids: [24405], nameEn: 'Arcane Circle', nameJa: 'アルケインサークル', duration: 20, color: '#c084fc' },
   { ids: [118, 25786], nameEn: 'Battle Voice', nameJa: 'バトルボイス', duration: 20, color: '#a3e635' },
   { ids: [25785], nameEn: 'Radiant Finale', nameJa: '光神のフィナーレ', duration: 20, color: '#fb923c' },
-  { ids: [15998], nameEn: 'Technical Finish', nameJa: 'テクニカルフィニッシュ', duration: 20, color: '#34d399', aliases: ['Technical Step', 'テクニカルステップ'] },
+  {
+    ids: [],
+    nameEn: 'Quadruple Technical Finish',
+    nameJa: 'クワッド・テクニカルフィニッシュ',
+    duration: 20,
+    color: '#34d399',
+    aliases: ['Quad Technical Finish', 'Quad. Technical Finish', 'クワッドテクニカルフィニッシュ'],
+  },
   { ids: [25801], nameEn: 'Searing Light', nameJa: 'シアリングライト', duration: 20, color: '#fcd34d' },
   { ids: [7520], nameEn: 'Embolden', nameJa: 'エンボルデン', duration: 20, color: '#f87171' },
-  { ids: [34681], nameEn: 'Starry Muse', nameJa: 'スタリーミューズ', duration: 20, color: '#38bdf8' },
+  { ids: [34681], nameEn: 'Starry Muse', nameJa: 'イマジンスカイ', duration: 20, color: '#38bdf8', aliases: ['Imagined Sky', 'スターリーミューズ'] },
   { ids: [16552], nameEn: 'Divination', nameJa: 'ディヴィネーション', duration: 20, color: '#fbbf24' },
   { ids: [36871], nameEn: 'Dokumori', nameJa: '毒盛の術', duration: 20, color: '#86efac' },
-  { ids: [], nameEn: 'Halcination', nameJa: 'ハルシネーション', duration: 20, color: '#22d3ee', aliases: ['Hallucination'] },
   { ids: [7436], nameEn: 'Chain Stratagem', nameJa: '連環計', duration: 20, color: '#a78bfa' },
 ];
 
@@ -546,6 +552,12 @@ async function fetchPartySynergyCastsV2(reportCode, fight, players, selectedPlay
         const abilityName = String(event?.ability?.name || event?.abilityName || state.abilityById.get(actionId) || '');
         const synergy = findPartySynergyAction(actionId, abilityName);
         if (!synergy) continue;
+        const laneOrder = PARTY_SYNERGY_ACTIONS.indexOf(synergy);
+        const meta = getActionMeta(abilityName || synergy.nameEn, actionId, player.job);
+        const icon = synergy.icon || meta.icon;
+        const iconCandidates = synergy.icon
+          ? [synergy.icon, ...(meta.iconCandidates || [])]
+          : (meta.iconCandidates || []);
         const ts = Number(event?.timestamp || 0);
         if (!ts) continue;
         all.push({
@@ -553,8 +565,12 @@ async function fetchPartySynergyCastsV2(reportCode, fight, players, selectedPlay
           actionId,
           action: synergy.nameEn,
           label: state.lang === 'ja' ? synergy.nameJa : synergy.nameEn,
+          laneKey: synergy.nameEn,
+          laneOrder: laneOrder >= 0 ? laneOrder : 999,
           duration: synergy.duration,
           color: synergy.color,
+          icon,
+          iconCandidates,
           sourceId: String(player.id),
           sourceName: player.name || '',
           sourceJob: player.job || '',

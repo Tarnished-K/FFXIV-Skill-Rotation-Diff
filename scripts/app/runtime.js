@@ -294,6 +294,13 @@ const state = {
   partyTimelineB: [],
   partyRollingDpsA: [],
   partyRollingDpsB: [],
+  partyDamageA: [],
+  partyDamageB: [],
+  partyGraphMode: 'dps',
+  partyTimelineFilter: 'all',
+  partyTimelineCustomPlayerIdsA: [],
+  partyTimelineCustomPlayerIdsB: [],
+  partyTimelineCustomModalOpen: false,
   partyTimelineLoading: false,
   tutorial: {
     active: false,

@@ -39,6 +39,13 @@ function resetComparisonData() {
   state.partyTimelineB = [];
   state.partyRollingDpsA = [];
   state.partyRollingDpsB = [];
+  state.partyDamageA = [];
+  state.partyDamageB = [];
+  state.partyGraphMode = 'dps';
+  state.partyTimelineFilter = 'all';
+  state.partyTimelineCustomPlayerIdsA = [];
+  state.partyTimelineCustomPlayerIdsB = [];
+  state.partyTimelineCustomModalOpen = false;
   state.partyTimelineLoading = false;
 }
 
@@ -194,6 +201,8 @@ async function loadPartyTimelineComparison() {
     ]);
     state.partyTimelineA = partyA;
     state.partyTimelineB = partyB;
+    state.partyDamageA = partyDamageA;
+    state.partyDamageB = partyDamageB;
     const maxT = Math.max(
       1,
       Math.max(0, (Number(state.fightA?.endTime || 0) - Number(state.fightA?.startTime || 0)) / 1000),

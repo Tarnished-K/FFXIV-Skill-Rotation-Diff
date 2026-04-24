@@ -514,6 +514,7 @@ async function fetchPartyDamageV2(reportCode, fight) {
         t: Math.max(0, (ts - Number(fight.startTime || 0)) / 1000),
         actionId,
         amount: Number(e?.amount || 0),
+        sourceId,
       });
     }
     if (!block?.nextPageTimestamp) break;

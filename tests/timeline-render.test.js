@@ -109,15 +109,30 @@ function loadTimelineHarness() {
           player: { id: '1', name: 'Alice', job: 'NIN' },
           records: [{ t: 8, action: 'Mug', actionId: 3, category: 'ability', label: 'Mug' }],
         },
+        {
+          player: { id: '3', name: 'Carol', job: 'PLD' },
+          records: [{ t: 11, action: 'Fight or Flight', actionId: 5, category: 'ability', label: 'Fight or Flight' }],
+        },
       ],
       partyTimelineB: [
         {
           player: { id: '2', name: 'Bob', job: 'SAM' },
           records: [{ t: 9, action: 'Meikyo Shisui', actionId: 4, category: 'ability', label: 'Meikyo Shisui' }],
         },
+        {
+          player: { id: '4', name: 'Dana', job: 'WHM' },
+          records: [{ t: 13, action: 'Presence of Mind', actionId: 6, category: 'ability', label: 'Presence of Mind' }],
+        },
       ],
       partyRollingDpsA: [{ t: 8, dps: 1000 }, { t: 10, dps: 1200 }],
       partyRollingDpsB: [{ t: 8, dps: 900 }, { t: 10, dps: 1100 }],
+      partyDamageA: [{ t: 5, amount: 1000, sourceId: 1 }, { t: 20, amount: 3000, sourceId: 3 }],
+      partyDamageB: [{ t: 5, amount: 1500, sourceId: 2 }, { t: 20, amount: 2500, sourceId: 4 }],
+      partyGraphMode: 'dps',
+      partyTimelineFilter: 'all',
+      partyTimelineCustomPlayerIdsA: [],
+      partyTimelineCustomPlayerIdsB: [],
+      partyTimelineCustomModalOpen: false,
       selectedA: { name: 'Player A', job: 'NIN' },
       selectedB: { name: 'Player B', job: 'SAM' },
       fightA: { startTime: 0, endTime: 30000 },
@@ -130,10 +145,17 @@ function loadTimelineHarness() {
     normalizeJobCode() {
       return 'UNK';
     },
-    JOB_ROLE: {},
+    JOB_ROLE: {
+      NIN: 'D',
+      SAM: 'D',
+      PLD: 'T',
+      WHM: 'H',
+    },
     JOB_NAME_JA: {
       NIN: '忍者',
       SAM: '侍',
+      PLD: 'ナイト',
+      WHM: '白魔',
     },
     t(key) {
       return {
@@ -231,8 +253,77 @@ describe('renderPartyTimeline', () => {
     expect(timelineWrap.innerHTML).toContain('pt-group-label b');
     expect(timelineWrap.innerHTML).toContain('忍者 Alice');
     expect(timelineWrap.innerHTML).toContain('侍 Bob');
+    expect(timelineWrap.innerHTML).toContain('ナイト Carol');
+    expect(timelineWrap.innerHTML).toContain('白魔 Dana');
     expect(timelineWrap.innerHTML).toContain('pt-event');
     expect(timelineWrap.innerHTML).toContain('PT DPS');
+    expect(timelineWrap.innerHTML).toContain('data-party-graph-mode="bossHp"');
+    expect(timelineWrap.innerHTML).toContain('data-party-filter="th"');
+    expect((timelineWrap.innerHTML.match(/data-party-filter="/g) || []).length).toBe(4);
+  });
+
+  it('switches the party comparison graph to estimated boss HP loss', () => {
+    const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.partyGraphMode = 'bossHp';
+
+    renderPartyTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('ボスHP低下');
+    expect(timelineWrap.innerHTML).toContain('pt-boss-hp-graph');
+    expect(timelineWrap.innerHTML).not.toContain('PT DPS</text>');
+  });
+
+  it('filters party comparison rows by tank and healer roles without deleting loaded data', () => {
+    const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.partyTimelineFilter = 'th';
+
+    renderPartyTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('ナイト Carol');
+    expect(timelineWrap.innerHTML).toContain('白魔 Dana');
+    expect(timelineWrap.innerHTML).not.toContain('忍者 Alice');
+    expect(timelineWrap.innerHTML).not.toContain('侍 Bob');
+    expect(context.state.partyTimelineA).toHaveLength(2);
+    expect(context.state.partyTimelineB).toHaveLength(2);
+  });
+
+  it('filters party comparison rows by damage roles', () => {
+    const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.partyTimelineFilter = 'dps';
+
+    renderPartyTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('忍者 Alice');
+    expect(timelineWrap.innerHTML).toContain('侍 Bob');
+    expect(timelineWrap.innerHTML).not.toContain('ナイト Carol');
+    expect(timelineWrap.innerHTML).not.toContain('白魔 Dana');
+  });
+
+  it('filters party comparison rows by custom player selections', () => {
+    const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.partyTimelineFilter = 'custom';
+    context.state.partyTimelineCustomPlayerIdsA = ['1'];
+    context.state.partyTimelineCustomPlayerIdsB = ['4'];
+
+    renderPartyTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('忍者 Alice');
+    expect(timelineWrap.innerHTML).toContain('白魔 Dana');
+    expect(timelineWrap.innerHTML).not.toContain('ナイト Carol');
+    expect(timelineWrap.innerHTML).not.toContain('侍 Bob');
+  });
+
+  it('renders a checkbox modal for custom party comparison filtering', () => {
+    const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.partyTimelineCustomModalOpen = true;
+
+    renderPartyTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('pt-custom-modal');
+    expect(timelineWrap.innerHTML).toContain('カスタム絞り込み');
+    expect(timelineWrap.innerHTML).toContain('data-custom-player-id="1"');
+    expect(timelineWrap.innerHTML).toContain('data-custom-player-id="4"');
+    expect(timelineWrap.innerHTML).not.toContain('表示するジョブ');
   });
 });
 
@@ -278,6 +369,47 @@ describe('bindTimelineInteractions', () => {
 
     pointerUpHandler({ pointerId: 1 });
     expect(timelineWrap.classList.contains('is-dragging')).toBe(false);
+  });
+
+  it('does not drag or scroll the timeline when interacting with the custom filter modal', () => {
+    const { bindTimelineInteractions, timelineWrap } = loadTimelineHarness();
+    bindTimelineInteractions();
+
+    const wheelHandler = timelineWrap.listeners.get('wheel');
+    const pointerDownHandler = timelineWrap.listeners.get('pointerdown');
+    const pointerMoveHandler = timelineWrap.listeners.get('pointermove');
+    const modalTarget = {
+      closest(selector) {
+        return selector.includes('.pt-custom-modal') ? {} : null;
+      },
+    };
+
+    let prevented = false;
+    timelineWrap.scrollLeft = 120;
+    wheelHandler({
+      deltaX: 0,
+      deltaY: 80,
+      ctrlKey: false,
+      target: modalTarget,
+      preventDefault() {
+        prevented = true;
+      },
+    });
+    expect(prevented).toBe(false);
+    expect(timelineWrap.scrollLeft).toBe(120);
+
+    pointerDownHandler({
+      button: 0,
+      clientX: 200,
+      pointerId: 1,
+      target: modalTarget,
+      preventDefault() {},
+    });
+    pointerMoveHandler({
+      clientX: 260,
+      preventDefault() {},
+    });
+    expect(timelineWrap.scrollLeft).toBe(120);
   });
 });
 

@@ -192,6 +192,29 @@ function computeRollingDps(damageEvents, maxT, windowSec = 15) {
   return computeRollingDpsShared(damageEvents, maxT, windowSec);
 }
 
+function computeEstimatedBossHp(damageEvents, maxT) {
+  const events = (damageEvents || [])
+    .map((event) => ({
+      t: Number(event?.t || 0),
+      amount: Math.max(0, Number(event?.amount || 0)),
+    }))
+    .filter((event) => event.amount > 0 && Number.isFinite(event.t))
+    .sort((a, b) => a.t - b.t);
+  const total = events.reduce((sum, event) => sum + event.amount, 0);
+  if (!total) return [];
+  let cumulative = 0;
+  const points = [{ t: 0, hp: 100 }];
+  for (const event of events) {
+    cumulative += event.amount;
+    points.push({
+      t: event.t,
+      hp: Math.max(0, 100 - (cumulative / total) * 100),
+    });
+  }
+  if (maxT > events[events.length - 1].t) points.push({ t: maxT, hp: 0 });
+  return points;
+}
+
 function detectPhases(bossCasts, fightDurationSec, lastPhase) {
   return detectPhasesFromBossCasts(bossCasts, fightDurationSec, lastPhase);
 }
@@ -315,6 +338,10 @@ function bindTimelineInteractions() {
   if (!wrap || wrap.dataset.timelineInteractionsBound === 'true') return;
 
   let dragState = null;
+  const getTimelineModalTarget = (event) => {
+    if (typeof event.target?.closest !== 'function') return null;
+    return event.target.closest('.pt-custom-modal, .pt-custom-backdrop');
+  };
   const stopDrag = (pointerId) => {
     if (!dragState) return;
     if (pointerId !== undefined && dragState.pointerId !== undefined && pointerId !== dragState.pointerId) return;
@@ -325,6 +352,12 @@ function bindTimelineInteractions() {
 
   wrap.addEventListener('wheel', (event) => {
     if (event.ctrlKey) return;
+    const modalTarget = getTimelineModalTarget(event);
+    if (modalTarget) {
+      if (modalTarget.classList?.contains('pt-custom-backdrop')) event.preventDefault?.();
+      event.stopPropagation?.();
+      return;
+    }
     const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
     if (!delta) return;
     wrap.scrollLeft += delta;
@@ -333,7 +366,13 @@ function bindTimelineInteractions() {
 
   wrap.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
-    if (typeof event.target?.closest === 'function' && event.target.closest('button, a, input, select, textarea')) return;
+    const modalTarget = getTimelineModalTarget(event);
+    if (modalTarget) {
+      if (!event.target?.closest?.('button, input, label')) event.preventDefault?.();
+      event.stopPropagation?.();
+      return;
+    }
+    if (typeof event.target?.closest === 'function' && event.target.closest('button, a, input, select, textarea, .pt-custom-modal, .pt-custom-backdrop, .pt-filter-controls, .pt-graph-controls')) return;
     dragState = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -718,8 +757,31 @@ function renderPartyTimeline() {
     if (phase) filtered = filtered.filter((record) => record.t >= phase.startT && record.t < phase.endT);
     return filtered;
   };
-  const rowsA = (state.partyTimelineA || []).map((row) => ({ ...row, records: filterRecords(row.records, 'a') }));
-  const rowsB = (state.partyTimelineB || []).map((row) => ({ ...row, records: filterRecords(row.records, 'b') }));
+  const partyFilter = ['th', 'dps', 'custom'].includes(state.partyTimelineFilter) ? state.partyTimelineFilter : 'all';
+  const customPlayerIdsA = new Set((state.partyTimelineCustomPlayerIdsA || []).map((id) => String(id || '')).filter(Boolean));
+  const customPlayerIdsB = new Set((state.partyTimelineCustomPlayerIdsB || []).map((id) => String(id || '')).filter(Boolean));
+  const getRowJob = (row) => String(row?.player?.job || '').toUpperCase();
+  const getRowPlayerId = (row) => String(row?.player?.id || '');
+  const hasCustomPlayerSelection = customPlayerIdsA.size || customPlayerIdsB.size;
+  const rowMatchesPartyFilter = (row, owner) => {
+    if (partyFilter === 'all') return true;
+    const job = getRowJob(row);
+    const role = JOB_ROLE[job] || '';
+    if (partyFilter === 'th') return role === 'T' || role === 'H';
+    if (partyFilter === 'dps') return role === 'D';
+    if (partyFilter === 'custom') {
+      const ids = owner === 'b' ? customPlayerIdsB : customPlayerIdsA;
+      return ids.has(getRowPlayerId(row));
+    }
+    return true;
+  };
+  const mapRows = (rows, owner) => (rows || [])
+    .filter((row) => rowMatchesPartyFilter(row, owner))
+    .map((row) => ({ ...row, records: filterRecords(row.records, owner) }));
+  const rowsA = mapRows(state.partyTimelineA, 'a');
+  const rowsB = mapRows(state.partyTimelineB, 'b');
+  const visibleIdsA = new Set(rowsA.map((row) => Number(row?.player?.id || 0)).filter(Boolean));
+  const visibleIdsB = new Set(rowsB.map((row) => Number(row?.player?.id || 0)).filter(Boolean));
   const maxT = Math.max(
     1,
     fightEndA,
@@ -728,18 +790,23 @@ function renderPartyTimeline() {
     ...rowsB.flatMap((row) => row.records.map((record) => record.t)),
   );
   const pxPerSec = 16 * state.zoom;
-  const labelWidth = 118;
+  const labelWidth = 172;
   const xStart = labelWidth + 10;
   const width = Math.max(1800, maxT * pxPerSec + xStart + 160);
+  const controlLeft = 8;
+  const controlWidth = xStart - controlLeft - 10;
   const rulerTop = 8;
   const groupLabelGap = 26;
   const rowHeight = 40;
-  const graphHeight = 82;
+  const graphHeight = 132;
   const groupGap = graphHeight + 44;
   const rowTopA = rulerTop + 28 + groupLabelGap;
   const graphTop = rowTopA + rowsA.length * rowHeight + 24;
   const rowTopB = graphTop + graphHeight + 34 + groupLabelGap;
   const totalHeight = rowTopB + rowsB.length * rowHeight + 26;
+  const controlPanelHeight = 58;
+  const controlPanelGap = 12;
+  const controlStackTop = graphTop + Math.max(0, (graphHeight - controlPanelHeight * 2 - controlPanelGap) / 2);
 
   const buildGrid = () => {
     const parts = [];
@@ -770,18 +837,30 @@ function renderPartyTimeline() {
     }).join('');
   };
 
-  const buildPartyDpsGraph = () => {
-    let dpsA = state.partyRollingDpsA || [];
-    let dpsB = state.partyRollingDpsB || [];
-    if (phaseA) dpsA = dpsA.filter((point) => point.t >= phaseA.startT && point.t <= phaseA.endT);
-    if (phaseB) dpsB = dpsB.filter((point) => point.t >= phaseB.startT && point.t <= phaseB.endT);
+  const filterGraphPoints = (points, valueKey, owner) => {
+    let filtered = (points || []).filter((point) => Number.isFinite(Number(point?.t)) && Number.isFinite(Number(point?.[valueKey])));
+    const phase = owner === 'b' ? phaseB : phaseA;
+    if (phase) filtered = filtered.filter((point) => point.t >= phase.startT && point.t <= phase.endT);
     if (state.currentTab === 'odd') {
-      dpsA = dpsA.filter((point) => Math.floor(point.t / 60) % 2 === 1);
-      dpsB = dpsB.filter((point) => Math.floor(point.t / 60) % 2 === 1);
+      filtered = filtered.filter((point) => Math.floor(point.t / 60) % 2 === 1);
     } else if (state.currentTab === 'even') {
-      dpsA = dpsA.filter((point) => Math.floor(point.t / 60) % 2 === 0 && point.t >= 60);
-      dpsB = dpsB.filter((point) => Math.floor(point.t / 60) % 2 === 0 && point.t >= 60);
+      filtered = filtered.filter((point) => Math.floor(point.t / 60) % 2 === 0 && point.t >= 60);
     }
+    return filtered;
+  };
+
+  const filterPartyDamageByVisibleRows = (events, visibleIds) => {
+    if (partyFilter === 'all' || !visibleIds.size) return events || [];
+    return (events || []).filter((event) => visibleIds.has(Number(event?.sourceId || 0)));
+  };
+
+  const buildPartyDpsGraph = () => {
+    const damageA = filterPartyDamageByVisibleRows(state.partyDamageA || [], visibleIdsA);
+    const damageB = filterPartyDamageByVisibleRows(state.partyDamageB || [], visibleIdsB);
+    const sourceA = partyFilter === 'all' ? (state.partyRollingDpsA || []) : computeRollingDps(damageA, maxT);
+    const sourceB = partyFilter === 'all' ? (state.partyRollingDpsB || []) : computeRollingDps(damageB, maxT);
+    const dpsA = filterGraphPoints(sourceA, 'dps', 'a');
+    const dpsB = filterGraphPoints(sourceB, 'dps', 'b');
     if (!dpsA.length && !dpsB.length) return '';
     const maxDps = Math.max(...dpsA.map((point) => point.dps), ...dpsB.map((point) => point.dps), 1);
     const plotHeight = graphHeight - 18;
@@ -803,6 +882,112 @@ function renderPartyTimeline() {
     </svg>`;
   };
 
+  const buildBossHpGraph = () => {
+    const damageA = filterPartyDamageByVisibleRows(state.partyDamageA || [], visibleIdsA);
+    const damageB = filterPartyDamageByVisibleRows(state.partyDamageB || [], visibleIdsB);
+    const hpA = filterGraphPoints(computeEstimatedBossHp(damageA, maxT), 'hp', 'a');
+    const hpB = filterGraphPoints(computeEstimatedBossHp(damageB, maxT), 'hp', 'b');
+    if (!hpA.length && !hpB.length) return '';
+    const plotHeight = graphHeight - 18;
+    const yBase = graphTop + plotHeight + 8;
+    const points = (values) => values.map((point) => {
+      const x = xStart + point.t * pxPerSec;
+      const y = yBase - (point.hp / 100) * plotHeight;
+      return `${x},${y}`;
+    }).join(' ');
+    return `<svg class="pt-dps-graph pt-boss-hp-graph" style="position:absolute; left:0; top:0; width:${width}px; height:${totalHeight}px; pointer-events:none; overflow:visible;">
+      <rect x="${xStart}" y="${graphTop}" width="${maxT * pxPerSec}" height="${graphHeight}" rx="6" fill="rgba(15, 23, 42, 0.48)" stroke="rgba(105, 146, 185, 0.14)" />
+      <text x="${xStart + 8}" y="${graphTop + 14}" fill="#94a3b8" font-size="10">ボスHP低下</text>
+      <text x="${xStart + 76}" y="${graphTop + 14}" fill="#38bdf8" font-size="10">Log A</text>
+      <text x="${xStart + 120}" y="${graphTop + 14}" fill="#f97316" font-size="10">Log B</text>
+      <text x="${xStart - 6}" y="${graphTop + 14}" text-anchor="end" fill="#64748b" font-size="9">100%</text>
+      <text x="${xStart - 6}" y="${graphTop + graphHeight - 4}" text-anchor="end" fill="#64748b" font-size="9">0%</text>
+      ${hpA.length ? `<polyline points="${points(hpA)}" fill="none" stroke="#38bdf8" stroke-width="1.8" opacity="0.86" />` : ''}
+      ${hpB.length ? `<polyline points="${points(hpB)}" fill="none" stroke="#f97316" stroke-width="1.8" opacity="0.86" />` : ''}
+    </svg>`;
+  };
+
+  const buildPartyGraphModeControls = () => {
+    const mode = state.partyGraphMode === 'bossHp' ? 'bossHp' : 'dps';
+    return `<div class="pt-graph-controls" style="left:${controlLeft}px; top:${controlStackTop + controlPanelHeight + controlPanelGap}px; width:${controlWidth}px; height:${controlPanelHeight}px">
+      <div class="pt-control-label">グラフ</div>
+      <button type="button" class="pt-graph-btn ${mode === 'dps' ? 'active' : ''}" data-party-graph-mode="dps">PTDPS</button>
+      <button type="button" class="pt-graph-btn ${mode === 'bossHp' ? 'active' : ''}" data-party-graph-mode="bossHp">ボスHP</button>
+    </div>`;
+  };
+
+  const buildPartyGraph = () => {
+    const mode = state.partyGraphMode === 'bossHp' ? 'bossHp' : 'dps';
+    return mode === 'bossHp' ? buildBossHpGraph() : buildPartyDpsGraph();
+  };
+
+  const buildPartyFilterControls = () => {
+    const modes = [
+      ['all', '全員'],
+      ['th', 'TH'],
+      ['dps', 'DPS'],
+      ['custom', 'カスタム'],
+    ];
+    return `<div class="pt-filter-controls" style="left:${controlLeft}px; top:${controlStackTop}px; width:${controlWidth}px; height:${controlPanelHeight}px">
+      <div class="pt-control-label">絞り込み</div>
+      ${modes.map(([mode, label]) => `<button type="button" class="pt-filter-btn ${partyFilter === mode ? 'active' : ''}" data-party-filter="${mode}">${label}</button>`).join('')}
+    </div>`;
+  };
+
+  const buildCustomPlayerList = (rows, owner) => {
+    const selectedIds = owner === 'b' ? customPlayerIdsB : customPlayerIdsA;
+    const defaultChecked = partyFilter !== 'custom' && !hasCustomPlayerSelection;
+    return (rows || []).map((row) => {
+      const id = getRowPlayerId(row);
+      const job = row.player?.job ? formatJobName(row.player.job) : '';
+      const name = row.player?.name || '-';
+      const checked = defaultChecked || selectedIds.has(id) ? ' checked' : '';
+      return `<label class="pt-custom-player">
+        <input type="checkbox" data-custom-owner="${owner}" data-custom-player-id="${escapeHtml(id)}"${checked}>
+        <span class="pt-custom-job">${escapeHtml(job || '-')}</span>
+        <span class="pt-custom-name">${escapeHtml(name)}</span>
+      </label>`;
+    }).join('');
+  };
+
+  const buildCustomFilterModal = () => {
+    if (!state.partyTimelineCustomModalOpen) return '';
+    const modalWidth = 640;
+    const modalHeight = 360;
+    const visibleLeft = Number(wrap.scrollLeft || 0);
+    const visibleTop = Number(wrap.scrollTop || 0);
+    const visibleWidth = Number(wrap.clientWidth || 900);
+    const visibleHeight = Number(wrap.clientHeight || totalHeight);
+    const modalLeft = Math.max(8, visibleLeft + Math.max(16, (visibleWidth - modalWidth) / 2));
+    const modalTop = Math.max(24, visibleTop + Math.max(16, (visibleHeight - modalHeight) / 2));
+    return `<div class="pt-custom-backdrop" data-custom-action="cancel"></div>
+      <div class="pt-custom-modal" role="dialog" aria-modal="true" aria-label="カスタム絞り込み" style="left:${modalLeft}px; top:${modalTop}px">
+        <div class="pt-custom-head">
+          <div>
+            <div class="pt-custom-title">カスタム絞り込み</div>
+            <div class="pt-custom-sub">表示するプレイヤーを選択</div>
+          </div>
+          <button type="button" class="pt-custom-close" data-custom-action="cancel" aria-label="閉じる">×</button>
+        </div>
+        <div class="pt-custom-grid">
+          <div class="pt-custom-side">
+            <div class="pt-custom-side-title a">Log A</div>
+            ${buildCustomPlayerList(state.partyTimelineA, 'a')}
+          </div>
+          <div class="pt-custom-side">
+            <div class="pt-custom-side-title b">Log B</div>
+            ${buildCustomPlayerList(state.partyTimelineB, 'b')}
+          </div>
+        </div>
+        <div class="pt-custom-actions">
+          <button type="button" class="pt-custom-secondary" data-custom-action="all">全員選択</button>
+          <button type="button" class="pt-custom-secondary" data-custom-action="clear">解除</button>
+          <button type="button" class="pt-custom-secondary" data-custom-action="cancel">キャンセル</button>
+          <button type="button" class="pt-custom-primary" data-custom-action="apply">適用</button>
+        </div>
+      </div>`;
+  };
+
   const buildRows = (rows, owner, startTop) => rows.map((row, index) => {
     const top = startTop + index * rowHeight;
     const job = row.player?.job ? formatJobName(row.player.job) : '';
@@ -819,10 +1004,13 @@ function renderPartyTimeline() {
       ${buildGrid()}
       <div class="pt-group-label a" style="top:${rowTopA - groupLabelGap}px">Log A</div>
       ${buildRows(rowsA, 'a', rowTopA)}
-      ${buildPartyDpsGraph()}
+      ${buildPartyGraph()}
+      ${buildPartyFilterControls()}
+      ${buildPartyGraphModeControls()}
       <div class="player-divider" style="top:${rowTopB - groupLabelGap - 14}px"></div>
       <div class="pt-group-label b" style="top:${rowTopB - groupLabelGap}px">Log B</div>
       ${buildRows(rowsB, 'b', rowTopB)}
+      ${buildCustomFilterModal()}
     </div>
   `;
   wrap.querySelectorAll('img.event-icon').forEach(img => {
@@ -838,6 +1026,59 @@ function renderPartyTimeline() {
         }
       }
       img.replaceWith(Object.assign(document.createElement('span'), { textContent: (img.alt || '?').slice(0, 2).toUpperCase() }));
+    });
+  });
+  wrap.querySelectorAll('[data-party-graph-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.partyGraphMode === 'bossHp' ? 'bossHp' : 'dps';
+      if (state.partyGraphMode === mode) return;
+      state.partyGraphMode = mode;
+      renderPartyTimeline();
+    });
+  });
+  wrap.querySelectorAll('[data-party-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = ['all', 'th', 'dps', 'custom'].includes(button.dataset.partyFilter)
+        ? button.dataset.partyFilter
+        : 'all';
+      if (mode === 'custom') {
+        state.partyTimelineCustomModalOpen = true;
+        renderPartyTimeline();
+        return;
+      }
+      state.partyTimelineFilter = mode;
+      state.partyTimelineCustomModalOpen = false;
+      renderPartyTimeline();
+    });
+  });
+  wrap.querySelectorAll('[data-custom-action]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.dataset.customAction;
+      const checkboxes = [...wrap.querySelectorAll('[data-custom-player-id]')];
+      if (action === 'all') {
+        checkboxes.forEach((checkbox) => { checkbox.checked = true; });
+        return;
+      }
+      if (action === 'clear') {
+        checkboxes.forEach((checkbox) => { checkbox.checked = false; });
+        return;
+      }
+      if (action === 'cancel') {
+        state.partyTimelineCustomModalOpen = false;
+        renderPartyTimeline();
+        return;
+      }
+      if (action === 'apply') {
+        state.partyTimelineCustomPlayerIdsA = checkboxes
+          .filter((checkbox) => checkbox.checked && checkbox.dataset.customOwner === 'a')
+          .map((checkbox) => checkbox.dataset.customPlayerId);
+        state.partyTimelineCustomPlayerIdsB = checkboxes
+          .filter((checkbox) => checkbox.checked && checkbox.dataset.customOwner === 'b')
+          .map((checkbox) => checkbox.dataset.customPlayerId);
+        state.partyTimelineFilter = 'custom';
+        state.partyTimelineCustomModalOpen = false;
+        renderPartyTimeline();
+      }
     });
   });
   bindTimelineInteractions();

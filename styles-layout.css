@@ -5,14 +5,105 @@
   overflow: hidden;
 }
 
+.header-ad {
+  display: flex;
+  flex: 0 0 468px;
+  align-items: center;
+  justify-content: center;
+  width: 468px;
+  min-width: 0;
+  max-width: 468px;
+  height: 60px;
+  overflow: hidden;
+  position: relative;
+}
+
+.header-ad .adsbygoogle,
+.header-ad ins,
+.header-ad iframe {
+  display: inline-block !important;
+  width: 468px !important;
+  max-width: 468px !important;
+  height: 60px !important;
+  min-width: 0 !important;
+  margin: 0 auto !important;
+  position: static !important;
+}
+
+.header-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 468px max-content;
+  width: 100%;
+  max-width: none;
+}
+
+.header-row > :first-child {
+  min-width: 0;
+}
+
 .header-actions {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   position: relative;
   z-index: 10;
+}
+
+.header-actions-top {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.header-actions-bottom {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+.header-actions-top > *,
+.header-actions-bottom > * {
+  min-height: 40px;
+}
+
+.header-actions .button-link,
+.header-actions .lang-btn,
+.header-actions .auth-btn,
+.header-status-area,
+.header-usage-area {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-actions .auth-btn,
+.header-actions .tutorial-launch-btn {
+  min-width: 148px;
+}
+
+.header-auth-area {
+  min-width: 148px;
+}
+
+.header-actions .lang-btn {
+  min-width: 68px;
+}
+
+.header-usage-area {
+  min-width: 118px;
+}
+
+.header-status-area {
+  min-width: 150px;
+}
+
+.header-actions .logout-btn {
+  min-width: 92px;
 }
 
 .admin-auth-status {
@@ -36,6 +127,10 @@
 .tutorial-launch-btn:hover {
   border-color: rgba(110, 231, 216, 0.56);
   color: #d8fffb;
+}
+
+.header-actions .lang-btn {
+  width: auto;
 }
 
 .tutorial-overlay {

@@ -78,6 +78,21 @@
   status = 200
 
 [[redirects]]
+  from = "/api/create-checkout"
+  to = "/.netlify/functions/create-checkout"
+  status = 200
+
+[[redirects]]
+  from = "/api/auth-status"
+  to = "/.netlify/functions/auth-status"
+  status = 200
+
+[[redirects]]
+  from = "/api/bookmarks"
+  to = "/.netlify/functions/bookmarks"
+  status = 200
+
+[[redirects]]
   from = "/api/supabase-config"
   to = "/.netlify/functions/supabase-config"
   status = 200

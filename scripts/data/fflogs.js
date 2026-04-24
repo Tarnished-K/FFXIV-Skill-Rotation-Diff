@@ -483,6 +483,98 @@ async function fetchPlayerDamageV2(reportCode, fight, sourceId) {
   return all;
 }
 
+const PARTY_SYNERGY_ACTIONS = [
+  { ids: [7396], nameEn: 'Brotherhood', nameJa: '桃園結義', duration: 20, color: '#f472b6' },
+  { ids: [7398], nameEn: 'Battle Litany', nameJa: 'バトルリタニー', duration: 20, color: '#60a5fa' },
+  { ids: [24405], nameEn: 'Arcane Circle', nameJa: 'アルケインサークル', duration: 20, color: '#c084fc' },
+  { ids: [118, 25786], nameEn: 'Battle Voice', nameJa: 'バトルボイス', duration: 20, color: '#a3e635' },
+  { ids: [25785], nameEn: 'Radiant Finale', nameJa: '光神のフィナーレ', duration: 20, color: '#fb923c' },
+  { ids: [15998], nameEn: 'Technical Finish', nameJa: 'テクニカルフィニッシュ', duration: 20, color: '#34d399', aliases: ['Technical Step', 'テクニカルステップ'] },
+  { ids: [25801], nameEn: 'Searing Light', nameJa: 'シアリングライト', duration: 20, color: '#fcd34d' },
+  { ids: [7520], nameEn: 'Embolden', nameJa: 'エンボルデン', duration: 20, color: '#f87171' },
+  { ids: [34681], nameEn: 'Starry Muse', nameJa: 'スタリーミューズ', duration: 20, color: '#38bdf8' },
+  { ids: [16552], nameEn: 'Divination', nameJa: 'ディヴィネーション', duration: 20, color: '#fbbf24' },
+  { ids: [36871], nameEn: 'Dokumori', nameJa: '毒盛の術', duration: 20, color: '#86efac' },
+  { ids: [], nameEn: 'Halcination', nameJa: 'ハルシネーション', duration: 20, color: '#22d3ee', aliases: ['Hallucination'] },
+  { ids: [7436], nameEn: 'Chain Stratagem', nameJa: '連環計', duration: 20, color: '#a78bfa' },
+];
+
+function normalizeSynergyName(value) {
+  return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function findPartySynergyAction(actionId, actionName) {
+  const id = Number(actionId || 0);
+  if (id) {
+    const byId = PARTY_SYNERGY_ACTIONS.find((action) => action.ids.includes(id));
+    if (byId) return byId;
+  }
+  const normalized = normalizeSynergyName(actionName);
+  if (!normalized) return null;
+  return PARTY_SYNERGY_ACTIONS.find((action) => {
+    const names = [action.nameEn, action.nameJa, ...(action.aliases || [])];
+    return names.some((name) => normalizeSynergyName(name) === normalized);
+  }) || null;
+}
+
+async function fetchPartySynergyCastsV2(reportCode, fight, players, selectedPlayerId) {
+  const partyMembers = (players || []).filter((player) => String(player.id) !== String(selectedPlayerId));
+  const query = `
+    query PartySynergyCasts($code: String!, $fightID: Int!, $sourceID: Int!, $startTime: Float) {
+      reportData {
+        report(code: $code) {
+          events(dataType: Casts, fightIDs: [$fightID], sourceID: $sourceID, startTime: $startTime) {
+            data
+            nextPageTimestamp
+          }
+        }
+      }
+    }
+  `;
+  const all = [];
+  await Promise.all(partyMembers.map(async (player) => {
+    let startTime = null;
+    while (true) {
+      const vars = { code: reportCode, fightID: Number(fight.id), sourceID: Number(player.id), startTime };
+      const data = await graphqlRequest(query, vars);
+      const block = data?.reportData?.report?.events;
+      const rows = block?.data || [];
+      for (const event of rows) {
+        const type = String(event?.type || '').toLowerCase();
+        if (type !== 'cast') continue;
+        const actionId = Number(event?.abilityGameID || event?.ability?.guid || 0);
+        const abilityName = String(event?.ability?.name || event?.abilityName || state.abilityById.get(actionId) || '');
+        const synergy = findPartySynergyAction(actionId, abilityName);
+        if (!synergy) continue;
+        const ts = Number(event?.timestamp || 0);
+        if (!ts) continue;
+        all.push({
+          t: Math.max(0, (ts - Number(fight.startTime || 0)) / 1000),
+          actionId,
+          action: synergy.nameEn,
+          label: state.lang === 'ja' ? synergy.nameJa : synergy.nameEn,
+          duration: synergy.duration,
+          color: synergy.color,
+          sourceId: String(player.id),
+          sourceName: player.name || '',
+          sourceJob: player.job || '',
+        });
+      }
+      if (!block?.nextPageTimestamp) break;
+      startTime = block.nextPageTimestamp;
+    }
+  }));
+  const seen = new Set();
+  return all
+    .sort((a, b) => a.t - b.t)
+    .filter((record) => {
+      const key = `${record.sourceId}:${record.actionId || record.action}:${Math.round(record.t * 10)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 Object.assign(globalThis, {
   parseFFLogsUrl,
   graphqlRequest,
@@ -499,4 +591,5 @@ Object.assign(globalThis, {
   fetchFightDpsV2,
   fetchPlayerDamageV2,
   fetchPlayerTimelineV2,
+  fetchPartySynergyCastsV2,
 });

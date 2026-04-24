@@ -509,12 +509,19 @@ button:focus-visible {
 
 .step4-header {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  align-items: stretch;
+  flex-direction: column;
   gap: 14px;
   margin-bottom: 18px;
   padding-bottom: 16px;
   border-bottom: 1px solid rgba(105, 146, 185, 0.14);
+}
+
+.step4-header-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
 }
 
 .step4-header h2 {
@@ -529,7 +536,7 @@ button:focus-visible {
 
 .step4-header .zoom-controls {
   margin-bottom: 0;
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .tabs {
@@ -569,6 +576,8 @@ button:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .phase-btn {

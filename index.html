@@ -32,17 +32,22 @@
         </div>
         <div class="header-ad">
           <ins class="adsbygoogle"
-               style="display:block;height:90px;"
+               style="display:inline-block;width:468px;height:60px;"
                data-ad-client="ca-pub-1720976285558165"
-               data-ad-slot="4407635592"
-               data-ad-format="horizontal"></ins>
+               data-ad-slot="4407635592"></ins>
           <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
         <div class="header-actions">
-          <div id="headerAuthArea" class="header-auth-area"></div>
-          <a id="tutorialBtn" class="button-link ghost tutorial-launch-btn" href="/tutorial.html">初めての方はこちら</a>
-          <a id="contactBtn" class="button-link ghost tutorial-launch-btn" href="/contact.html">ご要望フォーム</a>
-          <button id="langToggle" type="button" class="lang-btn">EN</button>
+          <div class="header-actions-top">
+            <div id="headerAuthArea" class="header-auth-area"></div>
+            <a id="contactBtn" class="button-link ghost tutorial-launch-btn" href="/contact.html">ご要望フォーム</a>
+            <button id="langToggle" type="button" class="lang-btn">EN</button>
+          </div>
+          <div class="header-actions-bottom">
+            <div id="headerUsageArea" class="header-usage-area" aria-live="polite"></div>
+            <div id="headerStatusArea" class="header-status-area" aria-live="polite"></div>
+            <a id="tutorialBtn" class="button-link ghost tutorial-launch-btn header-tutorial-link" href="/tutorial.html">初めての方はこちら</a>
+          </div>
         </div>
       </div>
     </header>
@@ -86,18 +91,25 @@
 
       <section class="card" id="step4">
         <div class="step4-header">
-          <h2 id="step4Title">4. 比較結果</h2>
-          <div class="tabs">
-            <button class="tab active" data-tab="all">全体TL</button>
-            <button class="tab" data-tab="odd">奇数分TL</button>
-            <button class="tab" data-tab="even">偶数分TL</button>
+          <div class="step4-header-main">
+            <h2 id="step4Title">4. 比較結果</h2>
+            <div class="tabs">
+              <button class="tab active" data-tab="all">全体TL</button>
+              <button class="tab" data-tab="odd">奇数分TL</button>
+              <button class="tab" data-tab="even">偶数分TL</button>
+            </div>
+            <div class="zoom-controls">
+              <button id="zoomOutBtn" type="button">−</button>
+              <span id="zoomLabel">100%</span>
+              <button id="zoomInBtn" type="button">＋</button>
+            </div>
+            <div id="bookmarkControls" class="bookmark-controls hidden">
+              <button id="saveBookmarkBtn" type="button" class="bookmark-action-btn">ブックマーク保存</button>
+              <button id="showBookmarksBtn" type="button" class="bookmark-action-btn ghost">ブックマーク一覧</button>
+            </div>
+            <div id="uiToast" class="ui-toast hidden" role="status" aria-live="polite"></div>
           </div>
           <div id="phaseContainer" class="phase-btns"></div>
-          <div class="zoom-controls">
-            <button id="zoomOutBtn" type="button">−</button>
-            <span id="zoomLabel">100%</span>
-            <button id="zoomInBtn" type="button">＋</button>
-          </div>
         </div>
         <p id="step4Message" class="message hidden"></p>
         <div id="timelineWrap" class="timeline-wrap"></div>
@@ -161,6 +173,18 @@
         <div class="auth-divider"><span>または</span></div>
         <button id="authGoogleBtn" type="button" class="auth-google-btn">Google でログイン</button>
         <p id="authSwitchText" class="auth-switch-text">アカウントをお持ちでない方は <a href="#" id="authSwitchLink">会員登録</a></p>
+      </div>
+    </div>
+
+    <div id="bookmarkModal" class="bookmark-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="bookmarkModalTitle">
+      <div id="bookmarkModalBackdrop" class="bookmark-modal-backdrop"></div>
+      <div class="bookmark-modal-card">
+        <div class="bookmark-modal-head">
+          <h2 id="bookmarkModalTitle">ブックマーク一覧</h2>
+          <button id="bookmarkModalCloseBtn" type="button" class="auth-close-btn" aria-label="閉じる">×</button>
+        </div>
+        <div id="bookmarkList" class="bookmark-list"></div>
+        <p id="bookmarkMessage" class="submessage bookmark-message"></p>
       </div>
     </div>
 

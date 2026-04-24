@@ -2,12 +2,20 @@ const MODULE_NAME = 'AuthUI';
 
 let _usageRemaining = null;
 
+function authText(key, fallback, ...args) {
+  const lang = globalThis.state?.lang || 'ja';
+  const table = globalThis.I18N?.[lang] || globalThis.I18N?.ja || {};
+  const value = table[key];
+  if (typeof value === 'function') return value(...args);
+  return value || fallback;
+}
+
 async function fetchUsageStatus(jwt) {
   try {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {};
     if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
-    const res = await fetch('/api/check-usage', { method: 'POST', headers, body: '{}' });
-    if (res.ok || res.status === 429) {
+    const res = await fetch('/api/auth-status', { method: 'GET', headers });
+    if (res.ok) {
       const data = await res.json();
       return data;
     }
@@ -17,43 +25,89 @@ async function fetchUsageStatus(jwt) {
   }
 }
 
+async function refreshAuthUI() {
+  const auth = globalThis.AuthModule;
+  if (!auth) return;
+  const session = await auth.getSession();
+  const jwt = session?.access_token || null;
+  const user = session?.user || null;
+  const usageData = await fetchUsageStatus(jwt);
+  renderHeaderAuth(user, usageData);
+}
+
+async function getAuthStatus() {
+  const auth = globalThis.AuthModule;
+  const session = await auth?.getSession?.();
+  const jwt = session?.access_token || null;
+  return fetchUsageStatus(jwt);
+}
+
+async function requirePremiumFeature(featureName) {
+  const status = await getAuthStatus();
+  if (status?.isPremium) return true;
+  const label = featureName || 'この機能';
+  const url = new URL('/premium.html', window.location.origin);
+  url.searchParams.set('feature', label);
+  window.location.href = url.toString();
+  return false;
+}
+
 function renderHeaderAuth(user, usageData) {
   const container = document.getElementById('headerAuthArea');
+  if (globalThis.state) {
+    globalThis.state.isPremium = Boolean(user && usageData?.isPremium);
+  }
+  renderHeaderStatus(usageData);
+  renderHeaderUsage(usageData);
+  updateAdVisibility(Boolean(usageData?.isPremium));
+  globalThis.updateBookmarkControls?.();
+  if (globalThis.state?.timelineA?.length && !globalThis.el?.timelineWrap?.classList?.contains('hidden')) {
+    globalThis.renderTimeline?.();
+  }
   if (!container) return;
 
   if (!user) {
     container.innerHTML =
-      '<button id="loginBtn" type="button" class="button-link ghost auth-btn">ログイン</button>' +
-      '<button id="signupBtn" type="button" class="button-link auth-btn">会員登録</button>';
-    if (usageData !== null) {
-      const remaining = usageData.remaining;
-      const badge = document.createElement('span');
-      badge.className = 'usage-badge';
-      badge.textContent = '今日あと' + (remaining >= 9999 ? '無制限' : remaining + '回');
-      container.prepend(badge);
-    }
+      '<button id="loginBtn" type="button" class="button-link ghost auth-btn">' + escapeHtml(authText('authLoginSignup', 'ログイン / 会員登録')) + '</button>';
     document.getElementById('loginBtn')?.addEventListener('click', () => openAuthModal('login'));
-    document.getElementById('signupBtn')?.addEventListener('click', () => openAuthModal('signup'));
   } else {
     const displayName = user.user_metadata?.full_name || user.email || '';
-    const isPremium = usageData && usageData.isPremium;
-    const remaining = usageData ? usageData.remaining : null;
-    const badge = isPremium
-      ? '<span class="plan-badge premium">有料会員</span>'
-      : '<span class="plan-badge free">無料会員</span>';
-    const usageBadge = remaining !== null
-      ? '<span class="usage-badge">今日あと' + (remaining >= 9999 ? '無制限' : remaining + '回') + '</span>'
-      : '';
     container.innerHTML =
-      usageBadge +
       '<span class="user-display">' + escapeHtml(displayName) + '</span>' +
-      badge +
-      '<button id="logoutBtn" type="button" class="button-link ghost auth-btn">ログアウト</button>';
+      '<button id="logoutBtn" type="button" class="button-link ghost auth-btn logout-btn">' + escapeHtml(authText('logoutBtn', 'ログアウト')) + '</button>';
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
       await globalThis.AuthModule.signOut();
       renderHeaderAuth(null, null);
     });
   }
+}
+
+function updateAdVisibility(isPremium) {
+  document.querySelectorAll('.header-ad, .adsbygoogle').forEach((el) => {
+    el.style.display = isPremium ? 'none' : '';
+  });
+}
+
+function renderHeaderStatus(usageData) {
+  const container = document.getElementById('headerStatusArea');
+  if (!container) return;
+  if (!usageData) {
+    container.textContent = '';
+    return;
+  }
+  container.textContent = authText('statusLabel', 'ステータス：') +
+    (usageData.isPremium ? authText('statusSupporter', 'サポーター') : authText('statusFree', '無料版'));
+}
+
+function renderHeaderUsage(usageData) {
+  const container = document.getElementById('headerUsageArea');
+  if (!container) return;
+  if (!usageData || typeof usageData.remaining !== 'number') {
+    container.textContent = '';
+    return;
+  }
+  const remaining = usageData.remaining;
+  container.textContent = authText('usageRemaining', '本日残り回数：' + remaining, remaining);
 }
 
 function escapeHtml(str) {
@@ -165,4 +219,12 @@ async function initAuthUI() {
   document.getElementById('authModalBackdrop')?.addEventListener('click', closeAuthModal);
 }
 
-globalThis.AuthUIModule = { initAuthUI, openAuthModal, closeAuthModal, renderHeaderAuth };
+globalThis.AuthUIModule = {
+  initAuthUI,
+  openAuthModal,
+  closeAuthModal,
+  renderHeaderAuth,
+  refreshAuthUI,
+  getAuthStatus,
+  requirePremiumFeature,
+};

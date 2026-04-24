@@ -156,8 +156,8 @@
     }
 
     for (const transition of transitions) {
-      const meta = metadataById.get(transition.id) || null;
       const fallbackIndex = phaseStarts.length + 1;
+      const meta = metadataById.get(transition.id) || relevantMetadata[fallbackIndex - 1] || null;
       const prev = phaseStarts[phaseStarts.length - 1];
       if (prev && Math.abs(prev.startT - transition.startT) < 0.2) continue;
       phaseStarts.push({

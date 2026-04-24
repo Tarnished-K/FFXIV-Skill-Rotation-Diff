@@ -44,6 +44,11 @@ function getActiveSynergies(t, allRecords, partyBuffRecords) {
     lang: state.lang,
   });
 }
+async function ensureSynergyTimelineAccess() {
+  return globalThis.AuthUIModule?.requirePremiumFeature
+    ? globalThis.AuthUIModule.requirePremiumFeature('synergy-timeline')
+    : true;
+}
 function buildFightPhasesFromFFLogs(reportJson, fight, lang = 'en') {
   return buildFightPhasesFromFFLogsShared(reportJson, fight, {
     getPhaseLabel(meta, fallbackIndex) {
@@ -323,6 +328,7 @@ function renderTimeline() {
   const labelB = state.selectedB?.name || 'B';
   const jobA = state.selectedA?.job || '';
   const jobB = state.selectedB?.job || '';
+  const showSynergyLane = Boolean(state.isPremium);
 
   // DPS繧ｰ繝ｩ繝輔・譛臥┌
   const hasDps = state.rollingDpsA.length > 0 || state.rollingDpsB.length > 0;
@@ -335,16 +341,19 @@ function renderTimeline() {
   const laneTop = {
     a_ogcd: playerAStart + 10,
     a_gcd: playerAStart + 64,
+    a_synergy: playerAStart + 132,
     b_ogcd: 0,
     b_gcd: 0,
+    b_synergy: 0,
   };
   const trackATop = playerAStart;
-  const trackAHeight = 110;
+  const trackAHeight = showSynergyLane ? 186 : 110;
   const dividerTop = trackATop + trackAHeight + 16;
   const trackBTop = dividerTop + 30;
-  const trackBHeight = 110;
+  const trackBHeight = showSynergyLane ? 186 : 110;
   laneTop.b_ogcd = trackBTop + 10;
   laneTop.b_gcd = trackBTop + 64;
+  laneTop.b_synergy = trackBTop + 132;
   const totalHeight = trackBTop + trackBHeight + 20;
 
   const isGcd = r => r.category === 'weaponskill' || r.category === 'spell';
@@ -415,13 +424,19 @@ function renderTimeline() {
 
   const buildLaneGuides = () => {
     const lines = [
-      { key: 'a_ogcd', owner: 'a' },
-      { key: 'a_gcd', owner: 'a' },
-      { key: 'b_ogcd', owner: 'b' },
-      { key: 'b_gcd', owner: 'b' },
+      { key: 'a_ogcd', owner: 'a', type: 'ability' },
+      { key: 'a_gcd', owner: 'a', type: 'gcd' },
+      { key: 'b_ogcd', owner: 'b', type: 'ability' },
+      { key: 'b_gcd', owner: 'b', type: 'gcd' },
     ];
-    return lines.map(({ key, owner }) => (
-      `<div class="lane-guide-line ${owner}" style="top:${laneTop[key] + 23}px"></div>`
+    if (showSynergyLane) {
+      lines.push(
+        { key: 'a_synergy', owner: 'a', type: 'synergy' },
+        { key: 'b_synergy', owner: 'b', type: 'synergy' },
+      );
+    }
+    return lines.map(({ key, owner, type }) => (
+      `<div class="lane-guide-line ${owner} ${type}" style="top:${laneTop[key] + 23}px"></div>`
     )).join('');
   };
 
@@ -438,6 +453,30 @@ function renderTimeline() {
       overlays.push(`<div class="burst-overlay" style="left:${x}px; top:${baseTop}px; width:${w}px; height:${h}px; background:${buff.color}20; border-left:2px solid ${buff.color}60;"><span class="burst-label" style="color:${buff.color}">${label}</span></div>`);
     }
     return overlays.join('');
+  };
+
+  const buildSynergyLane = (records, owner) => {
+    if (!showSynergyLane) return '';
+    const top = laneTop[`${owner}_synergy`];
+    const seen = new Set();
+    return (records || []).filter((record) => {
+      const key = `${Math.round(record.t * 10)}:${record.actionId || record.action}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).map((record) => {
+      const buff = findBurstBuff(record.actionId, record.action);
+      const duration = record.duration || buff?.duration || 20;
+      const x = 60 + record.t * pxPerSec;
+      const w = Math.max(24, duration * pxPerSec);
+      const label = record.label || (buff ? (state.lang === 'ja' ? buff.nameJa : buff.nameEn) : record.action);
+      const color = record.color || buff?.color || '#f2cf7a';
+      const source = record.sourceName ? ` / ${record.sourceName}${record.sourceJob ? ` (${record.sourceJob})` : ''}` : '';
+      const title = `${formatTimelineTime(record.t)} ${label}${source} (${duration}s)`;
+      return `<div class="synergy-window ${owner}" style="left:${x}px; top:${top + 2}px; width:${w}px; border-color:${color}99; background:${color}22;" title="${title}">
+        <span style="color:${color}">${label}</span>
+      </div>`;
+    }).join('');
   };
 
   const buildPhaseLines = () => {
@@ -516,14 +555,18 @@ function renderTimeline() {
       <div class="lane-label" style="top:${laneTop.a_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track a" style="top:${trackATop}px; height:${trackAHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.a_gcd + 12}px">${t('laneGcd')}</div>
+      ${showSynergyLane ? `<div class="lane-label" style="top:${laneTop.a_synergy + 12}px">${t('laneSynergy')}</div>` : ''}
       ${buildBuffOverlays(a, 'a')}
+      ${buildSynergyLane(state.partyBuffsA, 'a')}
       <div class="player-divider" style="top:${dividerTop}px"></div>
       <div class="player-label player-label-b" style="top:${dividerTop + 10}px">${labelB}</div>
       <div class="lane-label" style="top:${laneTop.b_ogcd + 12}px">${t('laneAbility')}</div>
       <div class="track b" style="top:${trackBTop}px; height:${trackBHeight}px"></div>
       <div class="lane-label" style="top:${laneTop.b_gcd + 12}px">${t('laneGcd')}</div>
+      ${showSynergyLane ? `<div class="lane-label" style="top:${laneTop.b_synergy + 12}px">${t('laneSynergy')}</div>` : ''}
       ${buildLaneGuides()}
       ${buildBuffOverlays(b, 'b')}
+      ${buildSynergyLane(state.partyBuffsB, 'b')}
       ${buildEvents(a, 'a', state.partyBuffsA)}
       ${buildEvents(b, 'b', state.partyBuffsB)}
       ${buildPhaseLines()}
@@ -547,6 +590,7 @@ function renderTimeline() {
   });
   bindTimelineInteractions();
 }
+
 function renderPhaseButtons() {
   const container = el.phaseContainer;
   if (!container) return;
@@ -568,7 +612,7 @@ function renderPhaseButtons() {
     const btn = document.createElement('button');
     const isActive = state.currentPhase && state.currentPhase.id === phase.id;
     btn.className = 'phase-btn' + (isActive ? ' active' : '');
-    btn.textContent = phase.label;
+    btn.textContent = String(phase.label || `P${phase.id}`);
     const titleA = phase.a ? `A: ${formatTimelineTime(phase.a.startT)} - ${formatTimelineTime(phase.a.endT)}` : '';
     const titleB = phase.b ? `B: ${formatTimelineTime(phase.b.startT)} - ${formatTimelineTime(phase.b.endT)}` : '';
     btn.title = [titleA, titleB].filter(Boolean).join(' / ');
@@ -584,6 +628,7 @@ function renderPhaseButtons() {
 
 Object.assign(globalThis, {
   formatJobName,
+  ensureSynergyTimelineAccess,
   buildFightPhasesFromFFLogs,
   classifyStats,
   computeRollingDps,

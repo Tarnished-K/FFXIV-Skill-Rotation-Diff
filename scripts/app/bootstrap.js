@@ -76,10 +76,19 @@ function setComparisonError(kind, message) {
     el.timelineWrap.innerHTML = '';
     el.timelineWrap.classList.add('hidden');
   }
+  updateBookmarkControls();
 }
 
 function buildSharedReportUrl(reportId) {
   return reportId ? `https://www.fflogs.com/reports/${reportId}` : '';
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function getShareStateFromUrl() {
@@ -148,6 +157,111 @@ function syncShareStateUrl() {
     lang: state.lang,
   });
   window.history.replaceState({}, '', url);
+}
+
+function buildCurrentBookmarkData() {
+  const parsedA = state.urlA || parseFFLogsUrl(el.urlA?.value?.trim?.() || '');
+  const parsedB = state.urlB || parseFFLogsUrl(el.urlB?.value?.trim?.() || '');
+  const contentName = getCurrentContentName();
+  const jobA = getJobLabel(state.selectedA?.job || '');
+  const jobB = getJobLabel(state.selectedB?.job || '');
+  const query = buildSharedStateQuery({
+    reportA: parsedA?.reportId || '',
+    reportB: parsedB?.reportId || '',
+    fightA: state.selectedFightA || '',
+    fightB: state.selectedFightB || '',
+    playerA: el.playerA?.value || '',
+    playerB: el.playerB?.value || '',
+    phase: state.currentPhase?.id || '',
+    tab: state.currentTab || 'all',
+    zoom: state.zoom,
+    lang: state.lang,
+  });
+  return {
+    query,
+    path: '/' + query,
+    reportA: parsedA?.reportId || '',
+    reportB: parsedB?.reportId || '',
+    fightA: state.selectedFightA || '',
+    fightB: state.selectedFightB || '',
+    playerA: el.playerA?.value || '',
+    playerB: el.playerB?.value || '',
+    playerNameA: state.selectedA?.name || '',
+    playerNameB: state.selectedB?.name || '',
+    contentName,
+    jobA,
+    jobB,
+    createdFrom: 'comparison',
+  };
+}
+
+function getJobLabel(jobCode) {
+  if (!jobCode) return '';
+  if (typeof globalThis.formatJobName === 'function') return globalThis.formatJobName(jobCode);
+  return String(jobCode);
+}
+
+function getCurrentContentName() {
+  const fight = state.fightA || (state.reportA?.fights || []).find((f) => Number(f.id) === Number(state.selectedFightA));
+  if (typeof globalThis.getEncounterDisplayName === 'function') {
+    return globalThis.getEncounterDisplayName(state.reportA, fight) || fight?.name || '';
+  }
+  return fight?.name || '';
+}
+
+function buildBookmarkTitleFromData(data = {}, useCurrentFallback = false) {
+  const content = data.contentName || (useCurrentFallback ? getCurrentContentName() : '');
+  const a = data.playerNameA || (useCurrentFallback ? state.selectedA?.name : '') || 'A';
+  const b = data.playerNameB || (useCurrentFallback ? state.selectedB?.name : '') || 'B';
+  const jobA = data.jobA || (useCurrentFallback ? getJobLabel(state.selectedA?.job || '') : '');
+  const jobB = data.jobB || (useCurrentFallback ? getJobLabel(state.selectedB?.job || '') : '');
+  const matchup = `${a}${jobA ? ` (${jobA})` : ''} vs ${b}${jobB ? ` (${jobB})` : ''}`;
+  return content ? `${content} / ${matchup}` : matchup;
+}
+
+function getBookmarkDisplayParts(bookmark) {
+  const data = bookmark?.data || {};
+  const rawTitle = String(bookmark?.title || buildBookmarkTitleFromData(data) || '比較ブックマーク');
+  const titleParts = rawTitle.split(' / ');
+  const fallbackContent = titleParts.length > 1 ? titleParts[0] : '';
+  const fallbackPlayers = titleParts.length > 1 ? titleParts.slice(1).join(' / ') : rawTitle;
+  const jobA = data.jobA ? ` (${data.jobA})` : '';
+  const jobB = data.jobB ? ` (${data.jobB})` : '';
+  const players = data.playerNameA || data.playerNameB
+    ? `${data.playerNameA || 'A'}${jobA} vs ${data.playerNameB || 'B'}${jobB}`
+    : fallbackPlayers;
+  return {
+    content: data.contentName || fallbackContent || rawTitle,
+    players,
+  };
+}
+
+async function bookmarkFetch(input, init = {}) {
+  const session = await globalThis.AuthModule?.getSession?.();
+  const headers = Object.assign({}, init.headers || {});
+  if (session?.access_token) headers.Authorization = 'Bearer ' + session.access_token;
+  return fetch(input, Object.assign({}, init, { headers }));
+}
+
+function setBookmarkMessage(message) {
+  if (el.bookmarkMessage) el.bookmarkMessage.textContent = message || '';
+}
+
+function showToast(message) {
+  if (!el.uiToast || !message) return;
+  el.uiToast.textContent = message;
+  el.uiToast.classList.remove('hidden');
+  window.clearTimeout(showToast._timer);
+  showToast._timer = window.setTimeout(() => {
+    el.uiToast.classList.add('hidden');
+  }, 2400);
+}
+
+function updateBookmarkControls() {
+  if (!el.bookmarkControls) return;
+  const hasComparison = state.timelineA.length > 0 && state.timelineB.length > 0;
+  const canShow = !el.step4?.classList.contains('hidden') && (hasComparison || state.isPremium);
+  el.bookmarkControls.classList.toggle('hidden', !canShow);
 }
 
 function selectHasValue(select, value) {
@@ -327,24 +441,24 @@ async function handleCompare(options = {}) {
 
   el.step2Message.textContent = t('tlLoading');
   try {
-    const [tlA, tlB, dmgA, dmgB, aurasA, aurasB] = await Promise.all([
+    const [tlA, tlB, dmgA, dmgB, synergiesA, synergiesB] = await Promise.all([
       fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job),
       fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job),
       fetchPlayerDamageV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
       fetchPlayerDamageV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
-      fetchPlayerAurasV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
-      fetchPlayerAurasV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
+      fetchPartySynergyCastsV2(state.urlA.reportId, fightA, state.playersA, Number(state.selectedA.id)),
+      fetchPartySynergyCastsV2(state.urlB.reportId, fightB, state.playersB, Number(state.selectedB.id)),
     ]);
     state.timelineA = deduplicateTimeline(tlA);
     state.timelineB = deduplicateTimeline(tlB);
     state.damageA = dmgA;
     state.damageB = dmgB;
-    state.partyBuffsA = aurasA;
-    state.partyBuffsB = aurasB;
+    state.partyBuffsA = synergiesA;
+    state.partyBuffsB = synergiesB;
     correlateDamage(state.timelineA, state.damageA);
     correlateDamage(state.timelineB, state.damageB);
     logDebug(`ダメージイベント: A=${dmgA.length}件 B=${dmgB.length}件`);
-    logDebug(`PTバフ: A=${aurasA.length} B=${aurasB.length}`);
+    logDebug(`PTシナジー: A=${synergiesA.length} B=${synergiesB.length}`);
 
     const maxT = Math.max(1, ...state.timelineA.map(x => x.t), ...state.timelineB.map(x => x.t));
     state.rollingDpsA = computeRollingDps(dmgA, maxT);
@@ -452,9 +566,153 @@ async function handleCompare(options = {}) {
       }
     }
   }
+  updateBookmarkControls();
   if (!skipShareUrl) syncShareStateUrl();
   syncTutorialProgress();
   return !state.compareError;
+}
+
+async function saveCurrentBookmark() {
+  if (!state.isPremium) {
+    showToast(t('bookmarkPremiumOnly'));
+    return;
+  }
+  if (!state.timelineA.length || !state.timelineB.length) {
+    setBookmarkMessage(t('bookmarkSaveFirst'));
+    showToast(t('bookmarkSaveFirst'));
+    return;
+  }
+  if (el.saveBookmarkBtn) el.saveBookmarkBtn.disabled = true;
+  try {
+    const bookmarkData = buildCurrentBookmarkData();
+    const res = await bookmarkFetch('/api/bookmarks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: buildBookmarkTitleFromData(bookmarkData, true),
+        data: bookmarkData,
+      }),
+    });
+    const data = await res.json().catch(() => null);
+    if (res.status === 403) {
+      window.location.href = '/premium.html?feature=bookmarks';
+      return;
+    }
+    if (res.status === 409) {
+      setBookmarkMessage(t('bookmarkLimitReached'));
+      return;
+    }
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || t('bookmarkSaveFailed'));
+    }
+    setBookmarkMessage('');
+    showToast(t('bookmarkSaved'));
+  } catch (error) {
+    setBookmarkMessage(error.message || t('bookmarkSaveFailed'));
+  } finally {
+    if (el.saveBookmarkBtn) el.saveBookmarkBtn.disabled = false;
+  }
+}
+
+function openBookmarkModal() {
+  if (!el.bookmarkModal) return;
+  el.bookmarkModal.classList.remove('hidden');
+  el.bookmarkModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeBookmarkModal() {
+  if (!el.bookmarkModal) return;
+  el.bookmarkModal.classList.add('hidden');
+  el.bookmarkModal.setAttribute('aria-hidden', 'true');
+}
+
+function renderBookmarkList(bookmarks) {
+  if (!el.bookmarkList) return;
+  if (!bookmarks.length) {
+    el.bookmarkList.innerHTML = '<p class="submessage">' + escapeHtml(t('bookmarkEmpty')) + '</p>';
+    return;
+  }
+  el.bookmarkList.innerHTML = bookmarks.map((bookmark) => {
+    const display = getBookmarkDisplayParts(bookmark);
+    const created = bookmark.created_at ? new Date(bookmark.created_at).toLocaleString(state.lang === 'ja' ? 'ja-JP' : 'en-US') : '';
+    const href = bookmark.data?.path || ('/' + (bookmark.data?.query || ''));
+    return `
+      <div class="bookmark-item" data-bookmark-id="${bookmark.id}">
+        <div class="bookmark-item-meta">
+          <strong>${escapeHtml(display.content)}</strong>
+          <span class="bookmark-players">${escapeHtml(display.players)}</span>
+          <span>${escapeHtml(t('bookmarkSavedAt') + created)}</span>
+        </div>
+        <div class="bookmark-item-actions">
+          <a class="button-link ghost bookmark-open-link" href="${escapeHtml(href)}">${escapeHtml(t('bookmarkOpen'))}</a>
+          <button type="button" class="bookmark-delete-btn" data-delete-bookmark="${bookmark.id}">${escapeHtml(t('bookmarkDelete'))}</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function loadBookmarks() {
+  openBookmarkModal();
+  setBookmarkMessage(t('bookmarkLoading'));
+  if (el.bookmarkList) el.bookmarkList.innerHTML = '';
+  try {
+    const res = await bookmarkFetch('/api/bookmarks');
+    const data = await res.json().catch(() => null);
+    if (res.status === 403) {
+      closeBookmarkModal();
+      window.location.href = '/premium.html?feature=bookmarks';
+      return;
+    }
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || t('bookmarkListFailed'));
+    }
+    renderBookmarkList(data.bookmarks || []);
+    setBookmarkMessage('');
+  } catch (error) {
+    setBookmarkMessage(error.message || t('bookmarkListFailed'));
+  }
+}
+
+async function deleteBookmark(id) {
+  if (!id) return;
+  setBookmarkMessage(t('bookmarkDeleting'));
+  try {
+    const res = await bookmarkFetch('/api/bookmarks?id=' + encodeURIComponent(id), { method: 'DELETE' });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || t('bookmarkDeleteFailed'));
+    }
+    await loadBookmarks();
+    showToast(t('bookmarkDeleted'));
+  } catch (error) {
+    setBookmarkMessage(error.message || t('bookmarkDeleteFailed'));
+  }
+}
+
+async function checkUsageBeforeCompare() {
+  const session = await globalThis.AuthModule?.getSession?.();
+  const headers = { 'Content-Type': 'application/json' };
+  if (session?.access_token) headers.Authorization = 'Bearer ' + session.access_token;
+  const res = await fetch('/api/check-usage', {
+    method: 'POST',
+    headers,
+    body: '{}',
+  });
+  const data = await res.json().catch(() => null);
+  if (res.status === 429) {
+    const message = t('usageLimitReached');
+    if (el.step2Message) el.step2Message.textContent = message;
+    return { ok: false, limited: true, data };
+  }
+  if (!res.ok || !data?.ok) {
+    const message = data?.error || t('usageCheckFailed');
+    if (el.step2Message) el.step2Message.textContent = message;
+    return { ok: false, data };
+  }
+  const user = session?.user || null;
+  globalThis.AuthUIModule?.renderHeaderAuth?.(user, data);
+  return { ok: true, data };
 }
 
 async function restoreStateFromUrl() {
@@ -525,9 +783,21 @@ bindClick(el.compareBtn, 'compareBtn', async () => {
   logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
   el.compareBtn.disabled = true;
   try {
+    const usage = await checkUsageBeforeCompare();
+    if (!usage.ok) return;
     await handleCompare();
   } finally {
     el.compareBtn.disabled = false;
+  }
+});
+bindClick(el.saveBookmarkBtn, 'saveBookmarkBtn', saveCurrentBookmark);
+bindClick(el.showBookmarksBtn, 'showBookmarksBtn', loadBookmarks);
+bindClick(el.bookmarkModalCloseBtn, 'bookmarkModalCloseBtn', closeBookmarkModal);
+bindClick(el.bookmarkModalBackdrop, 'bookmarkModalBackdrop', closeBookmarkModal);
+el.bookmarkList?.addEventListener('click', (event) => {
+  const deleteButton = event.target.closest('[data-delete-bookmark]');
+  if (deleteButton) {
+    deleteBookmark(deleteButton.getAttribute('data-delete-bookmark'));
   }
 });
 el.playerA?.addEventListener('change', syncShareStateUrl);
@@ -615,6 +885,13 @@ function applyLang() {
     el.privacyLink.href = state.lang === 'en' ? '/privacy.html?lang=en' : '/privacy.html';
   }
   if (el.langToggle) el.langToggle.textContent = state.lang === 'ja' ? 'EN' : 'JA';
+  if (el.saveBookmarkBtn) el.saveBookmarkBtn.textContent = s.bookmarkSave;
+  if (el.showBookmarksBtn) el.showBookmarksBtn.textContent = s.bookmarkList;
+  if (el.bookmarkModalTitle) el.bookmarkModalTitle.textContent = s.bookmarkModalTitle;
+  globalThis.AuthUIModule?.refreshAuthUI?.();
+  if (el.bookmarkModal && !el.bookmarkModal.classList.contains('hidden')) {
+    loadBookmarks();
+  }
   // Re-render fight selects if data exists
   if (state.reportA) {
     const fightsA = extractSelectableFights(state.reportA);
@@ -660,6 +937,4 @@ try {
   console.error(e);
 }
 
-
-
-
+globalThis.updateBookmarkControls = updateBookmarkControls;

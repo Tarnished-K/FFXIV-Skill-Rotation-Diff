@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>サポーター登録 | FFXIV Skill Rotation Diff</title>
+    <meta
+      name="description"
+      content="FFXIV Skill Rotation Diff のサポータープラン案内ページです。"
+    />
+    <link rel="stylesheet" href="styles-base.css" />
+    <link rel="stylesheet" href="styles-layout.css" />
+    <link rel="stylesheet" href="styles-timeline.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script type="importmap">
+{
+  "imports": {
+    "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+  }
+}
+</script>
+  </head>
+  <body class="feedback-page premium-page">
+    <header>
+      <div class="header-row">
+        <div>
+          <h1>サポーター登録</h1>
+          <p>比較回数を気にせず使いたい方向けの月額プランです。</p>
+        </div>
+        <div class="header-actions">
+          <a class="button-link ghost tutorial-launch-btn" href="/">トップへ戻る</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="feedback-main premium-main">
+      <section class="card premium-hero-card">
+        <div class="guide-kicker">Supporter Plan</div>
+        <h2>サポーター特典</h2>
+        <p class="premium-lead">
+          月額200円（税込）で、FFXIV Skill Rotation Diffをより快適に利用できます。
+        </p>
+        <div class="premium-benefits">
+          <div class="premium-benefit">
+            <strong>広告非表示</strong>
+            <span>サポーターはヘッダー広告と本文広告を非表示にする予定です。</span>
+          </div>
+          <div class="premium-benefit">
+            <strong>比較回数無制限</strong>
+            <span>無料版の1日30回制限を気にせず比較できます。</span>
+          </div>
+          <div class="premium-benefit">
+            <strong>ブックマーク最大100件</strong>
+            <span>今後のフェーズで比較状態を保存できるようにします。</span>
+          </div>
+        </div>
+        <div class="premium-price">月額 <strong>200円</strong><span>税込</span></div>
+        <button id="supporterCheckoutBtn" type="button" class="premium-checkout-btn">
+          今すぐ始める（200円/月）
+        </button>
+        <p id="premiumMessage" class="submessage premium-message"></p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-legal">
+        <small>FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD. All Rights Reserved. This is an unofficial fan tool, not affiliated with or endorsed by Square Enix.</small>
+        <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>. &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a></small>
+      </div>
+      <small class="build-info" data-build-info>Version loading...</small>
+    </footer>
+
+    <div id="authModal" class="auth-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <div id="authModalBackdrop" class="auth-modal-backdrop"></div>
+      <div class="auth-modal-card">
+        <div class="auth-modal-head">
+          <h2 id="authModalTitle">ログイン</h2>
+          <button id="authCloseBtn" type="button" class="auth-close-btn" aria-label="閉じる">×</button>
+        </div>
+        <form id="authForm" novalidate>
+          <label class="auth-label">
+            メールアドレス
+            <input id="authEmailInput" type="email" autocomplete="email" required class="auth-input" />
+          </label>
+          <label class="auth-label">
+            パスワード
+            <input id="authPasswordInput" type="password" autocomplete="current-password" required class="auth-input" />
+          </label>
+          <p id="authError" class="auth-error" aria-live="polite"></p>
+          <button id="authSubmitBtn" type="submit" class="auth-submit-btn">ログイン</button>
+        </form>
+        <div class="auth-divider"><span>または</span></div>
+        <button id="authGoogleBtn" type="button" class="auth-google-btn">Google でログイン / 登録</button>
+        <p id="authSwitchText" class="auth-switch-text">アカウントをお持ちでない方は <a href="#" id="authSwitchLink">会員登録</a></p>
+      </div>
+    </div>
+
+    <script src="./scripts/shared/build-info.js"></script>
+    <script type="module" src="scripts/auth/auth.js"></script>
+    <script type="module" src="scripts/auth/auth-ui.js"></script>
+    <script type="module">
+      let checkoutAfterLogin = false;
+
+      async function startCheckout() {
+        const message = document.getElementById('premiumMessage');
+        const button = document.getElementById('supporterCheckoutBtn');
+        if (message) message.textContent = '';
+        if (button) button.disabled = true;
+        try {
+          const auth = globalThis.AuthModule;
+          await auth?.init?.();
+          const session = await auth?.getSession?.();
+          if (!session?.access_token) {
+            checkoutAfterLogin = true;
+            if (message) message.textContent = '先にログインまたは会員登録をしてください。';
+            globalThis.AuthUIModule?.openAuthModal?.('login');
+            return;
+          }
+          const res = await fetch('/api/create-checkout', {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + session.access_token },
+          });
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data?.url) {
+            throw new Error(data?.error || '支払い画面の作成に失敗しました。');
+          }
+          window.location.href = data.url;
+        } catch (error) {
+          if (message) message.textContent = error.message || 'エラーが発生しました。';
+        } finally {
+          if (button) button.disabled = false;
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          globalThis.AuthUIModule?.initAuthUI?.();
+          globalThis.AuthModule?.onAuthStateChange?.(() => {
+            if (!checkoutAfterLogin) return;
+            checkoutAfterLogin = false;
+            startCheckout();
+          });
+          document.getElementById('supporterCheckoutBtn')?.addEventListener('click', startCheckout);
+        });
+      } else {
+        globalThis.AuthUIModule?.initAuthUI?.();
+        globalThis.AuthModule?.onAuthStateChange?.(() => {
+          if (!checkoutAfterLogin) return;
+          checkoutAfterLogin = false;
+          startCheckout();
+        });
+        document.getElementById('supporterCheckoutBtn')?.addEventListener('click', startCheckout);
+      }
+    </script>
+  </body>
+</html>

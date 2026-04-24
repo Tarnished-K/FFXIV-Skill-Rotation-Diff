@@ -31,7 +31,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  border-bottom: 1px dashed rgba(105, 146, 185, 0.24);
+  border-bottom: none;
   z-index: 0;
 }
 
@@ -67,6 +67,11 @@
 
 .lane-guide-line.b {
   background: linear-gradient(90deg, rgba(249, 115, 22, 0.3), rgba(105, 146, 185, 0.16), transparent);
+}
+
+.lane-guide-line.synergy {
+  height: 2px;
+  background: linear-gradient(90deg, rgba(242, 207, 122, 0.5), rgba(110, 231, 216, 0.28), transparent);
 }
 
 .player-label {
@@ -167,6 +172,26 @@
   font-size: 9px;
   font-weight: bold;
   opacity: 0.8;
+  white-space: nowrap;
+}
+
+.synergy-window {
+  position: absolute;
+  z-index: 3;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid;
+  border-radius: 12px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
+.synergy-window span {
+  display: block;
+  padding: 11px 10px 0;
+  font-size: 11px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

@@ -99,7 +99,7 @@ function blockHeaderAutoAds() {
 }
 
 function updateAdVisibility(isPremium) {
-  document.querySelectorAll('.header-ad, .adsbygoogle').forEach((el) => {
+  document.querySelectorAll('.header-ad').forEach((el) => {
     el.style.display = isPremium ? 'none' : '';
   });
 }

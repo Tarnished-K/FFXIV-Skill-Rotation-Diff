@@ -16,9 +16,9 @@
 .header-ad ins,
 .header-ad iframe {
   display: inline-block !important;
-  width: 468px !important;
+  width: 728px !important;
   max-width: 100% !important;
-  height: 60px !important;
+  height: 90px !important;
   margin: 0 !important;
 }
 

@@ -427,7 +427,6 @@ function renderTimeline() {
   const bossCastsB = filterSynergyRecordsByView(state.bossCastsB, 'b');
   const playerDebuffsA = filterSynergyRecordsByView(state.playerDebuffsA, 'a');
   const playerDebuffsB = filterSynergyRecordsByView(state.playerDebuffsB, 'b');
-  const hasBossCastLane = bossCastsA.length || bossCastsB.length;
   const hasDebuffLaneA = playerDebuffsA.length > 0;
   const hasDebuffLaneB = playerDebuffsB.length > 0;
   const synergyLaneDefsA = buildSynergyLaneDefs(synergiesA);
@@ -439,15 +438,56 @@ function renderTimeline() {
   const debuffLaneHeightA = hasDebuffLaneA ? 24 : 0;
   const debuffLaneHeightB = hasDebuffLaneB ? 24 : 0;
 
-  // DPS繧ｰ繝ｩ繝輔・譛臥┌
+  // ボス詠唱レーン分類
+  const allBossCasts = [
+    ...bossCastsA.map((r) => ({ ...r, owner: 'a' })),
+    ...bossCastsB.map((r) => ({ ...r, owner: 'b' })),
+  ];
+  const mainBossCasts = allBossCasts.filter((r) => r.isBoss);
+  const addCastsRaw = allBossCasts.filter((r) => !r.isBoss);
+  const bossActorsSeen = [];
+  for (const r of mainBossCasts) {
+    if (r.bossActorId && !bossActorsSeen.some((b) => b.id === r.bossActorId)) {
+      bossActorsSeen.push({ id: r.bossActorId, name: r.sourceName || String(r.bossActorId) });
+    }
+    if (bossActorsSeen.length >= 2) break;
+  }
+  const boss1Id = bossActorsSeen[0]?.id ?? 0;
+  const boss2Id = bossActorsSeen[1]?.id ?? 0;
+  const boss1Casts = mainBossCasts.filter((r) => r.bossActorId === boss1Id);
+  const boss2Casts = boss2Id ? mainBossCasts.filter((r) => r.bossActorId === boss2Id) : [];
+  const overflowBossCasts = mainBossCasts.filter((r) => r.bossActorId !== boss1Id && r.bossActorId !== boss2Id);
+  const addCastsAll = [...addCastsRaw, ...overflowBossCasts];
+
+  const BOSS_LANE_H = 32;
+  const ADD_LANE_H = 30;
+  const LANE_GAP = 6;
+  const hasBoss1Lane = boss1Casts.length > 0;
+  const hasBoss2Lane = boss2Casts.length > 0;
+  const hasAddLane = addCastsAll.length > 0;
+  const hasBossCastLane = hasBoss1Lane || hasBoss2Lane || hasAddLane;
+  const bossCastTotalHeight =
+    (hasBoss1Lane ? BOSS_LANE_H + LANE_GAP : 0) +
+    (hasBoss2Lane ? BOSS_LANE_H + LANE_GAP : 0) +
+    (hasAddLane ? ADD_LANE_H + LANE_GAP : 0);
+
+  // DPS グラフ
   const hasDps = state.rollingDpsA.length > 0 || state.rollingDpsB.length > 0;
   const dpsGraphHeight = hasDps ? 80 : 0;
   const dpsGraphTop = hasDps ? 4 : 0;
-  const bossCastLaneHeight = hasBossCastLane ? 34 : 0;
-  const bossCastLaneTop = dpsGraphTop + dpsGraphHeight + (hasBossCastLane ? 8 : 0);
 
-  // Layout: DPS graph -> ruler -> player A -> divider -> player B
-  const rulerTop = dpsGraphTop + dpsGraphHeight + bossCastLaneHeight + (hasBossCastLane ? 10 : 0);
+  // ボス詠唱レーン各 top（上から: 雑魚 → ボス2 → ボス1）
+  const laneAreaTop = dpsGraphTop + dpsGraphHeight + (hasBossCastLane ? 8 : 0);
+  let _laneOffset = laneAreaTop;
+  const addLaneTop = hasAddLane ? _laneOffset : 0;
+  if (hasAddLane) _laneOffset += ADD_LANE_H + LANE_GAP;
+  const boss2LaneTop = hasBoss2Lane ? _laneOffset : 0;
+  if (hasBoss2Lane) _laneOffset += BOSS_LANE_H + LANE_GAP;
+  const boss1LaneTop = hasBoss1Lane ? _laneOffset : 0;
+  if (hasBoss1Lane) _laneOffset += BOSS_LANE_H + LANE_GAP;
+
+  // Layout: DPS graph -> boss lanes -> ruler -> player A -> divider -> player B
+  const rulerTop = laneAreaTop + bossCastTotalHeight + (hasBossCastLane ? 4 : 0);
   const playerAStart = rulerTop + 18;
   const laneTop = {
     a_ogcd: playerAStart + 10,
@@ -613,22 +653,51 @@ function renderTimeline() {
     }).join('');
   };
 
-  const buildBossCastLane = () => {
+  const buildSingleBossLane = (casts, laneTopY, laneLabel) => {
+    if (!casts.length) return '';
+    const barTop = laneTopY + 4;
+    const bars = casts.map((record) => {
+      const start = Number(record.t || 0);
+      const end = Math.max(start + 0.1, Number(record.endT || record.castEndT || start + 2));
+      const x = 60 + start * pxPerSec;
+      const w = Math.max(18, (end - start) * pxPerSec);
+      const label = record.label || record.action || '-';
+      const source = record.sourceName ? ` / ${record.sourceName}` : '';
+      const title = `${formatTimelineTime(start)}-${formatTimelineTime(end)} ${label}${source}`;
+      return `<div class="boss-cast-bar ${record.owner}" style="left:${x}px; top:${barTop}px; width:${w}px" title="${escapeHtml(title)}"><span>${escapeHtml(label)}</span></div>`;
+    }).join('');
+    return `<div class="lane-label boss-cast-lane-label" style="top:${laneTopY - 2}px">${escapeHtml(laneLabel)}</div>
+      <div class="boss-cast-lane-line" style="top:${laneTopY + 16}px"></div>
+      ${bars}`;
+  };
+
+  const buildAddCastLane = (casts, laneTopY) => {
+    if (!casts.length) return '';
+    const laneLabel = state.lang === 'ja' ? '雑魚詠唱' : 'Add Casts';
+    const barTop = laneTopY + 4;
+    const bars = casts.map((record) => {
+      const start = Number(record.t || 0);
+      const end = Math.max(start + 0.1, Number(record.endT || record.castEndT || start + 2));
+      const x = 60 + start * pxPerSec;
+      const w = Math.max(18, (end - start) * pxPerSec);
+      const label = record.label || record.action || '-';
+      const source = record.sourceName ? ` / ${record.sourceName}` : '';
+      const title = `${formatTimelineTime(start)}-${formatTimelineTime(end)} ${label}${source}`;
+      return `<div class="boss-cast-bar add ${record.owner}" style="left:${x}px; top:${barTop}px; width:${w}px" title="${escapeHtml(title)}"><span>${escapeHtml(label)}</span></div>`;
+    }).join('');
+    return `<div class="lane-label add-cast-lane-label" style="top:${laneTopY - 2}px">${escapeHtml(laneLabel)}</div>
+      ${bars}`;
+  };
+
+  const buildAllBossCastLanes = () => {
     if (!hasBossCastLane) return '';
-    const records = [...bossCastsA.map((record) => ({ ...record, owner: 'a' })), ...bossCastsB.map((record) => ({ ...record, owner: 'b' }))];
-    const top = bossCastLaneTop + 8;
-    return `<div class="lane-label boss-cast-lane-label" style="top:${top - 6}px">${state.lang === 'ja' ? 'ボス詠唱' : 'Boss Cast'}</div>
-      <div class="boss-cast-lane-line" style="top:${top + 12}px"></div>
-      ${records.map((record) => {
-        const start = Number(record.t || 0);
-        const end = Math.max(start + 0.1, Number(record.endT || record.castEndT || start + 2));
-        const x = 60 + start * pxPerSec;
-        const w = Math.max(18, (end - start) * pxPerSec);
-        const label = record.label || record.action || '-';
-        const source = record.sourceName ? ` / ${record.sourceName}` : '';
-        const title = `${formatTimelineTime(start)}-${formatTimelineTime(end)} ${label}${source}`;
-        return `<div class="boss-cast-bar ${record.owner}" style="left:${x}px; top:${top}px; width:${w}px" title="${escapeHtml(title)}"><span>${escapeHtml(label)}</span></div>`;
-      }).join('')}`;
+    const boss1Name = bossActorsSeen[0]?.name || (state.lang === 'ja' ? 'ボス詠唱' : 'Boss Cast');
+    const boss2Name = bossActorsSeen[1]?.name || (state.lang === 'ja' ? 'ボス 2' : 'Boss 2');
+    return [
+      buildAddCastLane(addCastsAll, addLaneTop),
+      hasBoss2Lane ? buildSingleBossLane(boss2Casts, boss2LaneTop, boss2Name) : '',
+      hasBoss1Lane ? buildSingleBossLane(boss1Casts, boss1LaneTop, boss1Name) : '',
+    ].join('');
   };
 
   const buildDebuffLane = (records, owner) => {
@@ -723,7 +792,7 @@ function renderTimeline() {
   el.timelineWrap.innerHTML = `
     <div class="timeline" style="width:${width}px; height:${totalHeight}px">
       ${buildDpsGraph()}
-      ${buildBossCastLane()}
+      ${buildAllBossCastLanes()}
       ${buildTimelineGrid()}
       ${buildRulerAtTop()}
       <div class="player-label player-label-a" style="top:${playerAStart - 4}px">${labelA}</div>

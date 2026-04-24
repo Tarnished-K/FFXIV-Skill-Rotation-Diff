@@ -267,27 +267,50 @@
   pointer-events: none;
 }
 
+.boss-cast-lane-label {
+  color: rgba(253, 224, 71, 0.85);
+}
+
+.add-cast-lane-label {
+  color: rgba(148, 163, 184, 0.75);
+}
+
 .boss-cast-bar {
   position: absolute;
   z-index: 3;
-  height: 22px;
+  height: 24px;
   min-width: 18px;
   overflow: hidden;
-  border: 1px solid rgba(250, 204, 21, 0.38);
+  border: 1px solid rgba(250, 204, 21, 0.50);
   border-radius: 5px;
-  background: rgba(250, 204, 21, 0.14);
-  color: #fef3c7;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 20px;
+  background: rgba(250, 204, 21, 0.22);
+  color: #fefce8;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 22px;
   pointer-events: auto;
   text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   white-space: nowrap;
 }
 
 .boss-cast-bar.b {
-  border-color: rgba(249, 115, 22, 0.38);
-  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.50);
+  background: rgba(249, 115, 22, 0.22);
+}
+
+.boss-cast-bar.add {
+  border-color: rgba(148, 163, 184, 0.40);
+  background: rgba(148, 163, 184, 0.14);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.boss-cast-bar.add.b {
+  border-color: rgba(148, 163, 184, 0.30);
+  background: rgba(148, 163, 184, 0.10);
 }
 
 .boss-cast-bar span {

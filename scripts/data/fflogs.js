@@ -483,6 +483,8 @@ async function fetchBossCastsV2(reportCode, fight, reportJson) {
       const key = `${sourceId}:${actionId || name}`;
       if (type === 'begincast') {
         const durationMs = Number(event?.duration || 0);
+        const actorType = String(sourceActor?.type || sourceActor?.subType || '').toLowerCase();
+        const isBoss = actorType === 'boss';
         if (!pending.has(key)) pending.set(key, []);
         pending.get(key).push({
           t,
@@ -492,6 +494,8 @@ async function fetchBossCastsV2(reportCode, fight, reportJson) {
           label: name,
           sourceId: String(sourceId || ''),
           sourceName: event?.source?.name || sourceActor?.name || '',
+          isBoss,
+          bossActorId: isBoss ? sourceId : 0,
         });
         continue;
       }

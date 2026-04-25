@@ -1261,7 +1261,7 @@ globalThis.__exportPremiumPreview = async function () {
       dps: getDps(dpsData, row.player?.name || ''),
       timeline: (row.records || [])
         .filter(e => e.t <= MAX_SEC)
-        .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '' })),
+        .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '', label: e.label || '', icon: e.icon || '', category: e.category || '' })),
     }));
   }
 
@@ -1283,7 +1283,7 @@ globalThis.__exportPremiumPreview = async function () {
             : 0),
         timeline: (state.timelineA || [])
           .filter(e => e.t <= MAX_SEC)
-          .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '' })),
+          .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '', label: e.label || '', icon: e.icon || '', category: e.category || '' })),
       },
       {
         name: state.selectedB.name,
@@ -1294,7 +1294,7 @@ globalThis.__exportPremiumPreview = async function () {
             : 0),
         timeline: (state.timelineB || [])
           .filter(e => e.t <= MAX_SEC)
-          .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '' })),
+          .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '', label: e.label || '', icon: e.icon || '', category: e.category || '' })),
       },
     ],
     bossCasts: (state.bossCastsA || [])

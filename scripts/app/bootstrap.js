@@ -1338,9 +1338,15 @@ globalThis.__exportPremiumPreview = async function () {
 globalThis.__captureTimelineHTML = function (type = 'personal') {
   const wrap = document.querySelector('.timeline-wrap');
   if (!wrap) { alert('タイムラインが表示されていません。比較を実行してから再試行してください。'); return; }
-  const filename = type === 'party'
-    ? 'premium-preview-party.html'
-    : 'premium-preview-timeline.html';
+  const FILE_MAP = {
+    'personal':      'premium-preview-timeline.html',
+    'party':         'premium-preview-party.html',
+    'personal-odd':  'premium-preview-personal-odd.html',
+    'personal-even': 'premium-preview-personal-even.html',
+    'party-odd':     'premium-preview-party-odd.html',
+    'party-even':    'premium-preview-party-even.html',
+  };
+  const filename = FILE_MAP[type] || `premium-preview-${type}.html`;
   const html = wrap.outerHTML;
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
@@ -1350,4 +1356,5 @@ globalThis.__captureTimelineHTML = function (type = 'personal') {
   a.click();
   URL.revokeObjectURL(url);
   console.log(`[__captureTimelineHTML] ダウンロード完了 - assets/${filename} に保存してください`);
+  console.log('利用可能なtype: personal / party / personal-odd / personal-even / party-odd / party-even');
 };

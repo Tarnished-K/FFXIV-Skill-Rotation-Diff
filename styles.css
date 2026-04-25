@@ -921,7 +921,15 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+}
+
+/* フェーズボタンバー & プレイヤーフィルターバー */
+.pp-phase-bar {
+  margin-bottom: 8px;
+}
+.pp-player-filter {
+  margin-bottom: 8px;
 }
 
 /* 名前タグ非表示（プライバシー保護） */

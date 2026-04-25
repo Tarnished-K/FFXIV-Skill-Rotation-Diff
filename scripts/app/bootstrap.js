@@ -1335,16 +1335,19 @@ globalThis.__exportPremiumPreview = async function () {
   });
 };
 
-globalThis.__captureTimelineHTML = function () {
+globalThis.__captureTimelineHTML = function (type = 'personal') {
   const wrap = document.querySelector('.timeline-wrap');
   if (!wrap) { alert('タイムラインが表示されていません。比較を実行してから再試行してください。'); return; }
+  const filename = type === 'party'
+    ? 'premium-preview-party.html'
+    : 'premium-preview-timeline.html';
   const html = wrap.outerHTML;
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'premium-preview-timeline.html';
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
-  console.log('[__captureTimelineHTML] ダウンロード完了 - assets/premium-preview-timeline.html に保存してください');
+  console.log(`[__captureTimelineHTML] ダウンロード完了 - assets/${filename} に保存してください`);
 };

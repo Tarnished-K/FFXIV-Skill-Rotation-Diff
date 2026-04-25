@@ -912,3 +912,35 @@
 .ui-toast.hidden {
   display: none;
 }
+
+/* ===== プレミアムプレビュー コントロール ===== */
+
+/* コントロールバーレイアウト */
+.pp-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+/* 名前タグ非表示（プライバシー保護） */
+.premium-preview-outer .player-label {
+  visibility: hidden;
+}
+
+/* レイヤー非表示クラス */
+.pp-layer-gcd-hidden .event.gcd,
+.pp-layer-gcd-hidden .lane-guide-line.gcd { display: none !important; }
+
+.pp-layer-ogcd-hidden .event.ogcd,
+.pp-layer-ogcd-hidden .lane-guide-line.ogcd { display: none !important; }
+
+.pp-layer-synergy-hidden .synergy-segment,
+.pp-layer-synergy-hidden .synergy-start,
+.pp-layer-synergy-hidden .synergy-start-icon,
+.pp-layer-synergy-hidden .synergy-lane-name,
+.pp-layer-synergy-hidden .lane-guide-line.synergy { display: none !important; }
+
+.pp-layer-cast-hidden .boss-cast-bar,
+.pp-layer-cast-hidden .boss-cast-lane-line { display: none !important; }

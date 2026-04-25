@@ -43,16 +43,28 @@
         </p>
         <div class="premium-benefits">
           <div class="premium-benefit">
-            <strong>広告非表示</strong>
-            <span>サポーターはヘッダー広告と本文広告を非表示にする予定です。</span>
+            <strong>シナジーTL分析</strong>
+            <span>パーティ全員のバフ発動タイミングを可視化。バーストウィンドウのずれを一目で確認できます。</span>
           </div>
           <div class="premium-benefit">
-            <strong>比較回数無制限</strong>
-            <span>無料版の1日30回制限を気にせず比較できます。</span>
+            <strong>デバフTL分析</strong>
+            <span>致命的な傷・弱点露出などのデバフ付与タイミングを比較し、与ダメ増加の活用状況を分析できます。</span>
+          </div>
+          <div class="premium-benefit">
+            <strong>ボス詠唱TL分析</strong>
+            <span>ボスの詠唱スケジュールをタイムライン上に重ねて表示。日本語アクション名に対応。</span>
           </div>
           <div class="premium-benefit">
             <strong>ブックマーク最大100件</strong>
-            <span>今後のフェーズで比較状態を保存できるようにします。</span>
+            <span>比較状態をワンクリックで保存。後から呼び出してURLなしで再比較できます。</span>
+          </div>
+          <div class="premium-benefit">
+            <strong>パーティ比較</strong>
+            <span>2件のレポートからパーティ全体のDPS・行動を横断比較できます。</span>
+          </div>
+          <div class="premium-benefit">
+            <strong>広告非表示・比較回数無制限</strong>
+            <span>ヘッダー広告を非表示にし、無料版の1日10回制限なく何度でも比較できます。</span>
           </div>
         </div>
         <div class="premium-price">月額 <strong>200円</strong><span>税込</span></div>
@@ -60,6 +72,14 @@
           準備中
         </button>
         <p id="premiumMessage" class="submessage premium-message"></p>
+      </section>
+      <section class="card premium-preview-card">
+        <div class="guide-kicker">実際の画面</div>
+        <h2>サポーター機能プレビュー</h2>
+        <p class="premium-lead">
+          実際の FFLogs データから生成した比較タイムラインです。シナジーレーン・ボス詠唱レーンを含むサポーター専用画面をご確認いただけます。
+        </p>
+        <div id="premiumPreviewOuter" class="premium-preview-outer"></div>
       </section>
     </main>
 
@@ -97,6 +117,7 @@
     </div>
 
     <script src="./scripts/shared/build-info.js"></script>
+    <script src="./scripts/premium-preview.js"></script>
     <script type="module" src="scripts/auth/auth.js"></script>
     <script type="module" src="scripts/auth/auth-ui.js"></script>
     <script type="module">

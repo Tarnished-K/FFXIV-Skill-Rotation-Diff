@@ -1236,3 +1236,82 @@ try {
 
 globalThis.updateBookmarkControls = updateBookmarkControls;
 globalThis.updateTimelineLayerControls = updateTimelineLayerControls;
+
+globalThis.__exportPremiumPreview = function () {
+  const MAX_SEC = 300;
+  if (!state.selectedA || !state.selectedB) {
+    alert('比較結果が見つかりません。先に比較を実行してください。');
+    return;
+  }
+
+  function getDps(dpsData, playerName, damageEvents, fightMs) {
+    const entry = (dpsData || []).find(e => e.name === playerName);
+    if (entry?.aDPS) return Math.round(entry.aDPS);
+    if (damageEvents?.length && fightMs > 0) {
+      const total = damageEvents.reduce((s, e) => s + (e.amount || 0), 0);
+      return Math.round(total / (fightMs / 1000));
+    }
+    return 0;
+  }
+
+  const fightDurA = (state.fightA?.endTime || 0) - (state.fightA?.startTime || 0);
+  const fightDurB = (state.fightB?.endTime || 0) - (state.fightB?.startTime || 0);
+
+  const data = {
+    reportCode: state.urlA?.reportId || '',
+    fightId: state.fightA?.id || 0,
+    encounter: state.fightA?.name || '',
+    previewMaxSec: MAX_SEC,
+    players: [
+      {
+        name: state.selectedA.name,
+        job: state.selectedA.job,
+        dps: getDps(state.dpsDataA, state.selectedA.name, state.damageA, fightDurA),
+        timeline: (state.timelineA || [])
+          .filter(e => e.t <= MAX_SEC)
+          .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '' })),
+      },
+      {
+        name: state.selectedB.name,
+        job: state.selectedB.job,
+        dps: getDps(state.dpsDataB, state.selectedB.name, state.damageB, fightDurB),
+        timeline: (state.timelineB || [])
+          .filter(e => e.t <= MAX_SEC)
+          .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '' })),
+      },
+    ],
+    bossCasts: (state.bossCastsA || [])
+      .filter(e => e.t <= MAX_SEC)
+      .map(e => ({
+        t: e.t,
+        endT: e.endT ?? e.t + 3,
+        action: e.action || '',
+        actionJa: e.actionJa || e.action || '',
+        isBoss: !!e.isBoss,
+        sourceName: e.sourceName || '',
+      })),
+    synergy: (state.partyBuffsA || [])
+      .filter(e => e.t <= MAX_SEC)
+      .map(e => ({
+        t: e.t,
+        duration: e.duration || 20,
+        nameEn: e.nameEn || '',
+        nameJa: e.nameJa || e.nameEn || '',
+        color: e.color || '#888',
+        sourceName: e.sourceName || '',
+      })),
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'premium-preview-data.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  console.log('[__exportPremiumPreview] ダウンロード完了', {
+    players: data.players.map(p => `${p.name} (${p.job}): ${p.dps} DPS, ${p.timeline.length}件`),
+    bossCasts: data.bossCasts.length,
+    synergy: data.synergy.length,
+  });
+};

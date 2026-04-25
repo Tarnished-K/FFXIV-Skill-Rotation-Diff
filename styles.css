@@ -583,6 +583,117 @@
   margin-top: 12px;
 }
 
+/* ===== プレビューセクション ===== */
+
+.premium-preview-card {
+  margin-top: 20px;
+}
+
+.premium-preview-outer {
+  margin-top: 16px;
+  min-height: 48px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+}
+
+.premium-preview-loading {
+  padding: 16px 0;
+  color: var(--text-muted, #94a3b8);
+}
+
+.premium-preview-error {
+  padding: 16px 0;
+  color: var(--danger, #f87171);
+}
+
+/* Player header row above the scrollable timeline */
+.premium-preview-players {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.premium-preview-player-a,
+.premium-preview-player-b {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+}
+
+.premium-preview-vs {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 600;
+}
+
+.premium-preview-pname {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary, #e2e8f0);
+}
+
+.premium-preview-pjob {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.premium-preview-pdps {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent, #6ee7b7);
+}
+
+/* Scrollable timeline wrapper */
+.premium-preview-scroll {
+  overflow-x: auto;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  background: var(--timeline-bg, #0f172a);
+  padding: 0 8px;
+  cursor: grab;
+}
+
+.premium-preview-scroll:active {
+  cursor: grabbing;
+}
+
+/* Small job label inside the player label */
+.player-preview-job {
+  font-size: 0.7rem;
+  color: var(--text-muted, #94a3b8);
+  margin-left: 4px;
+  font-style: normal;
+}
+
+.player-preview-dps {
+  font-size: 0.72rem;
+  margin-left: 6px;
+  color: var(--accent, #6ee7b7);
+  font-variant-numeric: tabular-nums;
+}
+
+.premium-preview-caption {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.premium-preview-caption a {
+  color: var(--accent, #6ee7b7);
+  text-decoration: none;
+}
+
+.premium-preview-caption a:hover {
+  text-decoration: underline;
+}
+
 /* ===== ブックマークUI ===== */
 .bookmark-controls {
   display: inline-flex;

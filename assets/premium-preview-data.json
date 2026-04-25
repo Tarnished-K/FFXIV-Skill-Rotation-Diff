@@ -1,0 +1,14 @@
+{
+  "reportCode": "",
+  "fightId": 0,
+  "encounter": "",
+  "previewMaxSec": 300,
+  "players": [
+    { "name": "Player A", "job": "BLM", "dps": 0, "timeline": [] },
+    { "name": "Player B", "job": "BLM", "dps": 0, "timeline": [] }
+  ],
+  "bossCasts": [],
+  "synergy": [],
+  "partyA": [],
+  "partyB": []
+}

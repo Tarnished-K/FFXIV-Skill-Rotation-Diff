@@ -1237,21 +1237,32 @@ try {
 globalThis.updateBookmarkControls = updateBookmarkControls;
 globalThis.updateTimelineLayerControls = updateTimelineLayerControls;
 
-globalThis.__exportPremiumPreview = function () {
+globalThis.__exportPremiumPreview = async function () {
   const MAX_SEC = 300;
   if (!state.selectedA || !state.selectedB) {
     alert('比較結果が見つかりません。先に比較を実行してください。');
     return;
   }
 
-  function getDps(dpsData, playerName, damageEvents, fightMs) {
+  if (!state.partyTimelineA.length || !state.partyTimelineB.length) {
+    console.log('[__exportPremiumPreview] PTタイムラインを取得中...');
+    await loadPartyTimelineComparison();
+  }
+
+  function getDps(dpsData, playerName) {
     const entry = (dpsData || []).find(e => e.name === playerName);
-    if (entry?.aDPS) return Math.round(entry.aDPS);
-    if (damageEvents?.length && fightMs > 0) {
-      const total = damageEvents.reduce((s, e) => s + (e.amount || 0), 0);
-      return Math.round(total / (fightMs / 1000));
-    }
-    return 0;
+    return entry?.aDPS ? Math.round(entry.aDPS) : 0;
+  }
+
+  function buildParty(partyTimeline, dpsData) {
+    return (partyTimeline || []).map(row => ({
+      name: row.player?.name || '',
+      job: row.player?.job || '',
+      dps: getDps(dpsData, row.player?.name || ''),
+      timeline: (row.records || [])
+        .filter(e => e.t <= MAX_SEC)
+        .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '' })),
+    }));
   }
 
   const fightDurA = (state.fightA?.endTime || 0) - (state.fightA?.startTime || 0);
@@ -1266,7 +1277,10 @@ globalThis.__exportPremiumPreview = function () {
       {
         name: state.selectedA.name,
         job: state.selectedA.job,
-        dps: getDps(state.dpsDataA, state.selectedA.name, state.damageA, fightDurA),
+        dps: getDps(state.dpsDataA, state.selectedA.name) ||
+          (state.damageA?.length && fightDurA > 0
+            ? Math.round(state.damageA.reduce((s, e) => s + (e.amount || 0), 0) / (fightDurA / 1000))
+            : 0),
         timeline: (state.timelineA || [])
           .filter(e => e.t <= MAX_SEC)
           .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '' })),
@@ -1274,7 +1288,10 @@ globalThis.__exportPremiumPreview = function () {
       {
         name: state.selectedB.name,
         job: state.selectedB.job,
-        dps: getDps(state.dpsDataB, state.selectedB.name, state.damageB, fightDurB),
+        dps: getDps(state.dpsDataB, state.selectedB.name) ||
+          (state.damageB?.length && fightDurB > 0
+            ? Math.round(state.damageB.reduce((s, e) => s + (e.amount || 0), 0) / (fightDurB / 1000))
+            : 0),
         timeline: (state.timelineB || [])
           .filter(e => e.t <= MAX_SEC)
           .map(e => ({ t: e.t, castEndT: e.castEndT ?? null, action: e.action || '' })),
@@ -1300,6 +1317,8 @@ globalThis.__exportPremiumPreview = function () {
         color: e.color || '#888',
         sourceName: e.sourceName || '',
       })),
+    partyA: buildParty(state.partyTimelineA, state.dpsDataA),
+    partyB: buildParty(state.partyTimelineB, state.dpsDataB),
   };
 
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

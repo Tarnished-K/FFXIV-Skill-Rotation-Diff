@@ -6,7 +6,7 @@
   const DATA_URL = './assets/premium-preview-data.json';
   const PX_PER_SEC = 60;
 
-  // Layout constants
+  // Layout constants — personal view
   const RULER_TOP = 8;
   const RULER_H = 24;
   const BOSS_LANE_TOP = RULER_TOP + RULER_H + 4;
@@ -18,6 +18,11 @@
   const GCD_H = 28;
   const PLAYER_BLOCK_H = PLAYER_LABEL_H + 56 + OGCD_H + 16;
   const DIVIDER_H = 20;
+
+  // Layout constants — party view
+  const PARTY_ROW_H = 40;
+  const PARTY_EVENT_H = 22;
+  const GROUP_LABEL_H = 24;
 
   // --- DOM helpers ---
 
@@ -115,7 +120,6 @@
     const laneIndexByKey = new Map(laneKeys.map((k, i) => [k, i]));
     const colorByKey = new Map(synergy.map(r => [r.nameEn, r.color || '#888']));
 
-    // Lane name labels (placed in the left gutter via absolute positioning)
     for (const [key, idx] of laneIndexByKey) {
       const nameEl = div('synergy-lane-name');
       nameEl.style.top = `${synergyLaneTop + idx * SYNERGY_ROW_H}px`;
@@ -125,7 +129,6 @@
       labelContainer.appendChild(nameEl);
     }
 
-    // Synergy segments (bars)
     const frag = document.createDocumentFragment();
     for (const r of synergy) {
       const idx = laneIndexByKey.get(r.nameEn) ?? 0;
@@ -140,7 +143,7 @@
     return frag;
   }
 
-  // --- Player track ---
+  // --- Player track (personal view) ---
 
   function buildPlayerTrack(player, trackTop, pxPerSec, owner) {
     const frag = document.createDocumentFragment();
@@ -169,6 +172,37 @@
       const w = isGcd ? Math.max(6, Math.round((r.castEndT - r.t) * pxPerSec)) : 8;
       const eventEl = div('event');
       Object.assign(eventEl.style, { left: `${x}px`, top: `${top}px`, height: `${h}px`, width: `${w}px` });
+      eventEl.title = r.action || '';
+      frag.appendChild(eventEl);
+    }
+
+    return frag;
+  }
+
+  // --- Compact party row (party view) ---
+
+  function buildPartyRow(player, rowTop, pxPerSec, owner) {
+    const frag = document.createDocumentFragment();
+
+    const label = div(`player-label player-label-${owner} party-preview-row-label`);
+    label.style.top = `${rowTop}px`;
+    label.style.height = `${PARTY_ROW_H}px`;
+    const nameSpan = span('', player.name);
+    const jobSmall = document.createElement('small');
+    jobSmall.className = 'player-preview-job';
+    jobSmall.textContent = player.job;
+    label.appendChild(nameSpan);
+    label.appendChild(text(' '));
+    label.appendChild(jobSmall);
+    frag.appendChild(label);
+
+    const eventTop = rowTop + Math.round((PARTY_ROW_H - PARTY_EVENT_H) / 2);
+    for (const r of player.timeline || []) {
+      const isGcd = r.castEndT != null && (r.castEndT - r.t) > 1.0;
+      const x = Math.round(r.t * pxPerSec);
+      const w = isGcd ? Math.max(6, Math.round((r.castEndT - r.t) * pxPerSec)) : 8;
+      const eventEl = div('event');
+      Object.assign(eventEl.style, { left: `${x}px`, top: `${eventTop}px`, height: `${PARTY_EVENT_H}px`, width: `${w}px` });
       eventEl.title = r.action || '';
       frag.appendChild(eventEl);
     }
@@ -216,31 +250,13 @@
     container.appendChild(p);
   }
 
-  // --- Main render ---
+  // --- Shared timeline scaffold ---
 
-  function render(data, container) {
+  function buildTimelineScaffold(data, totalH) {
     const maxSec = Math.min(data.previewMaxSec || 300, 300);
     const totalW = maxSec * PX_PER_SEC;
 
-    const uniqueSynergyKeys = [...new Set((data.synergy || []).map(r => r.nameEn))];
-    const synergyH = Math.max(SYNERGY_ROW_H, uniqueSynergyKeys.length * SYNERGY_ROW_H + 6);
-    const synergyLaneTop = BOSS_LANE_TOP + BOSS_LANE_H + 6;
-
-    const playerATop = synergyLaneTop + synergyH + 8;
-    const playerABottom = playerATop + PLAYER_BLOCK_H;
-    const dividerTop = playerABottom + 4;
-    const playerBTop = dividerTop + DIVIDER_H;
-    const playerBBottom = playerBTop + PLAYER_BLOCK_H;
-    const totalH = playerBBottom + 12;
-
-    // Clear and build
-    container.textContent = '';
-
-    buildPlayerHeader(data.players, container);
-
     const scrollWrap = div('premium-preview-scroll');
-    container.appendChild(scrollWrap);
-
     const timeline = div('timeline');
     Object.assign(timeline.style, { width: `${totalW}px`, height: `${totalH}px`, position: 'relative' });
     scrollWrap.appendChild(timeline);
@@ -248,6 +264,33 @@
     timeline.appendChild(buildGridLines(maxSec, PX_PER_SEC, totalH));
     timeline.appendChild(buildRuler(maxSec, PX_PER_SEC));
     timeline.appendChild(buildBossLane(data.bossCasts || [], PX_PER_SEC));
+
+    return { scrollWrap, timeline, maxSec };
+  }
+
+  function synergyLayout(data) {
+    const uniqueSynergyKeys = [...new Set((data.synergy || []).map(r => r.nameEn))];
+    const synergyH = Math.max(SYNERGY_ROW_H, uniqueSynergyKeys.length * SYNERGY_ROW_H + 6);
+    const synergyLaneTop = BOSS_LANE_TOP + BOSS_LANE_H + 6;
+    return { synergyH, synergyLaneTop };
+  }
+
+  // --- Personal view ---
+
+  function renderPersonalView(data, viewWrap) {
+    viewWrap.textContent = '';
+
+    const { synergyH, synergyLaneTop } = synergyLayout(data);
+    const playerATop = synergyLaneTop + synergyH + 8;
+    const playerABottom = playerATop + PLAYER_BLOCK_H;
+    const dividerTop = playerABottom + 4;
+    const playerBTop = dividerTop + DIVIDER_H;
+    const playerBBottom = playerBTop + PLAYER_BLOCK_H;
+    const totalH = playerBBottom + 12;
+
+    const { scrollWrap, timeline } = buildTimelineScaffold(data, totalH);
+    viewWrap.appendChild(scrollWrap);
+
     timeline.appendChild(buildSynergyLane(data.synergy || [], synergyLaneTop, PX_PER_SEC, timeline));
     timeline.appendChild(buildPlayerTrack(data.players[0], playerATop, PX_PER_SEC, 'a'));
 
@@ -257,7 +300,94 @@
 
     timeline.appendChild(buildPlayerTrack(data.players[1], playerBTop, PX_PER_SEC, 'b'));
 
-    buildCaption(data, container);
+    buildCaption(data, viewWrap);
+  }
+
+  // --- Party view ---
+
+  function renderPartyView(data, viewWrap) {
+    viewWrap.textContent = '';
+
+    const partyA = data.partyA || [];
+    const partyB = data.partyB || [];
+
+    const { synergyH, synergyLaneTop } = synergyLayout(data);
+    const groupALabelTop = synergyLaneTop + synergyH + 8;
+    const groupAStart = groupALabelTop + GROUP_LABEL_H;
+    const groupAEnd = groupAStart + partyA.length * PARTY_ROW_H;
+    const dividerTop = groupAEnd + 4;
+    const groupBLabelTop = dividerTop + DIVIDER_H;
+    const groupBStart = groupBLabelTop + GROUP_LABEL_H;
+    const groupBEnd = groupBStart + partyB.length * PARTY_ROW_H;
+    const totalH = groupBEnd + 12;
+
+    const { scrollWrap, timeline } = buildTimelineScaffold(data, totalH);
+    viewWrap.appendChild(scrollWrap);
+
+    timeline.appendChild(buildSynergyLane(data.synergy || [], synergyLaneTop, PX_PER_SEC, timeline));
+
+    const glabelA = div('party-preview-group-label');
+    glabelA.style.top = `${groupALabelTop}px`;
+    glabelA.textContent = 'A側';
+    timeline.appendChild(glabelA);
+
+    for (let i = 0; i < partyA.length; i++) {
+      timeline.appendChild(buildPartyRow(partyA[i], groupAStart + i * PARTY_ROW_H, PX_PER_SEC, 'a'));
+    }
+
+    const dividerEl = div('player-divider');
+    dividerEl.style.top = `${dividerTop}px`;
+    timeline.appendChild(dividerEl);
+
+    const glabelB = div('party-preview-group-label');
+    glabelB.style.top = `${groupBLabelTop}px`;
+    glabelB.textContent = 'B側';
+    timeline.appendChild(glabelB);
+
+    for (let i = 0; i < partyB.length; i++) {
+      timeline.appendChild(buildPartyRow(partyB[i], groupBStart + i * PARTY_ROW_H, PX_PER_SEC, 'b'));
+    }
+
+    buildCaption(data, viewWrap);
+  }
+
+  // --- Main render (with tabs) ---
+
+  function render(data, container) {
+    container.textContent = '';
+
+    buildPlayerHeader(data.players, container);
+
+    const hasParty = (data.partyA?.length > 0) || (data.partyB?.length > 0);
+
+    const tabs = div('premium-preview-tabs');
+    const btnPersonal = div('premium-preview-tab is-active');
+    btnPersonal.textContent = '個人比較';
+    const btnParty = div('premium-preview-tab');
+    btnParty.textContent = 'PT分析';
+    tabs.appendChild(btnPersonal);
+    if (hasParty) tabs.appendChild(btnParty);
+    container.appendChild(tabs);
+
+    const viewWrap = div('premium-preview-view');
+    container.appendChild(viewWrap);
+
+    function showPersonal() {
+      btnPersonal.classList.add('is-active');
+      btnParty.classList.remove('is-active');
+      renderPersonalView(data, viewWrap);
+    }
+
+    function showParty() {
+      btnParty.classList.add('is-active');
+      btnPersonal.classList.remove('is-active');
+      renderPartyView(data, viewWrap);
+    }
+
+    btnPersonal.addEventListener('click', showPersonal);
+    btnParty.addEventListener('click', showParty);
+
+    showPersonal();
   }
 
   function init() {

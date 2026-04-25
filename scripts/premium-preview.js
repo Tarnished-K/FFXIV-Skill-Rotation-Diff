@@ -58,7 +58,7 @@
   }
 
   // --- Layer visibility ---
-  const LAYERS = ['gcd', 'ogcd', 'synergy', 'cast'];
+  const LAYERS = ['synergy', 'debuff', 'cast'];
 
   function applyAllLayers(outer, wrap) {
     if (!wrap) return;
@@ -92,9 +92,8 @@
     const layers = document.createElement('div');
     layers.className = 'timeline-layer-controls';
     layers.innerHTML = [
-      { key: 'gcd',     label: 'GCD' },
-      { key: 'ogcd',    label: 'oGCD' },
       { key: 'synergy', label: 'シナジー' },
+      { key: 'debuff',  label: 'デバフ' },
       { key: 'cast',    label: 'ボスキャスト' },
     ].map(({ key, label }) => `
       <label class="timeline-layer-toggle">

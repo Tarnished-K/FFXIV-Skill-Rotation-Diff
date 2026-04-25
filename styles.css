@@ -930,17 +930,14 @@
 }
 
 /* レイヤー非表示クラス */
-.pp-layer-gcd-hidden .event.gcd,
-.pp-layer-gcd-hidden .lane-guide-line.gcd { display: none !important; }
-
-.pp-layer-ogcd-hidden .event.ogcd,
-.pp-layer-ogcd-hidden .lane-guide-line.ogcd { display: none !important; }
-
 .pp-layer-synergy-hidden .synergy-segment,
 .pp-layer-synergy-hidden .synergy-start,
 .pp-layer-synergy-hidden .synergy-start-icon,
 .pp-layer-synergy-hidden .synergy-lane-name,
 .pp-layer-synergy-hidden .lane-guide-line.synergy { display: none !important; }
+
+.pp-layer-debuff-hidden .player-debuff-segment,
+.pp-layer-debuff-hidden .lane-guide-line.debuff { display: none !important; }
 
 .pp-layer-cast-hidden .boss-cast-bar,
 .pp-layer-cast-hidden .boss-cast-lane-line { display: none !important; }

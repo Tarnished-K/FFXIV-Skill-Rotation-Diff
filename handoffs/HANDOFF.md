@@ -5,5 +5,6 @@
 - [HANDOFF-V2.md](HANDOFF-V2.md)
 - [HANDOFF-V3.md](HANDOFF-V3.md)
 - [HANDOFF-V4.md](HANDOFF-V4.md)
+- [HANDOFF-V5.md](HANDOFF-V5.md)
 
 旧ルート配置の HANDOFF は、このフォルダにまとめ直しています。

@@ -1,45 +1,28 @@
 // Premium page: injects captured timeline HTML snapshots with interactive controls.
-// Snapshots in assets/:
-//   premium-preview-timeline.html  → personal / 全体TL
-//   premium-preview-personal-odd.html  → personal / 奇数分TL
-//   premium-preview-personal-even.html → personal / 偶数分TL
-//   premium-preview-party.html     → party / 全体TL
-//   premium-preview-party-odd.html → party / 奇数分TL
-//   premium-preview-party-even.html → party / 偶数分TL
-// Run __captureTimelineHTML(type) in the live app to capture each view.
+// Snapshots: assets/premium-preview-timeline.html (personal), assets/premium-preview-party.html (party)
+// Run __captureTimelineHTML('personal') or __captureTimelineHTML('party') to update.
 (function PremiumPreview() {
   'use strict';
 
-  const SNAPSHOT_MAP = {
-    personal: {
-      all:  './assets/premium-preview-timeline.html',
-      odd:  './assets/premium-preview-personal-odd.html',
-      even: './assets/premium-preview-personal-even.html',
-    },
-    party: {
-      all:  './assets/premium-preview-party.html',
-      odd:  './assets/premium-preview-party-odd.html',
-      even: './assets/premium-preview-party-even.html',
-    },
+  const SNAPSHOT_URLS = {
+    personal: './assets/premium-preview-timeline.html',
+    party:    './assets/premium-preview-party.html',
   };
+  // Scroll-to time (seconds) for 奇数分/偶数分 TL tabs
+  const TAB_SCROLL_SEC = { all: 0, odd: 60, even: 120 };
+
   const ZOOM_STEPS = [50, 75, 100, 125, 150, 200];
-  let zoomIdx = 2;
+  let zoomIdx  = 2;    // 100%
   let currentView = 'personal';
   let currentTab  = 'all';
   const snapshotCache = {};
 
-  function currentUrl() {
-    return SNAPSHOT_MAP[currentView][currentTab];
-  }
-
-  // --- Scroll bindings ---
+  // ---- Drag scroll ----
 
   function bindDragScroll(wrap) {
     let dragging = false, startX = 0, scrollLeft = 0;
     wrap.addEventListener('mousedown', e => {
-      dragging = true;
-      startX = e.pageX;
-      scrollLeft = wrap.scrollLeft;
+      dragging = true; startX = e.pageX; scrollLeft = wrap.scrollLeft;
       wrap.style.cursor = 'grabbing';
     });
     document.addEventListener('mouseup', () => { dragging = false; wrap.style.cursor = ''; });
@@ -58,7 +41,61 @@
     }, { passive: false });
   }
 
-  // --- Name anonymization ---
+  // ---- Horizontal-only zoom ----
+  // Scales only inline left/width (pxPerSec equivalent). Icon sizes (from CSS) are unchanged.
+
+  function cacheZoomOrigins(timeline) {
+    if (timeline.dataset.zoomCached) return;
+    timeline.dataset.origTWidth = parseFloat(timeline.style.width) || 0;
+    timeline.querySelectorAll('[style]').forEach(el => {
+      if (el.style.left)  el.dataset.origLeft  = parseFloat(el.style.left)  || 0;
+      if (el.style.width) el.dataset.origWidth = parseFloat(el.style.width) || 0;
+    });
+    timeline.dataset.zoomCached = '1';
+  }
+
+  function applyZoom(wrap) {
+    const timeline = wrap?.querySelector('.timeline');
+    if (!timeline) return;
+    cacheZoomOrigins(timeline);
+    const f = ZOOM_STEPS[zoomIdx] / 100;
+    timeline.style.width = `${parseFloat(timeline.dataset.origTWidth) * f}px`;
+    timeline.querySelectorAll('[data-orig-left], [data-orig-width]').forEach(el => {
+      if (el.dataset.origLeft  !== undefined) el.style.left  = `${parseFloat(el.dataset.origLeft)  * f}px`;
+      if (el.dataset.origWidth !== undefined) el.style.width = `${parseFloat(el.dataset.origWidth) * f}px`;
+    });
+  }
+
+  // ---- Time-based scroll ----
+
+  function scrollToSec(wrap, targetSec) {
+    if (targetSec === 0) { wrap.scrollLeft = 0; return; }
+    // Detect pxPerSec from tick marks (already scaled by zoom)
+    let t0 = null, t60 = null;
+    wrap.querySelectorAll('.tick').forEach(tick => {
+      const text = tick.querySelector('span')?.textContent.trim();
+      const left = parseFloat(tick.style.left || '0');
+      if (text === '0:00') t0 = left;
+      if (text === '1:00') t60 = left;
+    });
+    let scrollTarget;
+    if (t0 !== null && t60 !== null) {
+      const pxPerSec = (t60 - t0) / 60;
+      scrollTarget = Math.max(0, t0 + targetSec * pxPerSec - 200);
+    } else {
+      // Fallback
+      scrollTarget = Math.max(0, (60 + targetSec * 40) * (ZOOM_STEPS[zoomIdx] / 100) - 200);
+    }
+    wrap.scrollLeft = scrollTarget;
+  }
+
+  function applyTabScroll(outer) {
+    const wrap = outer.querySelector('.timeline-wrap');
+    if (!wrap) return;
+    scrollToSec(wrap, TAB_SCROLL_SEC[currentTab] ?? 0);
+  }
+
+  // ---- Name anonymization ----
 
   function anonymizeNames(slot) {
     // DPS graph: hide player-name labels, keep axis numbers (text-anchor="end")
@@ -67,34 +104,32 @@
     });
 
     // PT row labels: "ジョブ プレイヤー名" → "ジョブ"
-    // Determine group A vs B by comparing top with the B group-label top
     const groupLabelB = slot.querySelector('.pt-group-label.b');
     const bTop = groupLabelB ? parseFloat(groupLabelB.style.top || '9999') : 9999;
-
     let countA = 0, countB = 0;
+
     slot.querySelectorAll('.pt-row-label').forEach(el => {
-      const top = parseFloat(el.style.top || '0');
-      const job = (el.textContent.trim().split(' ')[0]) || '';
-      const group = top > bTop ? 'B' : 'A';
-      const num = group === 'B' ? ++countB : ++countA;
-      el.dataset.ppGroup = group;
-      el.dataset.ppNum = num;
-      el.dataset.ppJob = job;
+      const top  = parseFloat(el.style.top || '0');
+      const job  = el.textContent.trim().split(' ')[0] || '';
+      const grp  = top > bTop ? 'B' : 'A';
+      const num  = grp === 'B' ? ++countB : ++countA;
       el.dataset.ppTop = top;
+      el.dataset.ppJob = job;
+      el.dataset.ppGrp = grp;
+      el.dataset.ppNum = num;
       el.textContent = job;
       el.removeAttribute('title');
     });
   }
 
-  // --- Phase buttons ---
+  // ---- Phase buttons ----
 
   function buildPhaseButtons(outer, slot) {
-    const old = outer.querySelector('.pp-phase-bar');
-    if (old) old.remove();
+    outer.querySelector('.pp-phase-bar')?.remove();
 
     const phases = [{ label: 'P1', left: 0 }];
     slot.querySelectorAll('.phase-divider.a').forEach(el => {
-      const left = parseFloat(el.style.left) || 0;
+      const left  = parseFloat(el.style.left) || 0;
       const label = el.querySelector('.phase-divider-label')?.textContent.trim() || '';
       if (label && left > 0) phases.push({ label, left });
     });
@@ -110,78 +145,82 @@
       btn.addEventListener('click', () => {
         const wrap = outer.querySelector('.timeline-wrap');
         if (!wrap) return;
-        const zoom = ZOOM_STEPS[zoomIdx] / 100;
-        wrap.scrollLeft = Math.max(0, (left - 200) * zoom);
+        // left is the original value; after zoom cacheZoomOrigins scales it via style.left
+        // Read the current (scaled) style.left from the phase-divider element itself
+        const divider = slot.querySelector('.phase-divider.a');
+        // Re-locate this specific divider by matching closest label
+        let scaledLeft = left * (ZOOM_STEPS[zoomIdx] / 100);
+        const div = Array.from(slot.querySelectorAll('.phase-divider.a')).find(d =>
+          parseFloat(d.dataset.origLeft || d.style.left) * (ZOOM_STEPS[zoomIdx] / 100) === scaledLeft ||
+          Math.abs((parseFloat(d.dataset.origLeft || parseFloat(d.style.left) / (ZOOM_STEPS[zoomIdx] / 100))) - left) < 1
+        );
+        if (div) scaledLeft = parseFloat(div.style.left) || scaledLeft;
+        wrap.scrollLeft = Math.max(0, scaledLeft - 200);
       });
       bar.appendChild(btn);
     });
 
-    const wrapSlot = outer.querySelector('.pp-wrap-slot');
-    outer.insertBefore(bar, wrapSlot);
+    outer.insertBefore(bar, outer.querySelector('.pp-wrap-slot'));
   }
 
-  // --- Player filter (PT view) ---
+  // ---- Player filter (PT view) ----
 
   function buildPlayerFilter(outer, slot) {
-    const old = outer.querySelector('.pp-player-filter');
-    if (old) old.remove();
+    outer.querySelector('.pp-player-filter')?.remove();
 
     const rows = Array.from(slot.querySelectorAll('.pt-row-label[data-pp-top]'));
     if (rows.length === 0) return;
 
-    const ROW_H = 40;
     const timeline = slot.querySelector('.timeline');
+    const ROW_H = 40;
 
     const bar = document.createElement('div');
-    bar.className = 'pp-player-filter pp-phase-bar phase-btns';
+    bar.className = 'pp-player-filter phase-btns';
 
     rows.forEach(rowLabel => {
       const rowTop = parseFloat(rowLabel.dataset.ppTop);
       const job    = rowLabel.dataset.ppJob || '?';
-      const group  = rowLabel.dataset.ppGroup || 'A';
+      const grp    = rowLabel.dataset.ppGrp || 'A';
       const num    = rowLabel.dataset.ppNum || '?';
 
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'phase-btn active';
-      btn.textContent = `${job} (${group}${num})`;
+      btn.textContent = `${job} (${grp}${num})`;
 
       let visible = true;
       btn.addEventListener('click', () => {
         visible = !visible;
         btn.classList.toggle('active', visible);
         rowLabel.style.opacity = visible ? '' : '0.25';
-
         if (!timeline) return;
+
+        // Events are at top ≈ rowTop - 3 (row starts ~8px before label)
+        const evMin = rowTop - 8;
+        const evMax = rowTop + (ROW_H - 8); // rowTop + 32
         timeline.querySelectorAll('.pt-event').forEach(ev => {
-          const evTop = parseFloat(ev.style.top || '0');
-          if (evTop >= rowTop && evTop < rowTop + ROW_H) {
-            ev.style.display = visible ? '' : 'none';
-          }
+          const t = parseFloat(ev.style.top || '0');
+          if (t >= evMin && t < evMax) ev.style.display = visible ? '' : 'none';
         });
 
-        // Also hide the row guide line
+        // Row guide line: top ≈ rowTop + 10
         timeline.querySelectorAll('.pt-row-line').forEach(line => {
-          const lTop = parseFloat(line.style.top || '0');
-          if (Math.abs(lTop - (rowTop + 10)) < 5) {
-            line.style.opacity = visible ? '' : '0.1';
-          }
+          const t = parseFloat(line.style.top || '0');
+          if (Math.abs(t - (rowTop + 10)) < 6) line.style.opacity = visible ? '' : '0.1';
         });
       });
 
       bar.appendChild(btn);
     });
 
-    const wrapSlot = outer.querySelector('.pp-wrap-slot');
-    outer.insertBefore(bar, wrapSlot);
+    outer.insertBefore(bar, outer.querySelector('.pp-wrap-slot'));
   }
 
-  // --- Snapshot injection ---
+  // ---- Snapshot injection ----
 
   function injectSnapshot(outer, html) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const src = doc.querySelector('.timeline-wrap');
+    const doc  = new DOMParser().parseFromString(html, 'text/html');
+    const src  = doc.querySelector('.timeline-wrap');
     const slot = outer.querySelector('.pp-wrap-slot');
 
     if (!src) {
@@ -196,40 +235,17 @@
 
     anonymizeNames(slot);
     buildPhaseButtons(outer, slot);
-    if (currentView === 'party') {
-      buildPlayerFilter(outer, slot);
-    } else {
-      outer.querySelector('.pp-player-filter')?.remove();
-    }
+    if (currentView === 'party') buildPlayerFilter(outer, slot);
+    else outer.querySelector('.pp-player-filter')?.remove();
 
     const wrap = slot.querySelector('.timeline-wrap');
     bindDragScroll(wrap);
     bindWheelScroll(wrap);
     applyZoom(wrap);
-    applyAllLayers(outer, wrap);
+    applyTabScroll(outer);
   }
 
-  // --- Zoom ---
-
-  function applyZoom(wrap) {
-    if (!wrap) return;
-    const inner = wrap.querySelector('.timeline');
-    if (inner) inner.style.zoom = ZOOM_STEPS[zoomIdx] / 100;
-  }
-
-  // --- Layer visibility ---
-
-  const LAYERS = ['synergy', 'debuff', 'cast'];
-
-  function applyAllLayers(outer, wrap) {
-    if (!wrap) return;
-    LAYERS.forEach(key => {
-      const cb = outer.querySelector(`input[data-layer="${key}"]`);
-      wrap.classList.toggle(`pp-layer-${key}-hidden`, cb ? !cb.checked : false);
-    });
-  }
-
-  // --- Controls bar (built once) ---
+  // ---- Controls bar ----
 
   function buildControls(outer) {
     const bar = document.createElement('div');
@@ -253,12 +269,15 @@
     // Zoom
     const zoom = document.createElement('div');
     zoom.className = 'zoom-controls';
-    zoom.innerHTML = `
-      <button type="button" data-delta="-1">−</button>
-      <span class="pp-zoom-label">${ZOOM_STEPS[zoomIdx]}%</span>
-      <button type="button" data-delta="1">＋</button>`;
-    zoom.querySelector('.pp-zoom-label').style.cssText =
-      'min-width:44px;color:var(--text-secondary);font-size:13px;text-align:center';
+    const zoomLabel = document.createElement('span');
+    zoomLabel.className = 'pp-zoom-label';
+    zoomLabel.style.cssText = 'min-width:44px;color:var(--text-secondary);font-size:13px;text-align:center';
+    zoomLabel.textContent = `${ZOOM_STEPS[zoomIdx]}%`;
+    const zoomOut = document.createElement('button');
+    zoomOut.type = 'button'; zoomOut.dataset.delta = '-1'; zoomOut.textContent = '−';
+    const zoomIn  = document.createElement('button');
+    zoomIn.type  = 'button'; zoomIn.dataset.delta  =  '1'; zoomIn.textContent  = '＋';
+    zoom.append(zoomOut, zoomLabel, zoomIn);
 
     // Layer toggles
     const layerCtrl = document.createElement('div');
@@ -267,85 +286,74 @@
       { key: 'synergy', label: 'シナジー' },
       { key: 'debuff',  label: 'デバフ' },
       { key: 'cast',    label: 'ボスキャスト' },
-    ].map(({ key, label }) => `
-      <label class="timeline-layer-toggle">
-        <input type="checkbox" data-layer="${key}" checked>
-        <span>${label}</span>
-      </label>`).join('');
+    ].map(({ key, label }) =>
+      `<label class="timeline-layer-toggle"><input type="checkbox" data-layer="${key}" checked><span>${label}</span></label>`
+    ).join('');
 
     bar.append(viewTabs, tlTabs, zoom, layerCtrl);
     outer.insertBefore(bar, outer.querySelector('.pp-wrap-slot'));
 
-    // View tab click
+    // Personal / Party tab
     viewTabs.addEventListener('click', e => {
       const btn = e.target.closest('[data-view]');
       if (!btn || btn.dataset.view === currentView) return;
       currentView = btn.dataset.view;
-      viewTabs.querySelectorAll('.timeline-view-btn').forEach(b =>
-        b.classList.toggle('active', b === btn));
+      viewTabs.querySelectorAll('.timeline-view-btn').forEach(b => b.classList.toggle('active', b === btn));
       loadView(outer);
     });
 
-    // TL tab click
+    // 全体/奇数/偶数 tab — same snapshot, just scroll
     tlTabs.addEventListener('click', e => {
       const btn = e.target.closest('[data-tltab]');
       if (!btn || btn.dataset.tltab === currentTab) return;
       currentTab = btn.dataset.tltab;
-      tlTabs.querySelectorAll('.tab').forEach(b =>
-        b.classList.toggle('active', b === btn));
-      loadView(outer);
+      tlTabs.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+      applyTabScroll(outer);
     });
 
-    // Zoom click
+    // Zoom
     zoom.addEventListener('click', e => {
       const btn = e.target.closest('[data-delta]');
       if (!btn) return;
-      const delta = parseInt(btn.dataset.delta, 10);
-      zoomIdx = Math.max(0, Math.min(ZOOM_STEPS.length - 1, zoomIdx + delta));
-      zoom.querySelector('.pp-zoom-label').textContent = `${ZOOM_STEPS[zoomIdx]}%`;
+      zoomIdx = Math.max(0, Math.min(ZOOM_STEPS.length - 1, zoomIdx + parseInt(btn.dataset.delta, 10)));
+      zoomLabel.textContent = `${ZOOM_STEPS[zoomIdx]}%`;
       applyZoom(outer.querySelector('.timeline-wrap'));
     });
 
-    // Layer toggle change
+    // Layer toggles
     layerCtrl.addEventListener('change', e => {
       const cb = e.target.closest('[data-layer]');
       if (!cb) return;
       const wrap = outer.querySelector('.timeline-wrap');
-      if (wrap) wrap.classList.toggle(`pp-layer-${cb.dataset.layer}-hidden`, !cb.checked);
+      wrap?.classList.toggle(`pp-layer-${cb.dataset.layer}-hidden`, !cb.checked);
     });
   }
 
-  // --- Load view ---
+  // ---- Load snapshot ----
 
   function loadView(outer) {
-    const url = currentUrl();
-    if (snapshotCache[url]) {
-      injectSnapshot(outer, snapshotCache[url]);
-      return;
-    }
-    outer.querySelector('.pp-wrap-slot').innerHTML =
-      '<p class="premium-preview-loading">読み込み中...</p>';
+    const url  = SNAPSHOT_URLS[currentView];
+    const slot = outer.querySelector('.pp-wrap-slot');
+    if (snapshotCache[url]) { injectSnapshot(outer, snapshotCache[url]); return; }
+    slot.innerHTML = '<p class="premium-preview-loading">読み込み中...</p>';
     fetch(url)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
       .then(html => { snapshotCache[url] = html; injectSnapshot(outer, html); })
       .catch(() => {
-        outer.querySelector('.pp-wrap-slot').innerHTML =
-          '<p class="premium-preview-loading">スナップショット未収集（準備中）</p>';
+        slot.innerHTML = '<p class="premium-preview-loading">スナップショット未収集（準備中）</p>';
         outer.querySelector('.pp-phase-bar')?.remove();
         outer.querySelector('.pp-player-filter')?.remove();
       });
   }
 
-  // --- Init ---
+  // ---- Init ----
 
   function init() {
     const outer = document.getElementById('premiumPreviewOuter');
     if (!outer) return;
-
     const slot = document.createElement('div');
     slot.className = 'pp-wrap-slot';
     outer.appendChild(slot);
-
     buildControls(outer);
     loadView(outer);
   }

@@ -16,6 +16,8 @@ const {
   syncTutorialProgress,
 } = globalThis.TutorialModule;
 
+let workflowDisableDepth = 0;
+
 function resetComparisonData() {
   state.timelineA = [];
   state.timelineB = [];
@@ -61,7 +63,8 @@ function setComparisonControlsDisabled(disabled) {
 }
 
 function setLoadingWorkflowDisabled(disabled) {
-  state.isLoadingWorkflow = Boolean(disabled);
+  workflowDisableDepth = disabled ? workflowDisableDepth + 1 : Math.max(0, workflowDisableDepth - 1);
+  state.isLoadingWorkflow = workflowDisableDepth > 0;
   [
     el.loadBtn,
     el.loadPlayersBtn,
@@ -73,12 +76,13 @@ function setLoadingWorkflowDisabled(disabled) {
     el.personalTimelineViewBtn,
     el.partyTimelineViewBtn,
   ].forEach((node) => {
-    if (node) node.disabled = Boolean(disabled);
+    if (node) node.disabled = state.isLoadingWorkflow;
   });
   el.timelineViewBtns?.forEach((button) => {
-    button.disabled = Boolean(disabled);
+    button.disabled = state.isLoadingWorkflow;
   });
-  setComparisonControlsDisabled(disabled);
+  updateTimelineLayerControls();
+  setComparisonControlsDisabled(state.isLoadingWorkflow);
 }
 
 function renderComparisonError() {
@@ -149,6 +153,39 @@ function setTimelineView(view) {
   el.timelineViewBtns?.forEach((button) => {
     button.classList.toggle('active', button.dataset.timelineView === nextView);
   });
+}
+
+function renderActiveTimelineView() {
+  if (!state.timelineA.length || !state.timelineB.length || el.timelineWrap?.classList.contains('hidden')) return;
+  if (state.timelineView === 'party' && state.partyTimelineA.length && state.partyTimelineB.length) renderPartyTimeline();
+  else renderTimeline();
+}
+
+function updateTimelineLayerControls() {
+  if (typeof t !== 'function') return;
+  const labels = {
+    synergy: t('layerSynergy'),
+    debuff: t('layerDebuff'),
+    cast: t('layerCast'),
+  };
+  const stateKeys = {
+    synergy: 'showSynergyTimeline',
+    debuff: 'showDebuffTimeline',
+    cast: 'showCastTimeline',
+  };
+  for (const input of el.timelineLayerToggles || []) {
+    const layer = input.dataset.timelineLayer;
+    const key = stateKeys[layer];
+    if (!key) continue;
+    const label = input.closest('label')?.querySelector('[data-layer-label]');
+    if (label) label.textContent = labels[layer] || layer;
+    input.checked = state[key] !== false;
+    const supporterOnly = layer === 'synergy' || layer === 'cast';
+    const disabledByPlan = supporterOnly && !state.isPremium;
+    const disabledByView = state.timelineView === 'party' && (layer === 'synergy' || layer === 'debuff');
+    input.disabled = disabledByPlan || disabledByView || state.isLoadingWorkflow;
+    input.title = input.disabled ? t('supporterOnlySuffix') : '';
+  }
 }
 
 function setZoomLevel(zoom) {
@@ -253,12 +290,15 @@ async function loadPartyTimelineComparison() {
 
 async function activateTimelineView(view) {
   if (view === 'party' && !state.isPremium) {
-    showToast(t('partyTimelinePremiumOnly'));
+    const url = new URL('/premium.html', window.location.origin);
+    url.searchParams.set('feature', 'party-timeline');
+    window.location.href = url.toString();
     setTimelineView('personal');
     if (state.timelineA.length && state.timelineB.length) renderTimeline();
     return;
   }
   setTimelineView(view);
+  updateTimelineLayerControls();
   if (!state.timelineA.length || !state.timelineB.length) return;
   el.timelineWrap?.classList.remove('hidden');
   if (state.timelineView === 'party') {
@@ -734,7 +774,7 @@ async function handleCompare(options = {}) {
 
 async function saveCurrentBookmark() {
   if (!state.isPremium) {
-    showToast(t('bookmarkPremiumOnly'));
+    window.location.href = '/premium.html?feature=bookmarks';
     return;
   }
   if (!state.timelineA.length || !state.timelineB.length) {
@@ -821,6 +861,10 @@ function renderBookmarkList(bookmarks) {
 }
 
 async function loadBookmarks() {
+  if (!state.isPremium) {
+    window.location.href = '/premium.html?feature=bookmarks';
+    return;
+  }
   openBookmarkModal();
   setBookmarkMessage(t('bookmarkLoading'));
   if (el.bookmarkList) el.bookmarkList.innerHTML = '';
@@ -913,32 +957,37 @@ async function restoreStateFromUrl() {
   const shareState = getShareStateFromUrl();
   applySharedViewState(shareState);
   if (!shareState.reportA || !shareState.reportB) return;
-  el.urlA.value = buildSharedReportUrl(shareState.reportA);
-  el.urlB.value = buildSharedReportUrl(shareState.reportB);
-  logDebug('restoring share state', shareState);
-  const reportsLoaded = await handleLoadReports({ skipShareUrl: true });
-  if (!reportsLoaded) {
+  setLoadingWorkflowDisabled(true);
+  try {
+    el.urlA.value = buildSharedReportUrl(shareState.reportA);
+    el.urlB.value = buildSharedReportUrl(shareState.reportB);
+    logDebug('restoring share state', shareState);
+    const reportsLoaded = await handleLoadReports({ skipShareUrl: true });
+    if (!reportsLoaded) {
+      syncShareStateUrl();
+      return;
+    }
+    if (selectHasValue(el.fightA, shareState.fightA)) el.fightA.value = shareState.fightA;
+    if (selectHasValue(el.fightB, shareState.fightB)) el.fightB.value = shareState.fightB;
+    if (!selectHasValue(el.fightA, shareState.fightA) || !selectHasValue(el.fightB, shareState.fightB)) {
+      syncShareStateUrl();
+      return;
+    }
+    const playersLoaded = await handleLoadPlayers({ skipShareUrl: true });
+    if (!playersLoaded) {
+      syncShareStateUrl();
+      return;
+    }
+    if (selectHasValue(el.playerA, shareState.playerA)) el.playerA.value = shareState.playerA;
+    if (selectHasValue(el.playerB, shareState.playerB)) el.playerB.value = shareState.playerB;
+    if (selectHasValue(el.playerA, shareState.playerA) && selectHasValue(el.playerB, shareState.playerB)) {
+      await handleCompare({ skipShareUrl: true, deferTimelineRender: true });
+    }
+    applySharedViewState(shareState, { rerender: true });
     syncShareStateUrl();
-    return;
+  } finally {
+    setLoadingWorkflowDisabled(false);
   }
-  if (selectHasValue(el.fightA, shareState.fightA)) el.fightA.value = shareState.fightA;
-  if (selectHasValue(el.fightB, shareState.fightB)) el.fightB.value = shareState.fightB;
-  if (!selectHasValue(el.fightA, shareState.fightA) || !selectHasValue(el.fightB, shareState.fightB)) {
-    syncShareStateUrl();
-    return;
-  }
-  const playersLoaded = await handleLoadPlayers({ skipShareUrl: true });
-  if (!playersLoaded) {
-    syncShareStateUrl();
-    return;
-  }
-  if (selectHasValue(el.playerA, shareState.playerA)) el.playerA.value = shareState.playerA;
-  if (selectHasValue(el.playerB, shareState.playerB)) el.playerB.value = shareState.playerB;
-  if (selectHasValue(el.playerA, shareState.playerA) && selectHasValue(el.playerB, shareState.playerB)) {
-    await handleCompare({ skipShareUrl: true, deferTimelineRender: true });
-  }
-  applySharedViewState(shareState, { rerender: true });
-  syncShareStateUrl();
 }
 
 bindClick(el.tutorialBtn, 'tutorialBtn', () => {
@@ -1046,12 +1095,48 @@ el.tabs.forEach((tab, i) => {
     el.timelineWrap.classList.remove('hidden');
     if (state.timelineView === 'party' && state.partyTimelineA.length && state.partyTimelineB.length) renderPartyTimeline();
     else renderTimeline();
+    scrollTimelineToTabFocus();
     syncShareStateUrl();
   });
 });
 el.timelineViewBtns?.forEach((button, i) => {
   bindClick(button, `timeline-view-${i}`, () => {
     activateTimelineView(button.dataset.timelineView);
+  });
+});
+el.timelineLayerToggles?.forEach((input, i) => {
+  input.closest('label')?.addEventListener('click', (event) => {
+    const layer = input.dataset.timelineLayer;
+    const supporterOnly = layer === 'synergy' || layer === 'cast';
+    if (supporterOnly && !state.isPremium) {
+      event.preventDefault();
+      const url = new URL('/premium.html', window.location.origin);
+      url.searchParams.set('feature', `${layer}-timeline`);
+      window.location.href = url.toString();
+    }
+  });
+  input.addEventListener('change', async () => {
+    const layer = input.dataset.timelineLayer;
+    const stateKeys = {
+      synergy: 'showSynergyTimeline',
+      debuff: 'showDebuffTimeline',
+      cast: 'showCastTimeline',
+    };
+    const key = stateKeys[layer];
+    if (!key) return;
+    const supporterOnly = layer === 'synergy' || layer === 'cast';
+    if (input.checked && supporterOnly && !state.isPremium) {
+      input.checked = false;
+      const url = new URL('/premium.html', window.location.origin);
+      url.searchParams.set('feature', `${layer}-timeline`);
+      window.location.href = url.toString();
+      updateTimelineLayerControls();
+      return;
+    }
+    state[key] = input.checked;
+    updateTimelineLayerControls();
+    renderActiveTimelineView();
+    logDebug('timeline layer toggle', { layer, enabled: input.checked });
   });
 });
 function applyLang() {
@@ -1093,6 +1178,7 @@ function applyLang() {
     el.privacyLink.href = state.lang === 'en' ? '/privacy.html?lang=en' : '/privacy.html';
   }
   if (el.langToggle) el.langToggle.textContent = state.lang === 'ja' ? 'EN' : 'JA';
+  updateTimelineLayerControls();
   if (el.saveBookmarkBtn) el.saveBookmarkBtn.textContent = s.bookmarkSave;
   if (el.showBookmarksBtn) el.showBookmarksBtn.textContent = s.bookmarkList;
   if (el.bookmarkModalTitle) el.bookmarkModalTitle.textContent = s.bookmarkModalTitle;
@@ -1149,3 +1235,4 @@ try {
 }
 
 globalThis.updateBookmarkControls = updateBookmarkControls;
+globalThis.updateTimelineLayerControls = updateTimelineLayerControls;

@@ -56,8 +56,8 @@
           </div>
         </div>
         <div class="premium-price">月額 <strong>200円</strong><span>税込</span></div>
-        <button id="supporterCheckoutBtn" type="button" class="premium-checkout-btn">
-          今すぐ始める（200円/月）
+        <button id="supporterCheckoutBtn" type="button" class="premium-checkout-btn" disabled>
+          準備中
         </button>
         <p id="premiumMessage" class="submessage premium-message"></p>
       </section>
@@ -105,7 +105,8 @@
       async function startCheckout() {
         const message = document.getElementById('premiumMessage');
         const button = document.getElementById('supporterCheckoutBtn');
-        if (message) message.textContent = '';
+        if (message) message.textContent = 'サポーター登録は準備中です。';
+        return;
         if (button) button.disabled = true;
         try {
           const auth = globalThis.AuthModule;

@@ -267,6 +267,7 @@ describe('renderPartyTimeline', () => {
 
   it('renders boss casts and tracked player debuffs on the personal timeline', () => {
     const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.isPremium = true;
     context.state.bossCastsA = [{ t: 14, endT: 18, action: 'Raidwide', label: 'Raidwide', sourceName: 'Boss A' }];
     context.state.playerDebuffsA = [{ t: 20, endT: 50, action: 'Damage Down', label: 'ダメージ低下', color: '#f87171' }];
 

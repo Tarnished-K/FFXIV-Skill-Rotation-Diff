@@ -10,18 +10,18 @@ const {
 } = require('../scripts/shared/timeline-utils');
 
 describe('filterTimeline', () => {
-  const records = [{ t: 10 }, { t: 70 }, { t: 130 }];
+  const records = [{ t: 10 }, { t: 56 }, { t: 64 }, { t: 70 }, { t: 124 }, { t: 130 }];
 
   it('returns all records for the all tab', () => {
     expect(filterTimeline(records, 'all')).toEqual(records);
   });
 
   it('filters to odd minutes', () => {
-    expect(filterTimeline(records, 'odd')).toEqual([{ t: 70 }]);
+    expect(filterTimeline(records, 'odd')).toEqual([{ t: 56 }, { t: 64 }]);
   });
 
-  it('filters to even minutes after the first minute', () => {
-    expect(filterTimeline(records, 'even')).toEqual([{ t: 130 }]);
+  it('filters to even minute windows after the first minute', () => {
+    expect(filterTimeline(records, 'even')).toEqual([{ t: 124 }]);
   });
 });
 

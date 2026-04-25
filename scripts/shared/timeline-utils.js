@@ -8,10 +8,20 @@
   const NINJUTSU_KEYWORDS_JA = ['火遁', '雷遁', '氷遁', '風遁', '土遁', '水遁', '劫火滅却', '氷晶乱流', '月影', '風魔手裏剣'];
   const NINJUTSU_KEYWORDS_EN = ['katon', 'raiton', 'hyoton', 'huton', 'doton', 'suiton', 'goka mekkyaku', 'hyosho ranryu', 'moonshadow', 'fuma shuriken'];
 
+  function isInTimelineFocusWindow(seconds, tab) {
+    if (tab === 'all') return true;
+    const t = Number(seconds || 0);
+    if (!Number.isFinite(t)) return false;
+    const minute = Math.round(t / 60);
+    if (minute <= 0) return false;
+    if (tab === 'odd' && minute % 2 !== 1) return false;
+    if (tab === 'even' && minute % 2 !== 0) return false;
+    return Math.abs(t - minute * 60) <= 7;
+  }
+
   function filterTimeline(records, tab) {
     if (tab === 'all') return records;
-    if (tab === 'odd') return records.filter((record) => Math.floor(record.t / 60) % 2 === 1);
-    if (tab === 'even') return records.filter((record) => Math.floor(record.t / 60) % 2 === 0 && record.t >= 60);
+    if (tab === 'odd' || tab === 'even') return records.filter((record) => isInTimelineFocusWindow(record.t, tab));
     return records;
   }
 
@@ -112,6 +122,7 @@
     findEnemyActors,
     formatHitType,
     formatTimelineTime,
+    isInTimelineFocusWindow,
     normalizeActionCategory,
   };
 }));

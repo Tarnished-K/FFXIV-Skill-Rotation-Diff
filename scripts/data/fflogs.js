@@ -440,6 +440,39 @@ function getEnemyActorsForFight(reportJson, fight) {
   return named.length ? named : candidates.slice(0, 8);
 }
 
+async function fetchActionNamesJa(actionIds) {
+  const ids = [...new Set((actionIds || []).map((id) => Number(id || 0)).filter(Boolean))];
+  const result = new Map();
+  const missing = ids.filter((id) => {
+    if (state.bossActionNameJaById?.has(id)) {
+      result.set(id, state.bossActionNameJaById.get(id));
+      return false;
+    }
+    return true;
+  });
+  if (!missing.length || typeof fetch !== 'function') return result;
+  if (!state.bossActionNameJaById) state.bossActionNameJaById = new Map();
+  for (let i = 0; i < missing.length; i += 50) {
+    const chunk = missing.slice(i, i + 50);
+    try {
+      const url = `https://v2.xivapi.com/api/sheet/Action?rows=${chunk.join(',')}&fields=Name&language=ja`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const row of data?.rows || []) {
+        const id = Number(row?.row_id || 0);
+        const name = String(row?.fields?.Name || '');
+        if (!id || !name) continue;
+        state.bossActionNameJaById.set(id, name);
+        result.set(id, name);
+      }
+    } catch {
+      // Keep English FFLogs names if XIVAPI is unavailable.
+    }
+  }
+  return result;
+}
+
 async function fetchBossCastsV2(reportCode, fight, reportJson) {
   const actorsById = new Map((reportJson?.masterData?.actors || []).map((actor) => [Number(actor?.id || 0), actor]));
   const friendlyIds = new Set((fight?.friendlyPlayers || []).map((id) => Number(id)));
@@ -483,8 +516,9 @@ async function fetchBossCastsV2(reportCode, fight, reportJson) {
       const key = `${sourceId}:${actionId || name}`;
       if (type === 'begincast') {
         const durationMs = Number(event?.duration || 0);
-        const actorType = String(sourceActor?.type || sourceActor?.subType || '').toLowerCase();
-        const isBoss = actorType === 'boss';
+        const actorType = String(sourceActor?.type || '').toLowerCase();
+        const actorSubType = String(sourceActor?.subType || '').toLowerCase();
+        const isBoss = actorType === 'boss' || actorSubType === 'boss';
         if (!pending.has(key)) pending.set(key, []);
         pending.get(key).push({
           t,
@@ -508,6 +542,16 @@ async function fetchBossCastsV2(reportCode, fight, reportJson) {
     startTime = block.nextPageTimestamp;
   }
   for (const starts of pending.values()) all.push(...starts);
+  const jaNamesById = await fetchActionNamesJa(all.map((record) => record.actionId));
+  for (const record of all) {
+    const labelEn = record.label || record.action || '';
+    const labelJa = jaNamesById.get(Number(record.actionId || 0)) || labelEn;
+    record.actionEn = record.action || labelEn;
+    record.labelEn = labelEn;
+    record.actionJa = labelJa;
+    record.labelJa = labelJa;
+    record.label = state.lang === 'ja' ? labelJa : labelEn;
+  }
   return all.sort((a, b) => a.t - b.t);
 }
 

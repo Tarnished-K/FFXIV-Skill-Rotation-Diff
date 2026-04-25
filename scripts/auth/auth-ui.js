@@ -1,4 +1,4 @@
-const MODULE_NAME = 'AuthUI';
+﻿const MODULE_NAME = 'AuthUI';
 
 let _usageRemaining = null;
 
@@ -45,9 +45,8 @@ async function getAuthStatus() {
 async function requirePremiumFeature(featureName) {
   const status = await getAuthStatus();
   if (status?.isPremium) return true;
-  const label = featureName || 'この機能';
   const url = new URL('/premium.html', window.location.origin);
-  url.searchParams.set('feature', label);
+  url.searchParams.set('feature', featureName || 'premium');
   window.location.href = url.toString();
   return false;
 }
@@ -61,6 +60,7 @@ function renderHeaderAuth(user, usageData) {
   renderHeaderUsage(usageData);
   updateAdVisibility(Boolean(usageData?.isPremium));
   globalThis.updateBookmarkControls?.();
+  globalThis.updateTimelineLayerControls?.();
   if (globalThis.state?.timelineA?.length && !globalThis.el?.timelineWrap?.classList?.contains('hidden')) {
     if (globalThis.state.timelineView === 'party' && globalThis.state.partyTimelineA?.length && globalThis.state.partyTimelineB?.length) {
       globalThis.renderPartyTimeline?.();
@@ -120,7 +120,10 @@ function renderHeaderStatus(usageData) {
     container.textContent = label + authText('statusSupporter', 'サポーター');
     return;
   }
-  container.textContent = label + authText('statusFree', '無料版');
+  container.innerHTML = escapeHtml(label + authText('statusFree', '無料版')) +
+    ' <a class="status-register-link" href="/premium.html?feature=status">' +
+    escapeHtml(authText('statusRegister', '登録')) +
+    '</a>';
 }
 
 function renderHeaderUsage(usageData) {

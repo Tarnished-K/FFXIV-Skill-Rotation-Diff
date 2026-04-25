@@ -48,5 +48,6 @@ exports.handler = async (event) => {
     isPremium: status.isPremium,
     remaining: status.remaining,
     count: status.count,
+    dailyLimit: status.dailyLimit,
   });
 };

@@ -69,7 +69,8 @@
 
   .tabs,
   .phase-btns,
-  .zoom-controls {
+  .zoom-controls,
+  .timeline-layer-controls {
     width: 100%;
   }
 
@@ -192,6 +193,11 @@
     justify-content: space-between;
   }
 
+  .timeline-layer-controls {
+    flex-wrap: wrap;
+    border-radius: 14px;
+  }
+
   .tutorial-actions {
     flex-direction: column;
   }
@@ -267,6 +273,16 @@
 
 .header-status-area {
   color: var(--gold-light);
+}
+
+.status-register-link {
+  color: var(--teal-light);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.status-register-link:hover {
+  text-decoration: underline;
 }
 
 .header-status-area:empty,
@@ -555,6 +571,11 @@
   background: linear-gradient(135deg, rgba(45, 181, 163, 0.94), rgba(43, 134, 217, 0.94));
   color: #f7fffe;
   box-shadow: 0 14px 28px rgba(45, 181, 163, 0.18);
+}
+
+.premium-checkout-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .premium-message {

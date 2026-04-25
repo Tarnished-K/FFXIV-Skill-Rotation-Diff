@@ -54,12 +54,13 @@ exports.handler = async (event) => {
       'anon_key=' + anonKey + '; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=31536000';
   }
   if (!result.allowed) {
-    return json(429, { ok: false, error: 'Daily limit reached', count: result.count, remaining: 0 }, extraHeaders);
+    return json(429, { ok: false, error: 'Daily limit reached', count: result.count, remaining: 0, dailyLimit: result.dailyLimit }, extraHeaders);
   }
   return json(200, {
     ok: true,
     count: result.count,
     remaining: result.remaining,
     isPremium: result.isPremium,
+    dailyLimit: result.dailyLimit,
   }, extraHeaders);
 };

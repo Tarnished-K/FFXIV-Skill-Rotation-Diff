@@ -630,6 +630,47 @@ button:focus-visible {
   color: var(--text-primary);
 }
 
+.timeline-layer-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--border-dim);
+  border-radius: 999px;
+  background: rgba(4, 10, 17, 0.82);
+}
+
+.timeline-layer-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.timeline-layer-toggle input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--teal);
+}
+
+.timeline-layer-toggle:has(input:checked) {
+  background: rgba(45, 181, 163, 0.14);
+  color: var(--teal-light);
+}
+
+.timeline-layer-toggle:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 #zoomLabel {
   min-width: 44px;
   color: var(--text-secondary);
@@ -641,6 +682,15 @@ button:focus-visible {
 #step4.has-error .tabs,
 #step4.has-error .zoom-controls,
 #step4.has-error #phaseContainer {
+  display: none;
+}
+
+#step2 {
+  display: flex;
+  flex-direction: column;
+}
+
+#step2Message {
   display: none;
 }
 

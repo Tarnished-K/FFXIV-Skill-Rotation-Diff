@@ -1060,16 +1060,8 @@ function renderPartyTimeline() {
 
   const buildCustomFilterModal = () => {
     if (!state.partyTimelineCustomModalOpen) return '';
-    const modalWidth = 640;
-    const modalHeight = 360;
-    const visibleLeft = Number(wrap.scrollLeft || 0);
-    const visibleTop = Number(wrap.scrollTop || 0);
-    const visibleWidth = Number(wrap.clientWidth || 900);
-    const visibleHeight = totalHeight;
-    const modalLeft = Math.max(8, visibleLeft + Math.max(16, (visibleWidth - modalWidth) / 2));
-    const modalTop = Math.max(24, visibleTop + Math.max(16, (visibleHeight - modalHeight) / 2));
     return `<div class="pt-custom-backdrop" data-custom-action="cancel"></div>
-      <div class="pt-custom-modal" role="dialog" aria-modal="true" aria-label="カスタム絞り込み" style="left:${modalLeft}px; top:${modalTop}px">
+      <div class="pt-custom-modal" role="dialog" aria-modal="true" aria-label="カスタム絞り込み">
         <div class="pt-custom-head">
           <div>
             <div class="pt-custom-title">カスタム絞り込み</div>

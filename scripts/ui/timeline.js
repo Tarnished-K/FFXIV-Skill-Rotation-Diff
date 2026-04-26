@@ -1065,7 +1065,7 @@ function renderPartyTimeline() {
     const visibleLeft = Number(wrap.scrollLeft || 0);
     const visibleTop = Number(wrap.scrollTop || 0);
     const visibleWidth = Number(wrap.clientWidth || 900);
-    const visibleHeight = Number(wrap.clientHeight || totalHeight);
+    const visibleHeight = totalHeight;
     const modalLeft = Math.max(8, visibleLeft + Math.max(16, (visibleWidth - modalWidth) / 2));
     const modalTop = Math.max(24, visibleTop + Math.max(16, (visibleHeight - modalHeight) / 2));
     return `<div class="pt-custom-backdrop" data-custom-action="cancel"></div>

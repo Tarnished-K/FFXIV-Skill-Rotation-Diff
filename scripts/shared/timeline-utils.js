@@ -12,9 +12,9 @@
     if (tab === 'all') return true;
     const t = Number(seconds || 0);
     if (!Number.isFinite(t) || t < 0) return false;
-    // Show event if any minute mark of correct parity falls in [t-20, t+10]
-    // (window = 10s before mark to 20s after mark)
-    const mLo = Math.ceil((t - 20) / 60);
+    // Show event if any minute mark of correct parity falls in [t-30, t+10]
+    // (window = 10s before mark to 30s after mark)
+    const mLo = Math.ceil((t - 30) / 60);
     const mHi = Math.floor((t + 10) / 60);
     const parity = tab === 'odd' ? 1 : 0;
     for (let m = Math.max(mLo, 1); m <= mHi; m++) {

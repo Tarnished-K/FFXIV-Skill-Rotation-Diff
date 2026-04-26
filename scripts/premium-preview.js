@@ -8,14 +8,27 @@
     personal: './assets/premium-preview-timeline.html',
     party:    './assets/premium-preview-party.html',
   };
-  // Scroll-to time (seconds) for 奇数分/偶数分 TL tabs
-  const TAB_SCROLL_SEC = { all: 0, odd: 60, even: 120 };
+  // Scroll target (seconds) for 奇数分/偶数分 TL tabs — 10s before the minute mark = left edge
+  const TAB_SCROLL_SEC = { all: 0, odd: 50, even: 110 };
 
   const ZOOM_STEPS = [50, 75, 100, 125, 150, 200];
   let zoomIdx  = 2;    // 100%
   let currentView = 'personal';
   let currentTab  = 'all';
   const snapshotCache = {};
+
+  // ---- Role mapping (mirrors runtime.js JOB_ROLE) ----
+
+  const JOB_ROLE = {
+    PLD:'T', WAR:'T', DRK:'T', GNB:'T',
+    WHM:'H', SCH:'H', AST:'H', SGE:'H',
+    MNK:'D', DRG:'D', NIN:'D', SAM:'D', RPR:'D', VPR:'D',
+    BRD:'D', MCH:'D', DNC:'D',
+    BLM:'D', SMN:'D', RDM:'D', PCT:'D',
+  };
+
+  let currentFilter    = 'all';   // 'all' | 'th' | 'dps' | 'custom'
+  let customVisibleKeys = null;   // null = all; Set<"A1"|"B3"|…> when custom applied
 
   // ---- Drag scroll ----
 
@@ -78,15 +91,13 @@
       if (text === '0:00') t0 = left;
       if (text === '1:00') t60 = left;
     });
-    let scrollTarget;
     if (t0 !== null && t60 !== null) {
       const pxPerSec = (t60 - t0) / 60;
-      scrollTarget = Math.max(0, t0 + targetSec * pxPerSec - 200);
+      wrap.scrollLeft = Math.max(0, t0 + targetSec * pxPerSec);
     } else {
       // Fallback
-      scrollTarget = Math.max(0, (60 + targetSec * 40) * (ZOOM_STEPS[zoomIdx] / 100) - 200);
+      wrap.scrollLeft = Math.max(0, (60 + targetSec * 40) * (ZOOM_STEPS[zoomIdx] / 100));
     }
-    wrap.scrollLeft = scrollTarget;
   }
 
   function applyTabScroll(outer) {
@@ -145,13 +156,8 @@
       btn.addEventListener('click', () => {
         const wrap = outer.querySelector('.timeline-wrap');
         if (!wrap) return;
-        // left is the original value; after zoom cacheZoomOrigins scales it via style.left
-        // Read the current (scaled) style.left from the phase-divider element itself
-        const divider = slot.querySelector('.phase-divider.a');
-        // Re-locate this specific divider by matching closest label
         let scaledLeft = left * (ZOOM_STEPS[zoomIdx] / 100);
         const div = Array.from(slot.querySelectorAll('.phase-divider.a')).find(d =>
-          parseFloat(d.dataset.origLeft || d.style.left) * (ZOOM_STEPS[zoomIdx] / 100) === scaledLeft ||
           Math.abs((parseFloat(d.dataset.origLeft || parseFloat(d.style.left) / (ZOOM_STEPS[zoomIdx] / 100))) - left) < 1
         );
         if (div) scaledLeft = parseFloat(div.style.left) || scaledLeft;
@@ -163,57 +169,119 @@
     outer.insertBefore(bar, outer.querySelector('.pp-wrap-slot'));
   }
 
-  // ---- Player filter (PT view) ----
+  // ---- Party role filter ----
 
-  function buildPlayerFilter(outer, slot) {
-    outer.querySelector('.pp-player-filter')?.remove();
-
-    const rows = Array.from(slot.querySelectorAll('.pt-row-label[data-pp-top]'));
-    if (rows.length === 0) return;
-
+  function applyRoleFilter(slot) {
     const timeline = slot.querySelector('.timeline');
-    const ROW_H = 40;
-
-    const bar = document.createElement('div');
-    bar.className = 'pp-player-filter phase-btns';
-
-    rows.forEach(rowLabel => {
+    if (!timeline) return;
+    slot.querySelectorAll('.pt-row-label[data-pp-top]').forEach(rowLabel => {
       const rowTop = parseFloat(rowLabel.dataset.ppTop);
-      const job    = rowLabel.dataset.ppJob || '?';
-      const grp    = rowLabel.dataset.ppGrp || 'A';
-      const num    = rowLabel.dataset.ppNum || '?';
-
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'phase-btn active';
-      btn.textContent = `${job} (${grp}${num})`;
-
+      const role   = JOB_ROLE[(rowLabel.dataset.ppJob || '').toUpperCase()] || '';
+      const key    = rowLabel.dataset.ppGrp + rowLabel.dataset.ppNum;
       let visible = true;
-      btn.addEventListener('click', () => {
-        visible = !visible;
-        btn.classList.toggle('active', visible);
-        rowLabel.style.opacity = visible ? '' : '0.25';
-        if (!timeline) return;
+      if      (currentFilter === 'th')     visible = role === 'T' || role === 'H';
+      else if (currentFilter === 'dps')    visible = role === 'D';
+      else if (currentFilter === 'custom') visible = !customVisibleKeys || customVisibleKeys.has(key);
 
-        // Events are at top ≈ rowTop - 3 (row starts ~8px before label)
-        const evMin = rowTop - 8;
-        const evMax = rowTop + (ROW_H - 8); // rowTop + 32
-        timeline.querySelectorAll('.pt-event').forEach(ev => {
-          const t = parseFloat(ev.style.top || '0');
-          if (t >= evMin && t < evMax) ev.style.display = visible ? '' : 'none';
-        });
-
-        // Row guide line: top ≈ rowTop + 10
-        timeline.querySelectorAll('.pt-row-line').forEach(line => {
-          const t = parseFloat(line.style.top || '0');
-          if (Math.abs(t - (rowTop + 10)) < 6) line.style.opacity = visible ? '' : '0.1';
-        });
+      rowLabel.style.opacity = visible ? '' : '0.25';
+      const evMin = rowTop - 8, evMax = rowTop + 32;
+      timeline.querySelectorAll('.pt-event').forEach(ev => {
+        const t = parseFloat(ev.style.top || '0');
+        if (t >= evMin && t < evMax) ev.style.display = visible ? '' : 'none';
       });
-
-      bar.appendChild(btn);
+      timeline.querySelectorAll('.pt-row-line').forEach(line => {
+        const t = parseFloat(line.style.top || '0');
+        if (Math.abs(t - (rowTop + 10)) < 6) line.style.opacity = visible ? '' : '0.1';
+      });
     });
+  }
 
-    outer.insertBefore(bar, outer.querySelector('.pp-wrap-slot'));
+  function openCustomModal(outer, slot) {
+    outer.querySelector('.pp-custom-backdrop')?.remove();
+
+    const rows  = Array.from(slot.querySelectorAll('.pt-row-label[data-pp-top]'));
+    const rowsA = rows.filter(r => r.dataset.ppGrp === 'A');
+    const rowsB = rows.filter(r => r.dataset.ppGrp === 'B');
+
+    const rowHtml = r => {
+      const key     = r.dataset.ppGrp + r.dataset.ppNum;
+      const checked = !customVisibleKeys || customVisibleKeys.has(key) ? 'checked' : '';
+      return `<label class="pt-custom-player">
+        <input type="checkbox" data-custom-key="${key}" ${checked}>
+        <span class="pt-custom-job">${r.dataset.ppJob || '?'}</span>
+        <span class="pt-custom-name">(${key})</span>
+      </label>`;
+    };
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'pp-custom-backdrop';
+    backdrop.innerHTML = `
+      <div class="pt-custom-modal" role="dialog" aria-modal="true" aria-label="カスタム絞り込み">
+        <div class="pt-custom-head">
+          <div>
+            <div class="pt-custom-title">カスタム絞り込み</div>
+            <div class="pt-custom-sub">表示するプレイヤーを選択</div>
+          </div>
+          <button type="button" class="pt-custom-close" data-custom-action="cancel">×</button>
+        </div>
+        <div class="pt-custom-grid">
+          <div class="pt-custom-side">
+            <div class="pt-custom-side-title a">Log A</div>
+            ${rowsA.map(rowHtml).join('')}
+          </div>
+          <div class="pt-custom-side">
+            <div class="pt-custom-side-title b">Log B</div>
+            ${rowsB.map(rowHtml).join('')}
+          </div>
+        </div>
+        <div class="pt-custom-actions">
+          <button type="button" class="pt-custom-secondary" data-custom-action="all">全員選択</button>
+          <button type="button" class="pt-custom-secondary" data-custom-action="clear">解除</button>
+          <button type="button" class="pt-custom-secondary" data-custom-action="cancel">キャンセル</button>
+          <button type="button" class="pt-custom-primary" data-custom-action="apply">適用</button>
+        </div>
+      </div>`;
+
+    outer.appendChild(backdrop);
+
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove(); });
+
+    backdrop.querySelectorAll('[data-custom-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.customAction;
+        const cbs    = [...backdrop.querySelectorAll('[data-custom-key]')];
+        if (action === 'all')   { cbs.forEach(cb => { cb.checked = true;  }); return; }
+        if (action === 'clear') { cbs.forEach(cb => { cb.checked = false; }); return; }
+        if (action === 'cancel') { backdrop.remove(); return; }
+        if (action === 'apply') {
+          customVisibleKeys = new Set(cbs.filter(cb => cb.checked).map(cb => cb.dataset.customKey));
+          currentFilter = 'custom';
+          applyRoleFilter(slot);
+          slot.querySelectorAll('.pt-filter-btn[data-party-filter]').forEach(b =>
+            b.classList.toggle('active', b.dataset.partyFilter === 'custom')
+          );
+          backdrop.remove();
+        }
+      });
+    });
+  }
+
+  function wirePartyFilter(outer, slot) {
+    currentFilter    = 'all';
+    customVisibleKeys = null;
+
+    slot.querySelectorAll('.pt-filter-btn[data-party-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.partyFilter;
+        if (mode === 'custom') { openCustomModal(outer, slot); return; }
+        currentFilter    = mode;
+        customVisibleKeys = null;
+        applyRoleFilter(slot);
+        slot.querySelectorAll('.pt-filter-btn[data-party-filter]').forEach(b =>
+          b.classList.toggle('active', b.dataset.partyFilter === mode)
+        );
+      });
+    });
   }
 
   // ---- Snapshot injection ----
@@ -226,7 +294,6 @@
     if (!src) {
       slot.innerHTML = '<p class="premium-preview-loading">スナップショット未収集（準備中）</p>';
       outer.querySelector('.pp-phase-bar')?.remove();
-      outer.querySelector('.pp-player-filter')?.remove();
       return;
     }
 
@@ -235,8 +302,7 @@
 
     anonymizeNames(slot);
     buildPhaseButtons(outer, slot);
-    if (currentView === 'party') buildPlayerFilter(outer, slot);
-    else outer.querySelector('.pp-player-filter')?.remove();
+    if (currentView === 'party') wirePartyFilter(outer, slot);
 
     const wrap = slot.querySelector('.timeline-wrap');
     bindDragScroll(wrap);
@@ -342,7 +408,6 @@
       .catch(() => {
         slot.innerHTML = '<p class="premium-preview-loading">スナップショット未収集（準備中）</p>';
         outer.querySelector('.pp-phase-bar')?.remove();
-        outer.querySelector('.pp-player-filter')?.remove();
       });
   }
 

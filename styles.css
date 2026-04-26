@@ -954,6 +954,11 @@
   visibility: hidden;
 }
 
+/* PT比較のジョブ名ラベルを少し大きく */
+.premium-preview-outer .pt-row-label {
+  font-size: 12px;
+}
+
 /* レイヤー非表示クラス */
 .pp-layer-synergy-hidden .synergy-segment,
 .pp-layer-synergy-hidden .synergy-start,

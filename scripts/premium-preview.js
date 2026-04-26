@@ -17,14 +17,21 @@
   let currentTab  = 'all';
   const snapshotCache = {};
 
-  // ---- Role mapping (mirrors runtime.js JOB_ROLE) ----
+  // ---- Role mapping (mirrors runtime.js JOB_ROLE + JOB_NAME_JA for Japanese mode) ----
 
   const JOB_ROLE = {
+    // English job codes
     PLD:'T', WAR:'T', DRK:'T', GNB:'T',
     WHM:'H', SCH:'H', AST:'H', SGE:'H',
     MNK:'D', DRG:'D', NIN:'D', SAM:'D', RPR:'D', VPR:'D',
     BRD:'D', MCH:'D', DNC:'D',
     BLM:'D', SMN:'D', RDM:'D', PCT:'D',
+    // Full Japanese names (used when lang=ja, from JOB_NAME_JA)
+    'ナイト':'T', '戦士':'T', '暗黒騎士':'T', 'ガンブレイカー':'T',
+    '白魔道士':'H', '学者':'H', '占星術師':'H', '賢者':'H',
+    'モンク':'D', '竜騎士':'D', '忍者':'D', '侍':'D', 'リーパー':'D', 'ヴァイパー':'D',
+    '吟遊詩人':'D', '機工士':'D', '踊り子':'D',
+    '黒魔道士':'D', '召喚士':'D', '赤魔道士':'D', 'ピクトマンサー':'D',
   };
 
   let currentFilter    = 'all';   // 'all' | 'th' | 'dps' | 'custom'

@@ -1,5 +1,4 @@
-const { getUserIdFromJWT, isUserPremium } = require('../../lib/billing');
-const { readRuntimeEnv } = require('../../lib/runtime-env');
+const { getUserIdFromJWT, isUserPremium, getSupabaseConfig, serviceHeaders } = require('../../lib/billing');
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -22,19 +21,16 @@ function extractJWT(event) {
   return auth.startsWith('Bearer ') ? auth.slice(7) : null;
 }
 
-function getSupabaseConfig() {
-  const url = readRuntimeEnv('SUPABASE_URL');
-  const serviceRoleKey = readRuntimeEnv('SUPABASE_SERVICE_ROLE_KEY');
-  if (!url || !serviceRoleKey) return null;
-  return { url: url.replace(/\/+$/, ''), serviceRoleKey };
+function parseBody(body) {
+  try {
+    return { ok: true, payload: JSON.parse(body || '{}') };
+  } catch {
+    return { ok: false };
+  }
 }
 
-function serviceHeaders(config, extra = {}) {
-  return {
-    apikey: config.serviceRoleKey,
-    Authorization: `Bearer ${config.serviceRoleKey}`,
-    ...extra,
-  };
+function getIdParam(event) {
+  return event.queryStringParameters?.id || new URLSearchParams(event.rawQuery || '').get('id');
 }
 
 async function authorize(event) {
@@ -80,12 +76,9 @@ async function listBookmarks(config, userId) {
 }
 
 async function createBookmark(event, config, userId) {
-  let payload;
-  try {
-    payload = JSON.parse(event.body || '{}');
-  } catch {
-    return json(400, { ok: false, error: 'Invalid JSON.' });
-  }
+  const parsed = parseBody(event.body);
+  if (!parsed.ok) return json(400, { ok: false, error: 'Invalid JSON.' });
+  const payload = parsed.payload;
   const count = await countBookmarks(config, userId);
   if (count >= 100) {
     return json(409, { ok: false, error: 'Bookmark limit reached.', limit: 100 });
@@ -110,7 +103,7 @@ async function createBookmark(event, config, userId) {
 }
 
 async function deleteBookmark(event, config, userId) {
-  const id = event.queryStringParameters?.id || new URLSearchParams(event.rawQuery || '').get('id');
+  const id = getIdParam(event);
   if (!id || !/^\d+$/.test(id)) return json(400, { ok: false, error: 'Bookmark id is required.' });
   const url = new URL(`${config.url}/rest/v1/comparison_bookmarks`);
   url.searchParams.set('id', `eq.${id}`);
@@ -124,14 +117,11 @@ async function deleteBookmark(event, config, userId) {
 }
 
 async function updateBookmark(event, config, userId) {
-  const id = event.queryStringParameters?.id || new URLSearchParams(event.rawQuery || '').get('id');
+  const id = getIdParam(event);
   if (!id || !/^\d+$/.test(id)) return json(400, { ok: false, error: 'Bookmark id is required.' });
-  let payload;
-  try {
-    payload = JSON.parse(event.body || '{}');
-  } catch {
-    return json(400, { ok: false, error: 'Invalid JSON.' });
-  }
+  const parsed = parseBody(event.body);
+  if (!parsed.ok) return json(400, { ok: false, error: 'Invalid JSON.' });
+  const payload = parsed.payload;
   const title = String(payload.title || '').trim().slice(0, 120);
   if (!title) return json(400, { ok: false, error: 'Bookmark title is required.' });
   const url = new URL(`${config.url}/rest/v1/comparison_bookmarks`);

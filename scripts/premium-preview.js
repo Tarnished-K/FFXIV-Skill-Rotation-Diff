@@ -16,6 +16,7 @@
   let currentView = 'personal';
   let currentTab  = 'all';
   const snapshotCache = {};
+  let _dragMouseupCleanup = null;
 
   // ---- Role mapping (mirrors runtime.js JOB_ROLE + JOB_NAME_JA for Japanese mode) ----
 
@@ -40,12 +41,15 @@
   // ---- Drag scroll ----
 
   function bindDragScroll(wrap) {
+    if (_dragMouseupCleanup) { _dragMouseupCleanup(); _dragMouseupCleanup = null; }
     let dragging = false, startX = 0, scrollLeft = 0;
     wrap.addEventListener('mousedown', e => {
       dragging = true; startX = e.pageX; scrollLeft = wrap.scrollLeft;
       wrap.style.cursor = 'grabbing';
     });
-    document.addEventListener('mouseup', () => { dragging = false; wrap.style.cursor = ''; });
+    const onMouseup = () => { dragging = false; wrap.style.cursor = ''; };
+    document.addEventListener('mouseup', onMouseup);
+    _dragMouseupCleanup = () => document.removeEventListener('mouseup', onMouseup);
     wrap.addEventListener('mousemove', e => {
       if (!dragging) return;
       e.preventDefault();
@@ -181,7 +185,8 @@
   function applyRoleFilter(slot) {
     const timeline = slot.querySelector('.timeline');
     if (!timeline) return;
-    slot.querySelectorAll('.pt-row-label[data-pp-top]').forEach(rowLabel => {
+
+    const rows = Array.from(slot.querySelectorAll('.pt-row-label[data-pp-top]')).map(rowLabel => {
       const rowTop = parseFloat(rowLabel.dataset.ppTop);
       const role   = JOB_ROLE[(rowLabel.dataset.ppJob || '').toUpperCase()] || '';
       const key    = rowLabel.dataset.ppGrp + rowLabel.dataset.ppNum;
@@ -189,17 +194,20 @@
       if      (currentFilter === 'th')     visible = role === 'T' || role === 'H';
       else if (currentFilter === 'dps')    visible = role === 'D';
       else if (currentFilter === 'custom') visible = !customVisibleKeys || customVisibleKeys.has(key);
-
       rowLabel.style.opacity = visible ? '' : '0.25';
-      const evMin = rowTop - 8, evMax = rowTop + 32;
-      timeline.querySelectorAll('.pt-event').forEach(ev => {
-        const t = parseFloat(ev.style.top || '0');
-        if (t >= evMin && t < evMax) ev.style.display = visible ? '' : 'none';
-      });
-      timeline.querySelectorAll('.pt-row-line').forEach(line => {
-        const t = parseFloat(line.style.top || '0');
-        if (Math.abs(t - (rowTop + 10)) < 6) line.style.opacity = visible ? '' : '0.1';
-      });
+      return { rowTop, visible };
+    });
+
+    timeline.querySelectorAll('.pt-event').forEach(ev => {
+      const t = parseFloat(ev.style.top || '0');
+      const row = rows.find(r => t >= r.rowTop - 8 && t < r.rowTop + 32);
+      ev.style.display = !row || row.visible ? '' : 'none';
+    });
+
+    timeline.querySelectorAll('.pt-row-line').forEach(line => {
+      const t = parseFloat(line.style.top || '0');
+      const row = rows.find(r => Math.abs(t - (r.rowTop + 10)) < 6);
+      line.style.opacity = !row || row.visible ? '' : '0.1';
     });
   }
 

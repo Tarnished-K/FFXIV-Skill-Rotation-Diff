@@ -1235,10 +1235,10 @@ function scrollTimelineToTabFocus() {
     el.timelineWrap.scrollTo?.({ left: 0, behavior: 'smooth' });
     return;
   }
-  const minute = tab === 'odd' ? 1 : 2;
+  const targetSec = tab === 'odd' ? 50 : 110;
   const pxPerSec = 16 * state.zoom;
   const xStart = state.timelineView === 'party' ? 182 : 60;
-  const left = Math.max(0, xStart + Math.max(0, minute * 60 - 7) * pxPerSec - 80);
+  const left = Math.max(0, xStart + targetSec * pxPerSec);
   el.timelineWrap.scrollTo?.({ left, behavior: 'smooth' });
 }
 

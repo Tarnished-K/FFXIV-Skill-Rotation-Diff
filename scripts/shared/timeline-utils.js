@@ -11,12 +11,16 @@
   function isInTimelineFocusWindow(seconds, tab) {
     if (tab === 'all') return true;
     const t = Number(seconds || 0);
-    if (!Number.isFinite(t)) return false;
-    const minute = Math.round(t / 60);
-    if (minute <= 0) return false;
-    if (tab === 'odd' && minute % 2 !== 1) return false;
-    if (tab === 'even' && minute % 2 !== 0) return false;
-    return Math.abs(t - minute * 60) <= 7;
+    if (!Number.isFinite(t) || t < 0) return false;
+    // Show event if any minute mark of correct parity falls in [t-20, t+10]
+    // (window = 10s before mark to 20s after mark)
+    const mLo = Math.ceil((t - 20) / 60);
+    const mHi = Math.floor((t + 10) / 60);
+    const parity = tab === 'odd' ? 1 : 0;
+    for (let m = Math.max(mLo, 1); m <= mHi; m++) {
+      if (m % 2 === parity) return true;
+    }
+    return false;
   }
 
   function filterTimeline(records, tab) {

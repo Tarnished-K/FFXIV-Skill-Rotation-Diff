@@ -17,11 +17,11 @@ describe('filterTimeline', () => {
   });
 
   it('filters to odd minutes', () => {
-    expect(filterTimeline(records, 'odd')).toEqual([{ t: 56 }, { t: 64 }]);
+    expect(filterTimeline(records, 'odd')).toEqual([{ t: 56 }, { t: 64 }, { t: 70 }]);
   });
 
   it('filters to even minute windows after the first minute', () => {
-    expect(filterTimeline(records, 'even')).toEqual([{ t: 124 }]);
+    expect(filterTimeline(records, 'even')).toEqual([{ t: 124 }, { t: 130 }]);
   });
 });
 

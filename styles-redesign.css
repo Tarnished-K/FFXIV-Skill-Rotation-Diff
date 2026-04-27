@@ -898,3 +898,154 @@
     display: none;
   }
 }
+
+/* =====================================================================
+   ASSET ENHANCEMENT
+   image (28) card-window-bg · (5) border-frame · (7)/(8) buttons
+   (19-22) corners · (25)/(26) banners · (27) v-divider · (4) ornate
+   ===================================================================== */
+
+/* ─── All cards: image (28) base + corners (19-22) ──────────────────── */
+.card {
+  background:
+    url("assets/ui/corner-tl.png")      left top     / 54px auto no-repeat,
+    url("assets/ui/corner-tr.png")      right top    / 54px auto no-repeat,
+    url("assets/ui/corner-bl.png")      left bottom  / 54px auto no-repeat,
+    url("assets/ui/corner-br.png")      right bottom / 54px auto no-repeat,
+    url("assets/ui/card-window-bg.png") center       / 100% 100% no-repeat;
+  border-color: rgba(43, 134, 217, 0.28);
+  /* suppress the base gradient from styles-base.css — card-window-bg handles it */
+}
+
+/* Keep the top-edge highlight line from card::before readable */
+.card::before {
+  background: linear-gradient(90deg, transparent, rgba(123, 198, 255, 0.3), rgba(242, 207, 122, 0.5), rgba(123, 198, 255, 0.3), transparent);
+}
+
+/* ─── Step cards: add ornate corner (image 4) via CSS ────────────────── */
+.step-card {
+  background:
+    url("assets/ui/corner-tl-ornate.png") left top    / 58px auto no-repeat,
+    url("assets/ui/corner-tl.png")        left top    / 54px auto no-repeat,
+    url("assets/ui/corner-tr.png")        right top   / 54px auto no-repeat,
+    url("assets/ui/corner-bl.png")        left bottom / 54px auto no-repeat,
+    url("assets/ui/corner-br.png")        right bottom / 54px auto no-repeat,
+    url("assets/ui/card-window-bg.png")   center      / 100% 100% no-repeat;
+}
+
+/* Remove the old step-corner-ornament class (now CSS-driven) */
+.step-corner-ornament {
+  display: none;
+}
+
+/* ─── Step card h2 headers: banner (image 26) ───────────────────────── */
+.step-card h2 {
+  background: url("assets/ui/banner-ornate-wide.png") center / 100% 100% no-repeat;
+  padding: 8px 14px 8px 42px;
+  margin: 2px -8px 10px;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: none;
+  color: var(--gold-light);
+  text-shadow: 0 0 10px rgba(210, 168, 78, 0.45);
+}
+
+/* Step4 title doesn't use the small banner */
+#step4 h2 {
+  background: none;
+  padding: 0;
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+/* ─── Mothercrystal panel: gold frame (image 5) + base (image 28) ───── */
+.mothercrystal-panel {
+  background:
+    url("assets/ui/border-frame.png")   center / 100% 100% no-repeat,
+    url("assets/ui/corner-tl.png")      left top     / 54px auto no-repeat,
+    url("assets/ui/corner-tr.png")      right top    / 54px auto no-repeat,
+    url("assets/ui/corner-bl.png")      left bottom  / 54px auto no-repeat,
+    url("assets/ui/corner-br.png")      right bottom / 54px auto no-repeat,
+    url("assets/ui/card-window-bg.png") center       / 100% 100% no-repeat;
+  border-color: transparent;
+  box-shadow: var(--shadow), 0 0 40px rgba(43, 134, 217, 0.1) inset;
+}
+
+/* ─── Action buttons: glowing blue pill (image 8) ───────────────────── */
+#loadBtn,
+#loadPlayersBtn,
+#compareBtn {
+  background: url("assets/ui/btn-blue-bright.png") center / 100% 100% no-repeat;
+  border: none !important;
+  color: #e8f6ff;
+  text-shadow: 0 0 10px rgba(123, 198, 255, 0.55);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: none;
+  padding: 12px 16px;
+}
+
+#loadBtn:hover,
+#loadPlayersBtn:hover,
+#compareBtn:hover {
+  background: url("assets/ui/btn-blue-dark.png") center / 100% 100% no-repeat;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(43, 134, 217, 0.35);
+}
+
+/* ─── Sidebar section labels: small banner (image 25) ───────────────── */
+.sidebar-section-label {
+  background: url("assets/ui/banner-ornate.png") center / 100% 100% no-repeat;
+  padding: 5px 12px;
+  margin-bottom: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  text-align: center;
+  text-shadow: 0 0 6px rgba(210, 168, 78, 0.3);
+}
+
+/* ─── Sidebar: vertical accent bar (image 27) ───────────────────────── */
+.sidebar::before {
+  content: "";
+  position: absolute;
+  top: 120px;
+  right: 0px;
+  width: 6px;
+  height: calc(100% - 200px);
+  background: url("assets/ui/divider-v-light.png") center top / 100% auto repeat-y;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ─── Topbar: ornate corner decoration (image 4) ────────────────────── */
+.topbar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  background: url("assets/ui/corner-tl-ornate.png") top left / contain no-repeat;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Step4 card: slightly different styling for timeline section ─── */
+#step4 {
+  background:
+    url("assets/ui/corner-tl.png")      left top     / 54px auto no-repeat,
+    url("assets/ui/corner-tr.png")      right top    / 54px auto no-repeat,
+    url("assets/ui/corner-bl.png")      left bottom  / 54px auto no-repeat,
+    url("assets/ui/corner-br.png")      right bottom / 54px auto no-repeat,
+    url("assets/ui/card-window-bg.png") center       / 100% 100% no-repeat;
+}

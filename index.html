@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="styles-layout.css" />
     <link rel="stylesheet" href="styles-timeline.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles-redesign.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script type="importmap">
 {
@@ -35,140 +36,261 @@
     </script>
   </head>
   <body>
-    <header>
-      <div class="header-row">
-        <div class="site-identity">
-          <h1 id="siteTitle">FFXIV Skill Codex</h1>
-          <p id="siteDesc">FFLogs の公開ログ URL を 2 つ使って比較します</p>
+    <div class="app-shell">
+
+      <!-- ===== LEFT SIDEBAR ===== -->
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <img src="assets/ui/crystal-emblem.png" alt="FFXIV SRD" class="sidebar-logo-img" />
         </div>
-        <div class="header-ad">
-          <ins class="adsbygoogle"
-               style="display:inline-block;width:728px;height:90px;"
-               data-ad-client="ca-pub-1720976285558165"
-               data-ad-slot="4407635592"></ins>
-          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+        <nav class="sidebar-nav" aria-label="メインナビゲーション">
+          <a href="/" class="sidebar-nav-item is-active">
+            <img src="assets/ui/icon-home.png" alt="" class="sidebar-nav-icon" />
+            <span id="navHome">ホーム</span>
+          </a>
+          <a href="#step1" class="sidebar-nav-item">
+            <img src="assets/ui/icon-load.png" alt="" class="sidebar-nav-icon" />
+            <span id="navLoad">読み込み</span>
+          </a>
+          <a href="#step4" class="sidebar-nav-item">
+            <img src="assets/ui/icon-compare.png" alt="" class="sidebar-nav-icon" />
+            <span id="navCompare">比較</span>
+          </a>
+          <a href="#bookmarkControls" class="sidebar-nav-item" id="sidebarBookmarkLink">
+            <img src="assets/ui/icon-bookmark.png" alt="" class="sidebar-nav-icon" />
+            <span id="navBookmark">ブックマーク</span>
+          </a>
+          <a href="/tutorial.html" class="sidebar-nav-item">
+            <img src="assets/ui/icon-guide.png" alt="" class="sidebar-nav-icon" />
+            <span id="navGuide">ガイド</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-divider">
+          <img src="assets/ui/divider-gem.png" alt="" class="sidebar-divider-img" />
         </div>
-        <div class="header-actions">
-          <div class="header-actions-top">
-            <div id="headerAuthArea" class="header-auth-area"></div>
-            <a id="contactBtn" class="button-link ghost tutorial-launch-btn" href="/contact.html">ご要望フォーム</a>
-            <button id="langToggle" type="button" class="lang-btn">EN</button>
+
+        <div class="sidebar-data-section">
+          <div class="sidebar-section-label" id="sidebarDataSourceLabel">データソース</div>
+          <div class="sidebar-source-item">
+            <img src="assets/ui/crystal-emblem.png" alt="" class="sidebar-source-icon" />
+            <div class="sidebar-source-info">
+              <div class="sidebar-source-name">FFLOGS</div>
+              <div class="sidebar-source-type">Public Logs</div>
+            </div>
           </div>
-          <div class="header-actions-bottom">
+        </div>
+
+        <div class="sidebar-status-section">
+          <div class="sidebar-section-label" id="sidebarConnLabel">接続ステータス</div>
+          <div class="sidebar-conn-row">
+            <span class="sidebar-conn-dot"></span>
+            <span class="sidebar-conn-text" id="sidebarConnText">正常</span>
+          </div>
+          <div class="sidebar-conn-meta" id="sidebarLastFetch">最終取得<br>5分前</div>
+        </div>
+
+        <div class="sidebar-api-section">
+          <div class="sidebar-section-label">APIリミット</div>
+          <div class="sidebar-api-value" id="headerUsageAreaSidebar">
             <div id="headerUsageArea" class="header-usage-area" aria-live="polite"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ===== MAIN CONTENT ===== -->
+      <div class="main-content">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+          <div class="topbar-identity">
+            <h1 id="siteTitle">FFXIV Skill Rotation Diff</h1>
+            <p class="topbar-subtitle" id="siteDesc">RAID OPERATIONS CONSOLE</p>
+          </div>
+          <div class="header-ad">
+            <ins class="adsbygoogle"
+                 style="display:inline-block;width:728px;height:90px;"
+                 data-ad-client="ca-pub-1720976285558165"
+                 data-ad-slot="4407635592"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+          </div>
+          <div class="topbar-actions">
             <div id="headerStatusArea" class="header-status-area" aria-live="polite"></div>
-            <a id="tutorialBtn" class="button-link ghost tutorial-launch-btn header-tutorial-link" href="/tutorial.html">初めての方はこちら</a>
+            <a id="contactBtn" class="topbar-btn ghost" href="/contact.html">ご要望フォーム</a>
+            <a id="tutorialBtn" class="topbar-btn ghost tutorial-launch-btn" href="/tutorial.html">初めての方はこちら</a>
+            <button id="langToggle" type="button" class="topbar-btn lang-btn">EN</button>
+            <div id="headerAuthArea" class="header-auth-area topbar-auth"></div>
           </div>
-        </div>
-      </div>
-    </header>
+        </header>
 
-    <main>
-      <section class="card" id="step1">
-        <h2 id="step1Title">1. 公開 FFLogs ログを読み込む</h2>
-        <p id="publicOnlyNote" class="submessage">公開ログのみ対応です。</p>
-        <label id="logUrlALabel">ログURL A <input id="urlA" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
-        <label id="logUrlBLabel">ログURL B <input id="urlB" type="url" placeholder="https://ja.fflogs.com/reports/..." /></label>
-        <button id="loadBtn">読み込み開始</button>
-        <p id="step1Message" class="message"></p>
-      </section>
+        <!-- STEPS 1-3 + MOTHERCRYSTAL PANEL -->
+        <div class="steps-row">
 
-      <section class="card" id="step2">
-        <h2 id="step2Title">2. 戦闘データ選択（Kill のみ）</h2>
-        <div class="player-grid">
-          <label id="logAFightLabel">ログA 戦闘
-            <select id="fightA"></select>
-          </label>
-          <label id="logBFightLabel">ログB 戦闘
-            <select id="fightB"></select>
-          </label>
-        </div>
-        <button id="loadPlayersBtn">この戦闘でプレイヤー一覧を取得</button>
-        <p id="step2Message" class="submessage"></p>
-      </section>
+          <!-- STEP 1 -->
+          <section class="card step-card" id="step1">
+            <div class="step-card-number">
+              <img src="assets/ui/corner-tl-ornate.png" alt="" class="step-corner-ornament" />
+              <span class="step-number-badge">1</span>
+            </div>
+            <h2 id="step1Title">FFLogsの公開ログを読み込む</h2>
+            <p id="publicOnlyNote" class="submessage">比較したい2つのレポートURLを入力してください。</p>
+            <label id="logUrlALabel">A レポートURL（比較元）
+              <input id="urlA" type="url" placeholder="https://www.fflogs.com/reports/xxxxxxxx#fight=1" />
+            </label>
+            <label id="logUrlBLabel">B レポートURL（比較先）
+              <input id="urlB" type="url" placeholder="https://www.fflogs.com/reports/yyyyyyyy#fight=1" />
+            </label>
+            <button id="loadBtn">読み込み開始</button>
+            <p id="step1Message" class="message"></p>
+          </section>
 
-      <section class="card" id="step3">
-        <h2 id="step3Title">3. 比較するプレイヤー選択</h2>
-        <div class="player-grid">
-          <label id="logAPlayerLabel">ログAプレイヤー
-            <select id="playerA"></select>
-          </label>
-          <label id="logBPlayerLabel">ログBプレイヤー
-            <select id="playerB"></select>
-          </label>
-        </div>
-        <button id="compareBtn">比較を開始</button>
-      </section>
+          <!-- STEP 2 -->
+          <section class="card step-card" id="step2">
+            <div class="step-card-number">
+              <span class="step-number-badge">2</span>
+            </div>
+            <h2 id="step2Title">戦闘データを選択する</h2>
+            <p class="submessage">各レポートから比較する戦闘を選択してください。</p>
+            <div class="player-grid">
+              <label id="logAFightLabel">A レポートの戦闘
+                <select id="fightA"></select></label>
+              <label id="logBFightLabel">B レポートの戦闘
+                <select id="fightB"></select></label>
+            </div>
+            <button id="loadPlayersBtn">この戦闘でプレイヤー一覧を取得</button>
+            <p id="step2Message" class="submessage"></p>
+          </section>
 
-      <section class="card" id="step4">
-        <div class="step4-header">
-          <div class="step4-header-main">
-            <h2 id="step4Title">4. 比較結果</h2>
-            <div class="timeline-view-tabs">
-              <button id="personalTimelineViewBtn" type="button" class="timeline-view-btn active" data-timeline-view="personal">個人比較</button>
-              <button id="partyTimelineViewBtn" type="button" class="timeline-view-btn" data-timeline-view="party">PT比較</button>
+          <!-- STEP 3 -->
+          <section class="card step-card" id="step3">
+            <div class="step-card-number">
+              <span class="step-number-badge">3</span>
             </div>
-            <div class="tabs">
-              <button class="tab active" data-tab="all">全体TL</button>
-              <button class="tab" data-tab="odd">奇数分TL</button>
-              <button class="tab" data-tab="even">偶数分TL</button>
+            <h2 id="step3Title">比較するプレイヤーを選択</h2>
+            <p class="submessage">比較したいプレイヤー（ジョブ・ロール）を選択してください。</p>
+            <div class="player-grid">
+              <label id="logAPlayerLabel">A プレイヤー（比較元）
+                <select id="playerA"></select></label>
+              <label id="logBPlayerLabel">B プレイヤー（比較先）
+                <select id="playerB"></select></label>
             </div>
-            <div class="zoom-controls">
-              <button id="zoomOutBtn" type="button">−</button>
-              <span id="zoomLabel">100%</span>
-              <button id="zoomInBtn" type="button">＋</button>
+            <button id="compareBtn">比較を開始</button>
+          </section>
+
+          <!-- MOTHERCRYSTAL STATUS PANEL -->
+          <div class="mothercrystal-panel">
+            <div class="mc-header">
+              <img src="assets/ui/crystal-emblem.png" alt="" class="mc-logo" />
+              <div class="mc-header-text">
+                <div class="mc-title">Mothercrystal Status</div>
+                <div class="mc-subtitle">— 分析エンジン稼働中 —</div>
+              </div>
             </div>
-            <div class="timeline-layer-controls" aria-label="Timeline lanes">
-              <label class="timeline-layer-toggle">
-                <input type="checkbox" data-timeline-layer="synergy" checked>
-                <span data-layer-label="synergy">Synergy</span>
-              </label>
-              <label class="timeline-layer-toggle">
-                <input type="checkbox" data-timeline-layer="debuff" checked>
-                <span data-layer-label="debuff">Weakness / Damage Down</span>
-              </label>
-              <label class="timeline-layer-toggle">
-                <input type="checkbox" data-timeline-layer="cast" checked>
-                <span data-layer-label="cast">Boss Casts</span>
-              </label>
+            <div class="mc-crystal-wrap">
+              <img src="assets/ui/crystal-sword.png" alt="" class="mc-crystal-img" />
+              <div class="mc-glow-ring"></div>
             </div>
-            <div id="bookmarkControls" class="bookmark-controls hidden">
-              <button id="saveBookmarkBtn" type="button" class="bookmark-action-btn">ブックマーク保存</button>
-              <button id="showBookmarksBtn" type="button" class="bookmark-action-btn ghost">ブックマーク一覧</button>
+            <div class="mc-status-row">
+              <span class="mc-online-dot"></span>
+              <span class="mc-online-text">SYSTEM ONLINE</span>
             </div>
-            <div id="uiToast" class="ui-toast hidden" role="status" aria-live="polite"></div>
+            <p class="mc-desc" id="mcDesc">解析準備完了<br>高精度タイムライン解析を実行します</p>
+            <div class="mc-power-section">
+              <div class="mc-power-label">CRYSTAL POWER</div>
+              <div class="mc-power-bar-wrap">
+                <div class="mc-power-bar">
+                  <div class="mc-power-fill" style="width:100%"></div>
+                </div>
+                <span class="mc-power-value">100%</span>
+              </div>
+            </div>
           </div>
-          <div id="phaseContainer" class="phase-btns"></div>
-        </div>
-        <p id="step4Message" class="message hidden"></p>
-        <div id="timelineWrap" class="timeline-wrap"></div>
-      </section>
 
-      <section class="card hidden" id="debugNormal">
-        <h2 id="debugNormalTitle">Log</h2>
-        <pre id="debugLog" class="debug-log"></pre>
-      </section>
-      <section class="card hidden" id="debugError">
-        <h2 id="debugErrorTitle">Error Log</h2>
-        <pre id="errorLog" class="debug-log error-log"></pre>
-      </section>
-    </main>
+        </div><!-- /steps-row -->
 
-    <footer>
-      <div class="footer-ad">
-        <ins class="adsbygoogle"
-             style="display:inline-block;width:728px;height:90px;"
-             data-ad-client="ca-pub-1720976285558165"
-             data-ad-slot="4407635592"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-      </div>
-      <div class="footer-legal">
-        <small>FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD. All Rights Reserved. This is an unofficial fan tool, not affiliated with or endorsed by Square Enix.</small>
-        <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>. &nbsp;|&nbsp; <a id="privacyLink" href="/privacy.html">Privacy Policy</a></small>
-      </div>
-      <small class="build-info" data-build-info>Version loading...</small>
-    </footer>
+        <!-- STEP 4: TIMELINE -->
+        <section class="card" id="step4">
+          <div class="step4-header">
+            <div class="step4-header-main">
+              <h2 id="step4Title">4. 比較結果</h2>
+              <div class="timeline-view-tabs">
+                <button id="personalTimelineViewBtn" type="button" class="timeline-view-btn active" data-timeline-view="personal">個人比較</button>
+                <button id="partyTimelineViewBtn" type="button" class="timeline-view-btn" data-timeline-view="party">PT比較</button>
+              </div>
+              <div class="tabs">
+                <button class="tab active" data-tab="all">全体TL</button>
+                <button class="tab" data-tab="odd">奇数分TL</button>
+                <button class="tab" data-tab="even">偶数分TL</button>
+              </div>
+              <div class="zoom-controls">
+                <span class="zoom-label-prefix">ズーム</span>
+                <button id="zoomOutBtn" type="button">−</button>
+                <span id="zoomLabel">100%</span>
+                <button id="zoomInBtn" type="button">＋</button>
+              </div>
+              <div class="timeline-layer-controls" aria-label="Timeline lanes">
+                <label class="timeline-layer-toggle">
+                  <input type="checkbox" data-timeline-layer="synergy" checked>
+                  <span data-layer-label="synergy">シナジー</span>
+                </label>
+                <label class="timeline-layer-toggle">
+                  <input type="checkbox" data-timeline-layer="debuff" checked>
+                  <span data-layer-label="debuff">弱点・被ダメ上昇</span>
+                </label>
+                <label class="timeline-layer-toggle">
+                  <input type="checkbox" data-timeline-layer="cast" checked>
+                  <span data-layer-label="cast">ボス詠唱</span>
+                </label>
+              </div>
+              <div id="bookmarkControls" class="bookmark-controls hidden">
+                <button id="saveBookmarkBtn" type="button" class="bookmark-action-btn">ブックマーク保存</button>
+                <button id="showBookmarksBtn" type="button" class="bookmark-action-btn ghost">ブックマーク一覧</button>
+              </div>
+              <div id="uiToast" class="ui-toast hidden" role="status" aria-live="polite"></div>
+            </div>
+            <div id="phaseContainer" class="phase-btns"></div>
+          </div>
+          <p id="step4Message" class="message hidden"></p>
+          <div id="timelineWrap" class="timeline-wrap"></div>
+        </section>
 
+        <!-- DEBUG -->
+        <section class="card hidden" id="debugNormal">
+          <h2 id="debugNormalTitle">Log</h2>
+          <pre id="debugLog" class="debug-log"></pre>
+        </section>
+        <section class="card hidden" id="debugError">
+          <h2 id="debugErrorTitle">Error Log</h2>
+          <pre id="errorLog" class="debug-log error-log"></pre>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="site-footer">
+          <div class="footer-ad">
+            <ins class="adsbygoogle"
+                 style="display:inline-block;width:728px;height:90px;"
+                 data-ad-client="ca-pub-1720976285558165"
+                 data-ad-slot="4407635592"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+          </div>
+          <div class="footer-inner">
+            <div class="footer-brand">
+              <img src="assets/ui/crystal-emblem.png" alt="" class="footer-logo" />
+              <span class="footer-site-name">XIV-SRD.COM</span>
+            </div>
+            <div class="footer-legal">
+              <small>FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD. All Rights Reserved. This is an unofficial fan tool, not affiliated with or endorsed by Square Enix.</small>
+              <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>. &nbsp;|&nbsp; <a id="privacyLink" href="/privacy.html">Privacy Policy</a></small>
+            </div>
+            <small class="build-info" data-build-info>Version loading...</small>
+          </div>
+        </footer>
+
+      </div><!-- /main-content -->
+    </div><!-- /app-shell -->
+
+    <!-- TUTORIAL OVERLAY -->
     <div id="tutorialOverlay" class="tutorial-overlay hidden" aria-hidden="true">
       <div id="tutorialBackdrop" class="tutorial-backdrop"></div>
       <div id="tutorialCard" class="tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
@@ -186,6 +308,7 @@
       </div>
     </div>
 
+    <!-- AUTH MODAL -->
     <div id="authModal" class="auth-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
       <div id="authModalBackdrop" class="auth-modal-backdrop"></div>
       <div class="auth-modal-card">
@@ -211,6 +334,7 @@
       </div>
     </div>
 
+    <!-- BOOKMARK MODAL -->
     <div id="bookmarkModal" class="bookmark-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="bookmarkModalTitle">
       <div id="bookmarkModalBackdrop" class="bookmark-modal-backdrop"></div>
       <div class="bookmark-modal-card">

@@ -50,9 +50,9 @@
             <img src="assets/ui/icon-home.png" alt="" class="sidebar-nav-icon" />
             <span id="navHome">ホーム</span>
           </a>
-          <a href="/contact.html" class="sidebar-nav-item">
-            <img src="assets/ui/icon-request.png" alt="" class="sidebar-nav-icon" />
-            <span id="navLoad">ご要望フォーム</span>
+          <a href="/tutorial.html" class="sidebar-nav-item">
+            <img src="assets/ui/icon-guide.png" alt="" class="sidebar-nav-icon" />
+            <span id="navGuide">初めての方はこちら</span>
           </a>
           <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLoginBtn" onclick="document.getElementById('headerAuthArea')?.querySelector('button')?.click()">
             <img src="assets/ui/icon-login-new.png" alt="" class="sidebar-nav-icon" />
@@ -62,10 +62,81 @@
             <img src="assets/ui/icon-lang-switch.png" alt="" class="sidebar-nav-icon" />
             <span id="navLang">言語切り替え</span>
           </button>
-          <a href="/tutorial.html" class="sidebar-nav-item">
-            <img src="assets/ui/icon-guide.png" alt="" class="sidebar-nav-icon" />
-            <span id="navGuide">初めての方はこちら</span>
+          <a href="/contact.html" class="sidebar-nav-item">
+            <img src="assets/ui/icon-request.png" alt="" class="sidebar-nav-icon" />
+            <span id="navLoad">ご要望フォーム</span>
           </a>
+          <button type="button" class="sidebar-nav-item sidebar-lang-btn sidebar-ranking-toggle" id="sidebarRankingBtn" aria-expanded="false" aria-controls="sidebarRankingMenu">
+            <img src="assets/ui/icon-compare.png" alt="" class="sidebar-nav-icon" />
+            <span id="navRanking">ランキング</span>
+            <span class="sidebar-ranking-chevron" id="rankingChevron" aria-hidden="true">▶</span>
+          </button>
+          <div class="sidebar-ranking-menu" id="sidebarRankingMenu" aria-hidden="true">
+            <button type="button" class="sidebar-ranking-type-btn" aria-expanded="false" aria-controls="rankingTypeDamage">
+              <span id="navRankingDamage">ダメージランキング</span>
+              <span class="sidebar-ranking-chevron" aria-hidden="true">▶</span>
+            </button>
+            <div class="sidebar-ranking-type-content" id="rankingTypeDamage" aria-hidden="true">
+              <div class="sidebar-ranking-group">
+                <div class="sidebar-ranking-group-label">ヘビー級</div>
+                <a href="#" class="sidebar-ranking-item">零式1層：ヴァンプファタール</a>
+                <a href="#" class="sidebar-ranking-item">零式2層：エクストリームズ</a>
+                <a href="#" class="sidebar-ranking-item">零式3層：ザ・タイラント</a>
+                <a href="#" class="sidebar-ranking-item">零式4層/前半：リンドブルム</a>
+                <a href="#" class="sidebar-ranking-item">零式4層/後半：リンドブルム</a>
+              </div>
+              <div class="sidebar-ranking-group">
+                <div class="sidebar-ranking-group-label">絶</div>
+                <a href="#" class="sidebar-ranking-item">絶もう一つの未来</a>
+                <a href="#" class="sidebar-ranking-item">絶オメガ検証戦</a>
+                <a href="#" class="sidebar-ranking-item">絶竜詩戦争</a>
+                <a href="#" class="sidebar-ranking-item">絶アレキサンダー討滅戦</a>
+                <a href="#" class="sidebar-ranking-item">絶アルテマウェポン破壊作戦</a>
+                <a href="#" class="sidebar-ranking-item">絶バハムート討滅戦</a>
+              </div>
+              <div class="sidebar-ranking-group">
+                <div class="sidebar-ranking-group-label">極</div>
+                <a href="#" class="sidebar-ranking-item">エヌ・オー</a>
+                <a href="#" class="sidebar-ranking-item">グラシャラボラス</a>
+              </div>
+              <div class="sidebar-ranking-group">
+                <div class="sidebar-ranking-group-label">アナザーダンジョン</div>
+                <a href="#" class="sidebar-ranking-item">商客物語</a>
+              </div>
+            </div>
+            <button type="button" class="sidebar-ranking-type-btn" aria-expanded="false" aria-controls="rankingTypeSpeed">
+              <span id="navRankingSpeed">スピードランキング</span>
+              <span class="sidebar-ranking-chevron" aria-hidden="true">▶</span>
+            </button>
+            <div class="sidebar-ranking-type-content" id="rankingTypeSpeed" aria-hidden="true">
+              <div class="sidebar-ranking-group">
+                <div class="sidebar-ranking-group-label">ヘビー級</div>
+                <a href="#" class="sidebar-ranking-item">零式1層：ヴァンプファタール</a>
+                <a href="#" class="sidebar-ranking-item">零式2層：エクストリームズ</a>
+                <a href="#" class="sidebar-ranking-item">零式3層：ザ・タイラント</a>
+                <a href="#" class="sidebar-ranking-item">零式4層/前半：リンドブルム</a>
+                <a href="#" class="sidebar-ranking-item">零式4層/後半：リンドブルム</a>
+              </div>
+              <div class="sidebar-ranking-group">
+                <div class="sidebar-ranking-group-label">絶</div>
+                <a href="#" class="sidebar-ranking-item">絶もう一つの未来</a>
+                <a href="#" class="sidebar-ranking-item">絶オメガ検証戦</a>
+                <a href="#" class="sidebar-ranking-item">絶竜詩戦争</a>
+                <a href="#" class="sidebar-ranking-item">絶アレキサンダー討滅戦</a>
+                <a href="#" class="sidebar-ranking-item">絶アルテマウェポン破壊作戦</a>
+                <a href="#" class="sidebar-ranking-item">絶バハムート討滅戦</a>
+              </div>
+              <div class="sidebar-ranking-group">
+                <div class="sidebar-ranking-group-label">極</div>
+                <a href="#" class="sidebar-ranking-item">エヌ・オー</a>
+                <a href="#" class="sidebar-ranking-item">グラシャラボラス</a>
+              </div>
+              <div class="sidebar-ranking-group">
+                <div class="sidebar-ranking-group-label">アナザーダンジョン</div>
+                <a href="#" class="sidebar-ranking-item">商客物語</a>
+              </div>
+            </div>
+          </div>
         </nav>
 
         <div class="sidebar-divider">
@@ -81,15 +152,18 @@
               <div class="sidebar-source-type" id="sidebarUserRole">ゲスト</div>
             </div>
           </div>
-        </div>
-
-        <div class="sidebar-status-section">
-          <div class="sidebar-section-label" id="sidebarConnLabel">接続ステータス</div>
-          <div class="sidebar-conn-row">
-            <span class="sidebar-conn-dot"></span>
-            <span class="sidebar-conn-text" id="sidebarConnText">正常</span>
+          <div class="sidebar-section-label sidebar-sub-label" id="sidebarMemberStatusLabel">会員ステータス</div>
+          <div class="sidebar-source-item sidebar-source-item--no-icon">
+            <div class="sidebar-source-info">
+              <div class="sidebar-source-name" id="sidebarMemberStatus">ゲスト</div>
+            </div>
           </div>
-          <div class="sidebar-conn-meta" id="sidebarLastFetch">最終取得<br>5分前</div>
+          <div class="sidebar-section-label sidebar-sub-label" id="sidebarRemainingLabel">本日の残り回数</div>
+          <div class="sidebar-source-item sidebar-source-item--no-icon">
+            <div class="sidebar-source-info">
+              <div class="sidebar-source-name" id="sidebarRemainingUsage">—</div>
+            </div>
+          </div>
         </div>
 
         <div class="sidebar-api-section">
@@ -346,6 +420,43 @@
       </div>
     </div>
 
+    <script>
+      (function() {
+        function initRankingMenu() {
+          var rankingBtn = document.getElementById('sidebarRankingBtn');
+          var rankingMenu = document.getElementById('sidebarRankingMenu');
+          var rankingChevron = document.getElementById('rankingChevron');
+          if (rankingBtn && rankingMenu) {
+            rankingBtn.addEventListener('click', function() {
+              var isOpen = rankingMenu.classList.contains('is-open');
+              rankingMenu.classList.toggle('is-open', !isOpen);
+              rankingBtn.setAttribute('aria-expanded', String(!isOpen));
+              rankingMenu.setAttribute('aria-hidden', String(isOpen));
+              if (rankingChevron) rankingChevron.textContent = isOpen ? '▶' : '▼';
+            });
+          }
+          document.querySelectorAll('.sidebar-ranking-type-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var targetId = btn.getAttribute('aria-controls');
+              var targetEl = document.getElementById(targetId);
+              var chevron = btn.querySelector('.sidebar-ranking-chevron');
+              if (targetEl) {
+                var isOpen = targetEl.classList.contains('is-open');
+                targetEl.classList.toggle('is-open', !isOpen);
+                btn.setAttribute('aria-expanded', String(!isOpen));
+                targetEl.setAttribute('aria-hidden', String(isOpen));
+                if (chevron) chevron.textContent = isOpen ? '▶' : '▼';
+              }
+            });
+          });
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initRankingMenu);
+        } else {
+          initRankingMenu();
+        }
+      })();
+    </script>
     <script type="module" src="scripts/auth/auth.js"></script>
     <script type="module" src="scripts/auth/auth-ui.js"></script>
     <script src="./scripts/shared/build-info.js"></script>

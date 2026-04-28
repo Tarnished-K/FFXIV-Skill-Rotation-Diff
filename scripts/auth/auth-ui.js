@@ -54,18 +54,22 @@ async function requirePremiumFeature(featureName) {
 function updateSidebarAuth(user, usageData) {
   const usernameEl = document.getElementById('sidebarUsername');
   const roleEl = document.getElementById('sidebarUserRole');
+  const memberStatusEl = document.getElementById('sidebarMemberStatus');
   const loginBtn = document.getElementById('sidebarLoginBtn');
   const loginLabel = loginBtn?.querySelector('span');
   if (!user) {
     if (usernameEl) usernameEl.textContent = '—';
-    if (roleEl) roleEl.textContent = 'ゲスト';
-    if (loginLabel) loginLabel.textContent = 'ログイン';
+    if (roleEl) roleEl.textContent = authText('guestLabel', 'ゲスト');
+    if (memberStatusEl) memberStatusEl.textContent = authText('guestLabel', 'ゲスト');
+    if (loginLabel) loginLabel.textContent = authText('authLoginLabel', 'ログイン');
     if (loginBtn) loginBtn.onclick = () => openAuthModal('login');
   } else {
     const name = user.user_metadata?.full_name || user.email || '';
     if (usernameEl) usernameEl.textContent = name;
-    if (roleEl) roleEl.textContent = usageData?.isPremium ? 'サポーター' : '無料会員';
-    if (loginLabel) loginLabel.textContent = 'ログアウト';
+    const roleText = usageData?.isPremium ? authText('statusSupporter', 'サポーター') : authText('statusFreeLabel', '無料会員');
+    if (roleEl) roleEl.textContent = roleText;
+    if (memberStatusEl) memberStatusEl.textContent = roleText;
+    if (loginLabel) loginLabel.textContent = authText('logoutBtn', 'ログアウト');
     if (loginBtn) loginBtn.onclick = async () => {
       await globalThis.AuthModule.signOut();
       renderHeaderAuth(null, null);
@@ -151,13 +155,21 @@ function renderHeaderStatus(usageData) {
 
 function renderHeaderUsage(usageData) {
   const container = document.getElementById('headerUsageArea');
+  const sidebarRemaining = document.getElementById('sidebarRemainingUsage');
   if (!container) return;
   if (!usageData || typeof usageData.remaining !== 'number') {
     container.textContent = '';
+    if (sidebarRemaining) sidebarRemaining.textContent = '—';
     return;
   }
   const remaining = usageData.remaining;
-  container.textContent = authText('usageRemaining', '本日残り回数：' + remaining, remaining);
+  const text = authText('usageRemaining', '本日残り回数：' + remaining, remaining);
+  container.textContent = text;
+  if (sidebarRemaining) {
+    sidebarRemaining.textContent = remaining >= 9999
+      ? (globalThis.state?.lang === 'en' ? 'Unlimited' : '無制限')
+      : String(remaining);
+  }
 }
 
 function escapeHtml(str) {

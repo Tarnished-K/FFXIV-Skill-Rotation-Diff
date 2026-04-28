@@ -782,3 +782,116 @@ body::before {
     -webkit-backdrop-filter: blur(8px);
   }
 }
+
+/* =====================================================================
+   14. RANKING SUBMENU
+   ===================================================================== */
+
+/* Sub-section label with top margin */
+.sidebar-sub-label {
+  margin-top: 10px;
+}
+
+/* No-icon source item */
+.sidebar-source-item--no-icon {
+  padding: 8px 10px;
+}
+.sidebar-source-item--no-icon .sidebar-source-info {
+  width: 100%;
+}
+
+/* Ranking toggle button chevron */
+.sidebar-ranking-chevron {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.sidebar-ranking-toggle[aria-expanded="true"] .sidebar-ranking-chevron {
+  transform: rotate(90deg);
+}
+
+/* Ranking menu container */
+.sidebar-ranking-menu {
+  display: none;
+  overflow: hidden;
+  flex-direction: column;
+  padding: 4px 0 4px 14px;
+  border-left: 1px solid rgba(123, 198, 255, 0.15);
+  margin: 2px 0 2px 20px;
+}
+.sidebar-ranking-menu.is-open {
+  display: flex;
+}
+
+/* Ranking type button (ダメージランキング / スピードランキング) */
+.sidebar-ranking-type-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--n-r-sm);
+  transition: background 0.15s ease, color 0.15s ease;
+  text-align: left;
+  letter-spacing: 0.03em;
+}
+.sidebar-ranking-type-btn:hover {
+  background: rgba(43, 134, 217, 0.08);
+  color: var(--text-primary);
+}
+.sidebar-ranking-type-btn[aria-expanded="true"] .sidebar-ranking-chevron {
+  transform: rotate(90deg);
+}
+
+/* Ranking type content */
+.sidebar-ranking-type-content {
+  display: none;
+  flex-direction: column;
+  padding: 2px 0 4px 10px;
+  border-left: 1px solid rgba(123, 198, 255, 0.10);
+  margin: 2px 0 4px 8px;
+}
+.sidebar-ranking-type-content.is-open {
+  display: flex;
+}
+
+/* Ranking group label */
+.sidebar-ranking-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+.sidebar-ranking-group-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.7;
+  padding: 4px 6px 2px;
+}
+
+/* Individual ranking items */
+.sidebar-ranking-item {
+  display: block;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: var(--n-r-sm);
+  transition: background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-ranking-item:hover {
+  background: rgba(43, 134, 217, 0.08);
+  color: var(--text-primary);
+}

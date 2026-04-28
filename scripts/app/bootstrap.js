@@ -1190,6 +1190,28 @@ function applyLang() {
     el.privacyLink.href = state.lang === 'en' ? '/privacy.html?lang=en' : '/privacy.html';
   }
   if (el.langToggle) el.langToggle.textContent = state.lang === 'ja' ? 'EN' : 'JA';
+  // Sidebar nav items
+  const navHomeEl = document.getElementById('navHome');
+  if (navHomeEl) navHomeEl.textContent = s.navHome || 'ホーム';
+  const navGuideEl = document.getElementById('navGuide');
+  if (navGuideEl) navGuideEl.textContent = s.navGuide || '初めての方はこちら';
+  const navLangEl = document.getElementById('navLang');
+  if (navLangEl) navLangEl.textContent = s.navLang || '言語切り替え';
+  const navLoadEl = document.getElementById('navLoad');
+  if (navLoadEl) navLoadEl.textContent = s.navRequest || s.contactBtn || 'ご要望フォーム';
+  const navRankingEl = document.getElementById('navRanking');
+  if (navRankingEl) navRankingEl.textContent = s.navRanking || 'ランキング';
+  const navRankingDamageEl = document.getElementById('navRankingDamage');
+  if (navRankingDamageEl) navRankingDamageEl.textContent = s.navRankingDamage || 'ダメージランキング';
+  const navRankingSpeedEl = document.getElementById('navRankingSpeed');
+  if (navRankingSpeedEl) navRankingSpeedEl.textContent = s.navRankingSpeed || 'スピードランキング';
+  // Sidebar data section labels
+  const sidebarDataSourceLabelEl = document.getElementById('sidebarDataSourceLabel');
+  if (sidebarDataSourceLabelEl) sidebarDataSourceLabelEl.textContent = s.sidebarDataSourceLabel || 'ユーザー名';
+  const sidebarMemberStatusLabelEl = document.getElementById('sidebarMemberStatusLabel');
+  if (sidebarMemberStatusLabelEl) sidebarMemberStatusLabelEl.textContent = s.sidebarMemberStatusLabel || '会員ステータス';
+  const sidebarRemainingLabelEl = document.getElementById('sidebarRemainingLabel');
+  if (sidebarRemainingLabelEl) sidebarRemainingLabelEl.textContent = s.sidebarRemainingLabel || '本日の残り回数';
   updateTimelineLayerControls();
   if (el.saveBookmarkBtn) el.saveBookmarkBtn.textContent = s.bookmarkSave;
   if (el.showBookmarksBtn) el.showBookmarksBtn.textContent = s.bookmarkList;

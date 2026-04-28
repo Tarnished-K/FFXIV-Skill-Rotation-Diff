@@ -1,0 +1,784 @@
+/* =====================================================================
+   FFXIV SRD – Neuform CSS Design System
+   Override layer: removes PNG-as-frame pattern, replaces with
+   CSS glass surfaces and gradient border shells.
+   Load order: after styles-redesign.css
+   ===================================================================== */
+
+/* ─── Extended Design Tokens ─────────────────────────────────────────── */
+:root {
+  /* Glass surfaces */
+  --n-s1: rgba(8, 14, 24, 0.88);
+  --n-s2: rgba(11, 18, 30, 0.92);
+  --n-s3: rgba(14, 22, 36, 0.95);
+
+  /* Border family */
+  --n-border-ghost:   rgba(255, 255, 255, 0.045);
+  --n-border-dim:     rgba(123, 198, 255, 0.10);
+  --n-border-default: rgba(123, 198, 255, 0.18);
+  --n-border-accent:  rgba(210, 168, 78,  0.22);
+  --n-border-hover:   rgba(123, 198, 255, 0.30);
+  --n-border-focus:   rgba(123, 198, 255, 0.60);
+
+  /* Gradient shell tones */
+  --n-shell-cool: rgba(123, 198, 255, 0.16);
+  --n-shell-warm: rgba(210, 168, 78,  0.07);
+
+  /* Radii (4px-anchored family) */
+  --n-r-xs:   4px;
+  --n-r-sm:   8px;
+  --n-r-md:   12px;
+  --n-r-lg:   16px;
+  --n-r-xl:   20px;
+  --n-r-pill: 9999px;
+
+  /* Spacing (4px base) */
+  --n-sp-1: 4px;
+  --n-sp-2: 8px;
+  --n-sp-3: 12px;
+  --n-sp-4: 16px;
+  --n-sp-5: 20px;
+  --n-sp-6: 24px;
+
+  /* Motion */
+  --n-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --n-fast: 120ms;
+  --n-med:  180ms;
+  --n-slow: 300ms;
+}
+
+/* =====================================================================
+   1. GLASS CARD SYSTEM
+   Replace all PNG-as-frame backgrounds with CSS glass surfaces.
+   overflow must be visible so the gradient shell (::before at inset:-1px)
+   can bleed 1px outside the card border.
+   ===================================================================== */
+
+/* ─── Clear every PNG background set by styles-redesign.css ─────────── */
+.card,
+.step-card,
+.mothercrystal-panel,
+#step4 {
+  background-image: none;
+}
+
+/* ─── Base card ──────────────────────────────────────────────────────── */
+.card {
+  overflow: visible;                /* needed for the gradient shell */
+  background: var(--n-s1);
+  border: 1px solid var(--n-border-ghost);
+  border-radius: var(--n-r-lg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.38),
+    0  6px 16px rgba(0, 0, 0, 0.20);
+  transition:
+    border-color var(--n-med) var(--n-ease),
+    box-shadow   var(--n-med) var(--n-ease),
+    transform    var(--n-med) var(--n-ease);
+}
+
+/*
+ * Gradient border shell – the Neuform signature edge treatment.
+ * Extends 1px outside; sits behind the card background (z-index: -1).
+ * Creates a premium corner highlight instead of a flat stroke.
+ */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--n-r-lg) + 1px);
+  background: linear-gradient(
+    145deg,
+    var(--n-shell-cool) 0%,
+    var(--n-shell-warm) 45%,
+    transparent         78%
+  );
+  z-index: -1;
+  pointer-events: none;
+}
+
+/*
+ * Inner glass surface: top-left highlight simulating backlit glass.
+ * Replaces the old bottom-right radial glow from styles-base.css.
+ */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.035) 0%,
+    transparent                35%
+  );
+  pointer-events: none;
+}
+
+.card:hover {
+  border-color: var(--n-border-dim);
+  box-shadow:
+    0 28px 60px rgba(0, 0, 0, 0.44),
+    0 10px 24px rgba(0, 0, 0, 0.24);
+  transform: translateY(-2px);
+}
+
+/* ─── Step cards: slightly elevated surface ──────────────────────────── */
+.step-card {
+  background: var(--n-s2);
+  border-color: var(--n-border-dim);
+}
+
+.step-card:hover {
+  border-color: var(--n-border-default);
+}
+
+/* ─── Timeline card ──────────────────────────────────────────────────── */
+#step4 {
+  background: var(--n-s2);
+  border-color: rgba(43, 134, 217, 0.18);
+  min-height: 300px;
+}
+
+/* ─── Mothercrystal panel ────────────────────────────────────────────── */
+.mothercrystal-panel {
+  background: linear-gradient(
+    160deg,
+    rgba(10, 18, 32, 0.94) 0%,
+    rgba(8, 14, 24, 0.96)  100%
+  );
+  border: 1px solid rgba(43, 134, 217, 0.20);
+  border-radius: var(--n-r-lg);
+  overflow: visible;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.38),
+    0  0  48px rgba(43, 134, 217, 0.04) inset;
+  align-self: stretch;
+}
+
+/* =====================================================================
+   2. TYPOGRAPHY & INFORMATION HIERARCHY
+   ===================================================================== */
+
+/* ─── Step card h2: CSS accent bar, no background image ─────────────── */
+.step-card h2 {
+  background: none;
+  padding: 0 0 0 11px;
+  margin: 8px 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--gold-light);
+  text-shadow: none;
+  text-transform: none;
+  border-radius: 0;
+  position: relative;
+}
+
+/* Left gradient bar – same visual DNA as the step number badge */
+.step-card h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--gold-light) 0%, var(--blue) 100%);
+}
+
+/* Step4 title uses its own heading style */
+#step4 .step4-header h2,
+#step4 h2 {
+  background: none;
+  padding: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  text-shadow: none;
+  position: static;
+}
+#step4 .step4-header h2::before,
+#step4 h2::before {
+  display: none;
+}
+
+/* ─── Step number badge ──────────────────────────────────────────────── */
+.step-number-badge {
+  border: 1px solid rgba(210, 168, 78, 0.35);
+  background: rgba(210, 168, 78, 0.08);
+  color: var(--gold-light);
+  box-shadow: none;
+}
+
+/* =====================================================================
+   3. BUTTON SYSTEM – CSS-only, three-state design
+   default | hover | active | disabled
+   ===================================================================== */
+
+/* ─── Primary action buttons ─────────────────────────────────────────── */
+#loadBtn,
+#loadPlayersBtn,
+#compareBtn {
+  background: linear-gradient(
+    135deg,
+    rgba(43, 134, 217, 0.88) 0%,
+    rgba(21, 68, 136, 0.94)  100%
+  );
+  border: 1px solid rgba(123, 198, 255, 0.20) !important;
+  color: #e8f6ff;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-shadow: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 20px rgba(43, 134, 217, 0.20);
+  padding: 12px 16px;
+  border-radius: var(--n-r-sm);
+  transition:
+    background     var(--n-med) var(--n-ease),
+    border-color   var(--n-med) var(--n-ease),
+    box-shadow     var(--n-med) var(--n-ease),
+    transform      var(--n-med) var(--n-ease);
+}
+
+#loadBtn:hover,
+#loadPlayersBtn:hover,
+#compareBtn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(62, 155, 240, 0.94) 0%,
+    rgba(30, 90,  170, 0.98) 100%
+  );
+  border-color: rgba(123, 198, 255, 0.38) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 12px 28px rgba(43, 134, 217, 0.32);
+  transform: translateY(-1px);
+}
+
+#loadBtn:active,
+#loadPlayersBtn:active,
+#compareBtn:active {
+  transform: translateY(0);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 4px 12px rgba(43, 134, 217, 0.18);
+}
+
+#loadBtn:disabled,
+#loadPlayersBtn:disabled,
+#compareBtn:disabled {
+  background: rgba(30, 60, 100, 0.38);
+  border-color: rgba(123, 198, 255, 0.08) !important;
+  color: var(--text-muted);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.55;
+}
+
+/* ─── Tab bar (全体TL / 奇数分 / 偶数分) ────────────────────────────── */
+.tabs {
+  background: rgba(5, 10, 18, 0.80);
+  border: 1px solid var(--n-border-ghost);
+  backdrop-filter: blur(8px);
+}
+
+.tab {
+  color: var(--text-muted);
+  font-weight: 500;
+  transition:
+    background  var(--n-fast) var(--n-ease),
+    color       var(--n-fast) var(--n-ease),
+    box-shadow  var(--n-fast) var(--n-ease);
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+
+.tab.active {
+  background: linear-gradient(
+    135deg,
+    rgba(43, 134, 217, 0.85) 0%,
+    rgba(21, 68, 136, 0.90)  100%
+  );
+  color: #e8f6ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 12px rgba(43, 134, 217, 0.20);
+}
+
+/* ─── Timeline view toggle (個人比較 / PT比較) ──────────────────────── */
+.timeline-view-tabs {
+  background: rgba(5, 10, 18, 0.80);
+  border: 1px solid var(--n-border-ghost);
+  backdrop-filter: blur(8px);
+}
+
+.timeline-view-btn {
+  transition:
+    background  var(--n-fast) var(--n-ease),
+    color       var(--n-fast) var(--n-ease);
+}
+
+.timeline-view-btn:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.timeline-view-btn.active {
+  background: linear-gradient(
+    135deg,
+    rgba(210, 168, 78, 0.26) 0%,
+    rgba(110, 81,  33, 0.38) 100%
+  );
+  color: var(--gold-light);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ─── Phase buttons ──────────────────────────────────────────────────── */
+.phase-btn {
+  background: rgba(8, 15, 26, 0.86);
+  border-color: var(--n-border-ghost);
+  color: var(--text-muted);
+  font-size: 12px;
+  transition:
+    background   var(--n-fast) var(--n-ease),
+    border-color var(--n-fast) var(--n-ease),
+    color        var(--n-fast) var(--n-ease),
+    box-shadow   var(--n-fast) var(--n-ease);
+}
+
+.phase-btn:hover {
+  border-color: rgba(138, 92, 246, 0.45);
+  color: var(--text-secondary);
+  background: rgba(138, 92, 246, 0.07);
+  box-shadow: none;
+}
+
+.phase-btn.active {
+  border-color: rgba(167, 139, 250, 0.55);
+  background: rgba(138, 92, 246, 0.13);
+  color: #ddd6fe;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ─── Ghost / secondary buttons ─────────────────────────────────────── */
+.ghost {
+  border: 1px solid var(--n-border-ghost);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+}
+
+.ghost:hover {
+  border-color: var(--n-border-dim);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
+/* ─── Bookmark buttons ───────────────────────────────────────────────── */
+.bookmark-action-btn {
+  background: linear-gradient(
+    135deg,
+    rgba(45, 181, 163, 0.14) 0%,
+    rgba(14, 105,  95, 0.22) 100%
+  );
+  border: 1px solid rgba(110, 231, 216, 0.18);
+  color: var(--teal-light);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    background   var(--n-fast) var(--n-ease),
+    border-color var(--n-fast) var(--n-ease),
+    box-shadow   var(--n-fast) var(--n-ease);
+}
+
+.bookmark-action-btn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(45, 181, 163, 0.22) 0%,
+    rgba(14, 105,  95, 0.32) 100%
+  );
+  border-color: rgba(110, 231, 216, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 6px 16px rgba(45, 181, 163, 0.14);
+}
+
+.bookmark-action-btn.ghost {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--n-border-ghost);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.bookmark-action-btn.ghost:hover {
+  border-color: var(--n-border-dim);
+  color: var(--text-secondary);
+}
+
+/* =====================================================================
+   4. INPUTS & SELECTS
+   ===================================================================== */
+
+.step-card input[type="url"],
+.step-card select {
+  background: rgba(5, 10, 18, 0.85);
+  border: 1px solid var(--n-border-ghost);
+  border-radius: var(--n-r-sm);
+  color: var(--text-primary);
+  transition:
+    border-color var(--n-med) var(--n-ease),
+    box-shadow   var(--n-med) var(--n-ease),
+    background   var(--n-med) var(--n-ease);
+}
+
+.step-card input[type="url"]:focus,
+.step-card select:focus {
+  background: rgba(7, 13, 22, 0.95);
+  border-color: var(--n-border-focus);
+  box-shadow: 0 0 0 3px rgba(43, 134, 217, 0.10);
+  transform: none;
+}
+
+.step-card input[type="url"]::placeholder {
+  color: var(--text-muted);
+  opacity: 0.65;
+}
+
+/* =====================================================================
+   5. SIDEBAR – CSS-only decorations
+   ===================================================================== */
+
+/* Remove PNG vertical bar */
+.sidebar::before {
+  display: none;
+}
+
+/* Section labels: pure CSS, no PNG banner */
+.sidebar-section-label {
+  background: none;
+  padding: 0 0 0 2px;
+  margin-bottom: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+  text-shadow: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Small gold accent line in front of label text */
+.sidebar-section-label::before {
+  content: "";
+  display: block;
+  flex-shrink: 0;
+  width: 14px;
+  height: 1px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  opacity: 0.65;
+}
+
+/* Nav items */
+.sidebar-nav-item {
+  border-radius: var(--n-r-sm);
+  transition:
+    background     var(--n-fast) var(--n-ease),
+    border-color   var(--n-fast) var(--n-ease),
+    color          var(--n-fast) var(--n-ease);
+}
+
+.sidebar-nav-item:hover {
+  background: rgba(43, 134, 217, 0.08);
+  border-color: var(--n-border-dim);
+}
+
+.sidebar-nav-item.is-active {
+  background: rgba(43, 134, 217, 0.12);
+  border-color: rgba(123, 198, 255, 0.22);
+  color: var(--blue-light);
+}
+
+/* Data source item */
+.sidebar-source-item {
+  background: rgba(43, 134, 217, 0.05);
+  border: 1px solid rgba(43, 134, 217, 0.10);
+  border-radius: var(--n-r-sm);
+}
+
+/* Gem divider: keep the image but reduce visual weight */
+.sidebar-divider-img {
+  opacity: 0.45;
+  filter: saturate(0.55) brightness(0.85);
+}
+
+/* Connection dot */
+.sidebar-conn-dot {
+  box-shadow: 0 0 5px rgba(34, 197, 94, 0.55);
+}
+
+/* =====================================================================
+   6. TOPBAR
+   ===================================================================== */
+
+/* Remove PNG ornate corner */
+.topbar::before {
+  display: none;
+}
+
+.topbar {
+  border-bottom: 1px solid rgba(210, 168, 78, 0.13);
+}
+
+/* Refined bottom shimmer – pure CSS */
+.topbar::after {
+  background: linear-gradient(
+    90deg,
+    transparent                0%,
+    rgba(123, 198, 255, 0.10) 15%,
+    rgba(210, 168, 78,  0.48) 50%,
+    rgba(123, 198, 255, 0.10) 85%,
+    transparent               100%
+  );
+}
+
+.topbar-btn {
+  border-radius: var(--n-r-sm);
+  border-color: var(--n-border-ghost);
+  transition:
+    background   var(--n-fast) var(--n-ease),
+    border-color var(--n-fast) var(--n-ease),
+    color        var(--n-fast) var(--n-ease),
+    transform    var(--n-fast) var(--n-ease);
+}
+
+.topbar-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--n-border-dim);
+}
+
+/* =====================================================================
+   7. MOTHERCRYSTAL PANEL
+   ===================================================================== */
+
+.mc-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold-light);
+}
+
+.mc-subtitle {
+  font-size: 9px;
+  letter-spacing: 0.10em;
+  color: var(--text-muted);
+}
+
+.mc-power-bar {
+  background: rgba(43, 134, 217, 0.10);
+  border: 1px solid rgba(43, 134, 217, 0.14);
+}
+
+.mc-power-fill {
+  background: linear-gradient(
+    90deg,
+    rgba(43, 134, 217, 0.80) 0%,
+    rgba(123, 198, 255, 0.88) 100%
+  );
+  box-shadow: none;
+}
+
+/* =====================================================================
+   8. AUTH MODAL & BOOKMARK MODAL
+   ===================================================================== */
+
+.auth-modal-card {
+  background: var(--n-s3);
+  border: 1px solid var(--n-border-ghost);
+  border-radius: var(--n-r-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 32px 72px rgba(0, 0, 0, 0.52);
+}
+
+.auth-input {
+  background: rgba(5, 10, 18, 0.85) !important;
+  border: 1px solid var(--n-border-ghost) !important;
+  border-radius: var(--n-r-sm) !important;
+}
+
+.auth-input:focus {
+  border-color: var(--n-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(43, 134, 217, 0.10) !important;
+}
+
+.auth-submit-btn {
+  background: linear-gradient(
+    135deg,
+    rgba(43, 134, 217, 0.88) 0%,
+    rgba(21, 68, 136, 0.94)  100%
+  );
+  border: 1px solid rgba(123, 198, 255, 0.20);
+  color: #e8f6ff;
+  border-radius: var(--n-r-sm);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.auth-submit-btn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(62, 155, 240, 0.94) 0%,
+    rgba(30, 90,  170, 0.98) 100%
+  );
+  border-color: rgba(123, 198, 255, 0.36);
+}
+
+.auth-google-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--n-border-ghost);
+  border-radius: var(--n-r-sm);
+  color: var(--text-secondary);
+}
+
+.auth-google-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--n-border-dim);
+  color: var(--text-primary);
+}
+
+.auth-close-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--n-border-ghost);
+}
+
+.auth-close-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--n-border-dim);
+}
+
+.bookmark-modal-card {
+  background: var(--n-s3);
+  border: 1px solid var(--n-border-ghost);
+  border-radius: var(--n-r-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 32px 72px rgba(0, 0, 0, 0.52);
+}
+
+/* =====================================================================
+   9. ZOOM CONTROLS & LAYER TOGGLES
+   ===================================================================== */
+
+.zoom-controls,
+.timeline-layer-controls {
+  background: rgba(5, 10, 18, 0.80);
+  border: 1px solid var(--n-border-ghost);
+  backdrop-filter: blur(8px);
+}
+
+.zoom-controls button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.timeline-layer-toggle {
+  transition:
+    background  var(--n-fast) var(--n-ease),
+    color       var(--n-fast) var(--n-ease);
+}
+
+.timeline-layer-toggle:has(input:checked) {
+  background: rgba(45, 181, 163, 0.12);
+  color: var(--teal-light);
+}
+
+/* =====================================================================
+   10. BUTTON ICON FILTER REFINEMENT
+   ===================================================================== */
+
+/* Soften the PNG icons used as ::before content on action buttons */
+#loadBtn::before,
+#loadPlayersBtn::before,
+#compareBtn::before {
+  filter: brightness(2) saturate(0.35) opacity(0.72);
+}
+
+/* =====================================================================
+   11. BODY BACKGROUND – refined dot-grid atmosphere
+   ===================================================================== */
+
+body::before {
+  background:
+    linear-gradient(rgba(123, 198, 255, 0.038) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(123, 198, 255, 0.038) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.80) 0%,
+    rgba(0, 0, 0, 0.35) 55%,
+    transparent         100%
+  );
+}
+
+/* =====================================================================
+   12. FOOTER
+   ===================================================================== */
+
+.site-footer {
+  border-top: 1px solid rgba(210, 168, 78, 0.10);
+  background: rgba(4, 8, 14, 0.95);
+}
+
+.footer-logo {
+  opacity: 0.52;
+  filter: saturate(0.65);
+}
+
+/* =====================================================================
+   13. RESPONSIVE ADJUSTMENTS
+   ===================================================================== */
+
+@media (max-width: 960px) {
+  .step-card h2 {
+    font-size: 12px;
+    padding-left: 9px;
+  }
+
+  #loadBtn,
+  #loadPlayersBtn,
+  #compareBtn {
+    padding: 10px 14px;
+  }
+}
+
+@media (max-width: 680px) {
+  /* Collapsed sidebar: shrink the CSS accent lines */
+  .sidebar-section-label::before {
+    width: 8px;
+  }
+
+  /* Reduce blur cost on small screens */
+  .card,
+  .step-card,
+  #step4 {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}

@@ -77,9 +77,19 @@ function updateSidebarAuth(user, usageData) {
   }
 }
 
+function updateMothercrystalLimitStatus(usageData) {
+  const panel = document.querySelector('.mothercrystal-panel');
+  const text = document.getElementById('mcOnlineText') || panel?.querySelector('.mc-online-text');
+  if (!panel || !text) return;
+  const isOffline = Boolean(usageData && !usageData.isPremium && Number(usageData.remaining) <= 0);
+  panel.classList.toggle('is-offline', isOffline);
+  text.textContent = isOffline ? 'SYSTEM OFFLINE' : 'SYSTEM ONLINE';
+}
+
 function renderHeaderAuth(user, usageData) {
   const container = document.getElementById('headerAuthArea');
   updateSidebarAuth(user, usageData);
+  updateMothercrystalLimitStatus(usageData);
   if (globalThis.state) {
     globalThis.state.isPremium = Boolean(user && usageData?.isPremium);
   }
@@ -286,6 +296,7 @@ globalThis.AuthUIModule = {
   openAuthModal,
   closeAuthModal,
   renderHeaderAuth,
+  updateMothercrystalLimitStatus,
   refreshAuthUI,
   getAuthStatus,
   requirePremiumFeature,

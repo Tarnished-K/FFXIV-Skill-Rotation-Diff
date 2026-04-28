@@ -9,6 +9,11 @@
       content="FFLogs の公開ログ URL を 2 つ読み込み、プレイヤーごとのスキル回しとタイムラインを比較できるツールです。"
     />
     <link rel="canonical" href="https://xiv-srd.com/" />
+    <link rel="preload" as="image" href="assets/ui/bg-hero.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/ui/crystal-emblem.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/ui/card-window-bg.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/ui/card-window-warm.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/ui/btn-blue-dark.webp" />
     <link rel="stylesheet" href="styles-base.css" />
     <link rel="stylesheet" href="styles-layout.css" />
     <link rel="stylesheet" href="styles-timeline.css" />
@@ -42,32 +47,32 @@
       <!-- ===== LEFT SIDEBAR ===== -->
       <aside class="sidebar">
         <div class="sidebar-logo">
-          <img src="assets/ui/crystal-emblem.png" alt="FFXIV SRD" class="sidebar-logo-img" />
+          <img src="assets/ui/crystal-emblem.webp" alt="FFXIV SRD" class="sidebar-logo-img" width="72" height="72" fetchpriority="high" decoding="async" />
         </div>
 
         <nav class="sidebar-nav" aria-label="メインナビゲーション">
           <a href="/" class="sidebar-nav-item is-active">
-            <img src="assets/ui/icon-home.png" alt="" class="sidebar-nav-icon" />
+            <img src="assets/ui/icon-home.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
             <span id="navHome">ホーム</span>
           </a>
           <a href="/tutorial.html" class="sidebar-nav-item">
-            <img src="assets/ui/icon-guide.png" alt="" class="sidebar-nav-icon" />
+            <img src="assets/ui/icon-guide.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
             <span id="navGuide">初めての方はこちら</span>
           </a>
           <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLoginBtn" onclick="globalThis.AuthUIModule?.openAuthModal?.('login')">
-            <img src="assets/ui/icon-login-new.png" alt="" class="sidebar-nav-icon" />
+            <img src="assets/ui/icon-login-new.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
             <span id="navCompare">ログイン</span>
           </button>
           <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLangBtn" onclick="document.getElementById('langToggle')?.click()">
-            <img src="assets/ui/icon-lang-switch.png" alt="" class="sidebar-nav-icon" />
+            <img src="assets/ui/icon-lang-switch.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
             <span id="navLang">言語切り替え</span>
           </button>
           <a href="/contact.html" class="sidebar-nav-item">
-            <img src="assets/ui/icon-request.png" alt="" class="sidebar-nav-icon" />
+            <img src="assets/ui/icon-request.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
             <span id="navLoad">ご要望フォーム</span>
           </a>
           <button type="button" class="sidebar-nav-item sidebar-lang-btn sidebar-ranking-toggle" id="sidebarRankingBtn" aria-expanded="false" aria-controls="sidebarRankingMenu">
-            <img src="assets/ui/icon-compare.png" alt="" class="sidebar-nav-icon" />
+            <img src="assets/ui/icon-compare.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
             <span id="navRanking">ランキング</span>
             <span class="sidebar-ranking-chevron" id="rankingChevron" aria-hidden="true">▶</span>
           </button>
@@ -146,7 +151,7 @@
         <div class="sidebar-data-section">
           <div class="sidebar-section-label" id="sidebarDataSourceLabel">ユーザー名</div>
           <div class="sidebar-source-item">
-            <img src="assets/ui/crystal-emblem.png" alt="" class="sidebar-source-icon" />
+            <img src="assets/ui/crystal-emblem.webp" alt="" class="sidebar-source-icon" width="28" height="28" decoding="async" />
             <div class="sidebar-source-info">
               <div class="sidebar-source-name" id="sidebarUsername">—</div>
               <div class="sidebar-source-type" id="sidebarUserRole">ゲスト</div>
@@ -243,19 +248,19 @@
           <!-- MOTHERCRYSTAL STATUS PANEL -->
           <div class="mothercrystal-panel">
             <div class="mc-header">
-              <img src="assets/ui/crystal-emblem.png" alt="" class="mc-logo" />
+              <img src="assets/ui/crystal-emblem.webp" alt="" class="mc-logo" width="36" height="36" decoding="async" />
               <div class="mc-header-text">
                 <div class="mc-title">Mothercrystal Status</div>
                 <div class="mc-subtitle">— 分析エンジン稼働中 —</div>
               </div>
             </div>
             <div class="mc-crystal-wrap">
-              <img src="assets/ui/crystal-sword.png" alt="" class="mc-crystal-img" />
+              <img src="assets/ui/crystal-sword.webp" alt="" class="mc-crystal-img" width="80" height="130" decoding="async" />
               <div class="mc-glow-ring"></div>
             </div>
             <div class="mc-status-row">
               <span class="mc-online-dot"></span>
-              <span class="mc-online-text">SYSTEM ONLINE</span>
+              <span class="mc-online-text" id="mcOnlineText">SYSTEM ONLINE</span>
             </div>
             <p class="mc-desc" id="mcDesc" style="display:none;"></p>
             <div class="mc-power-section">
@@ -338,7 +343,7 @@
           </div>
           <div class="footer-inner">
             <div class="footer-brand">
-              <img src="assets/ui/crystal-emblem.png" alt="" class="footer-logo" />
+              <img src="assets/ui/crystal-emblem.webp" alt="" class="footer-logo" width="26" height="26" loading="lazy" decoding="async" />
               <span class="footer-site-name">XIV-SRD.COM</span>
             </div>
             <div class="footer-legal">

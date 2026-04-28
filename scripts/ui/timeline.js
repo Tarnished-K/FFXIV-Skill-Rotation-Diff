@@ -523,6 +523,27 @@ function renderTimeline() {
       }).join(' ');
       return `<polyline points="${coords}" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.8" />`;
     };
+    const hitPoints = (pts, color, label) => pts.map((point) => {
+      const x = 60 + point.t * pxPerSec;
+      const y = dpsGraphTop + gH - (point.dps / maxDps) * (gH - 5);
+      const tooltip = `${label} ${formatTimelineTime(point.t)} DPS: ${Math.round(point.dps).toLocaleString()}`;
+      return `<circle class="dps-graph-hit" cx="${x}" cy="${y}" r="12" fill="${color}" opacity="0.01"><title>${escapeHtml(tooltip)}</title></circle>`;
+    }).join('');
+    const hoverLines = (pts, color, label) => {
+      if (pts.length < 2) return '';
+      const parts = [];
+      for (let i = 1; i < pts.length; i++) {
+        const prev = pts[i - 1];
+        const point = pts[i];
+        const x1 = 60 + prev.t * pxPerSec;
+        const y1 = dpsGraphTop + gH - (prev.dps / maxDps) * (gH - 5);
+        const x2 = 60 + point.t * pxPerSec;
+        const y2 = dpsGraphTop + gH - (point.dps / maxDps) * (gH - 5);
+        const tooltip = `${label} ${formatTimelineTime(point.t)} DPS: ${Math.round(point.dps).toLocaleString()}`;
+        parts.push(`<line class="dps-graph-hover-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="18" opacity="0"><title>${escapeHtml(tooltip)}</title></line>`);
+      }
+      return parts.join('');
+    };
     // Y霆ｸ繝ｩ繝吶Ν
     const labels = [];
     for (let i = 0; i <= 2; i++) {
@@ -531,13 +552,17 @@ function renderTimeline() {
       const label = dps >= 1000 ? `${(dps / 1000).toFixed(0)}k` : dps.toFixed(0);
       labels.push(`<text x="55" y="${y + 3}" text-anchor="end" fill="#64748b" font-size="9">${label}</text>`);
     }
-    return `<svg class="dps-graph-svg" style="position:absolute; left:0; top:0; width:${width}px; height:${dpsGraphTop + dpsGraphHeight}px; pointer-events:none; overflow:visible;">
+    return `<svg class="dps-graph-svg" style="position:absolute; left:0; top:0; width:${width}px; height:${dpsGraphTop + dpsGraphHeight}px; pointer-events:auto; overflow:visible;">
       <rect x="60" y="${dpsGraphTop}" width="${maxT * pxPerSec}" height="${gH}" fill="#0f172a" rx="4" opacity="0.5" />
       ${labels.join('')}
       <text x="62" y="${dpsGraphTop + 10}" fill="#38bdf8" font-size="9">${labelA}</text>
       <text x="${62 + labelA.length * 7 + 10}" y="${dpsGraphTop + 10}" fill="#f97316" font-size="9">${labelB}</text>
       ${toPoints(dpsA, '#38bdf8')}
       ${toPoints(dpsB, '#f97316')}
+      ${hoverLines(dpsA, '#38bdf8', labelA)}
+      ${hoverLines(dpsB, '#f97316', labelB)}
+      ${hitPoints(dpsA, '#38bdf8', labelA)}
+      ${hitPoints(dpsB, '#f97316', labelB)}
     </svg>`;
   };
 
@@ -1021,10 +1046,25 @@ function renderPartyTimeline() {
       const x = xStart + point.t * pxPerSec;
       const y = yBase - (point.dps / maxDps) * plotHeight;
       const tooltip = `${label} ${formatTimelineTimeShared(point.t)} DPS: ${Math.round(point.dps).toLocaleString()}`;
-      return `<circle class="dps-graph-hit" cx="${x}" cy="${y}" r="6" fill="${color}" opacity="0.01"><title>${escapeHtml(tooltip)}</title></circle>`;
+      return `<circle class="dps-graph-hit" cx="${x}" cy="${y}" r="12" fill="${color}" opacity="0.01"><title>${escapeHtml(tooltip)}</title></circle>`;
     }).join('');
+    const hoverLines = (values, color, label) => {
+      if (values.length < 2) return '';
+      const parts = [];
+      for (let i = 1; i < values.length; i += 1) {
+        const prev = values[i - 1];
+        const point = values[i];
+        const x1 = xStart + prev.t * pxPerSec;
+        const y1 = yBase - (prev.dps / maxDps) * plotHeight;
+        const x2 = xStart + point.t * pxPerSec;
+        const y2 = yBase - (point.dps / maxDps) * plotHeight;
+        const tooltip = `${label} ${formatTimelineTimeShared(point.t)} DPS: ${Math.round(point.dps).toLocaleString()}`;
+        parts.push(`<line class="dps-graph-hover-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="18" opacity="0"><title>${escapeHtml(tooltip)}</title></line>`);
+      }
+      return parts.join('');
+    };
     const maxLabel = maxDps >= 1000 ? `${Math.round(maxDps / 1000)}k` : String(Math.round(maxDps));
-    return `<svg class="pt-dps-graph" style="position:absolute; left:0; top:0; width:${width}px; height:${totalHeight}px; pointer-events:none; overflow:visible;">
+    return `<svg class="pt-dps-graph" style="position:absolute; left:0; top:0; width:${width}px; height:${totalHeight}px; pointer-events:auto; overflow:visible;">
       <rect x="${xStart}" y="${graphTop}" width="${maxT * pxPerSec}" height="${graphHeight}" rx="6" fill="rgba(15, 23, 42, 0.48)" stroke="rgba(105, 146, 185, 0.14)" />
       <text x="${xStart + 8}" y="${graphTop + 14}" fill="#94a3b8" font-size="10">PT DPS</text>
       <text x="${xStart + 60}" y="${graphTop + 14}" fill="#38bdf8" font-size="10">Log A</text>
@@ -1032,6 +1072,8 @@ function renderPartyTimeline() {
       <text x="${xStart - 6}" y="${graphTop + 14}" text-anchor="end" fill="#64748b" font-size="9">${maxLabel}</text>
       ${dpsA.length ? `<polyline points="${points(dpsA)}" fill="none" stroke="#38bdf8" stroke-width="1.6" opacity="0.86" />` : ''}
       ${dpsB.length ? `<polyline points="${points(dpsB)}" fill="none" stroke="#f97316" stroke-width="1.6" opacity="0.86" />` : ''}
+      ${hoverLines(dpsA, '#38bdf8', 'Log A')}
+      ${hoverLines(dpsB, '#f97316', 'Log B')}
       ${hitPoints(dpsA, '#38bdf8', 'Log A')}
       ${hitPoints(dpsB, '#f97316', 'Log B')}
     </svg>`;

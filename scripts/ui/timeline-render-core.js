@@ -152,8 +152,23 @@ function renderTimeline() {
         const x = 60 + point.t * pxPerSec;
         const y = dpsGraphTop + graphHeight - (point.dps / maxDps) * (graphHeight - 5);
         const tooltip = `${label} ${coreFormatTimelineTime(point.t)} DPS: ${Math.round(point.dps).toLocaleString()}`;
-        return `<circle class="dps-graph-hit" cx="${x}" cy="${y}" r="6" fill="${color}" opacity="0.01"><title>${escapeAttr(tooltip)}</title></circle>`;
+        return `<circle class="dps-graph-hit" cx="${x}" cy="${y}" r="12" fill="${color}" opacity="0.01"><title>${escapeAttr(tooltip)}</title></circle>`;
       }).join('');
+    };
+    const toHoverLines = (points, color, label) => {
+      if (points.length < 2) return '';
+      const parts = [];
+      for (let i = 1; i < points.length; i += 1) {
+        const prev = points[i - 1];
+        const point = points[i];
+        const x1 = 60 + prev.t * pxPerSec;
+        const y1 = dpsGraphTop + graphHeight - (prev.dps / maxDps) * (graphHeight - 5);
+        const x2 = 60 + point.t * pxPerSec;
+        const y2 = dpsGraphTop + graphHeight - (point.dps / maxDps) * (graphHeight - 5);
+        const tooltip = `${label} ${coreFormatTimelineTime(point.t)} DPS: ${Math.round(point.dps).toLocaleString()}`;
+        parts.push(`<line class="dps-graph-hover-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="18" opacity="0"><title>${escapeAttr(tooltip)}</title></line>`);
+      }
+      return parts.join('');
     };
     const labels = [];
     for (let i = 0; i <= 2; i += 1) {
@@ -162,13 +177,15 @@ function renderTimeline() {
       const label = dps >= 1000 ? `${(dps / 1000).toFixed(0)}k` : dps.toFixed(0);
       labels.push(`<text x="55" y="${y + 3}" text-anchor="end" fill="#64748b" font-size="9">${label}</text>`);
     }
-    return `<svg class="dps-graph-svg" style="position:absolute; left:0; top:0; width:${width}px; height:${dpsGraphTop + dpsGraphHeight}px; pointer-events:none; overflow:visible;">
+    return `<svg class="dps-graph-svg" style="position:absolute; left:0; top:0; width:${width}px; height:${dpsGraphTop + dpsGraphHeight}px; pointer-events:auto; overflow:visible;">
       <rect x="60" y="${dpsGraphTop}" width="${maxT * pxPerSec}" height="${graphHeight}" fill="#0f172a" rx="4" opacity="0.5" />
       ${labels.join('')}
       <text x="62" y="${dpsGraphTop + 10}" fill="#38bdf8" font-size="9">${labelA}</text>
       <text x="${62 + labelA.length * 7 + 10}" y="${dpsGraphTop + 10}" fill="#f97316" font-size="9">${labelB}</text>
       ${toPoints(dpsA, '#38bdf8')}
       ${toPoints(dpsB, '#f97316')}
+      ${toHoverLines(dpsA, '#38bdf8', labelA)}
+      ${toHoverLines(dpsB, '#f97316', labelB)}
       ${toHitPoints(dpsA, '#38bdf8', labelA)}
       ${toHitPoints(dpsB, '#f97316', labelB)}
     </svg>`;

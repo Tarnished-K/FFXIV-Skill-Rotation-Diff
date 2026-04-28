@@ -66,9 +66,21 @@ function setMcPower(pct, label) {
   const fill = document.getElementById('mcPowerFill');
   const value = document.getElementById('mcPowerValue');
   const labelEl = document.getElementById('mcPowerLabel');
-  if (fill) fill.style.width = pct + '%';
-  if (value) value.textContent = pct + '%';
+  const safePct = Math.max(0, Math.min(100, Math.round(Number(pct) || 0)));
+  if (fill) fill.style.width = safePct + '%';
+  if (value) value.textContent = safePct + '%';
   if (labelEl && label) labelEl.textContent = label;
+}
+
+function createMcProgressTracker(totalSteps, start = 0, end = 100) {
+  const total = Math.max(1, Number(totalSteps) || 1);
+  let done = 0;
+  setMcPower(start, 'LOADING');
+  return (label = 'LOADING') => {
+    done += 1;
+    const pct = start + ((end - start) * done / total);
+    setMcPower(pct, label);
+  };
 }
 
 function setLoadingWorkflowDisabled(disabled) {
@@ -489,7 +501,6 @@ async function handleLoadReports(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step2.classList.remove('hidden');
-    setMcPower(50, 'LOADING');
     el.msg.textContent = t('killFightsLoaded')(fightsA.length, fightsB.length);
     sendAnalyticsEvent('reports_loaded', {
       reportCodeA: state.urlA.reportId,
@@ -552,7 +563,6 @@ async function handleLoadPlayers(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step3.classList.remove('hidden');
-    setMcPower(80, 'LOADING');
     el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
     if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
@@ -632,19 +642,21 @@ async function handleCompare(options = {}) {
 
   el.step2Message.textContent = t('tlLoading');
   try {
+    const markProgress = createMcProgressTracker(12, 8, 90);
+    const tracked = (promise, label) => promise.finally(() => markProgress(label));
     const [tlA, tlB, dmgA, dmgB, healA, healB, synergiesA, synergiesB, bossCastsA, bossCastsB, debuffsA, debuffsB] = await Promise.all([
-      fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job),
-      fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job),
-      fetchPlayerDamageV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
-      fetchPlayerDamageV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
-      fetchPlayerHealingV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
-      fetchPlayerHealingV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
-      fetchPartySynergyCastsV2(state.urlA.reportId, fightA, state.playersA, Number(state.selectedA.id)),
-      fetchPartySynergyCastsV2(state.urlB.reportId, fightB, state.playersB, Number(state.selectedB.id)),
-      fetchBossCastsV2(state.urlA.reportId, fightA, state.reportA),
-      fetchBossCastsV2(state.urlB.reportId, fightB, state.reportB),
-      fetchPlayerDebuffsV2(state.urlA.reportId, fightA, Number(state.selectedA.id)),
-      fetchPlayerDebuffsV2(state.urlB.reportId, fightB, Number(state.selectedB.id)),
+      tracked(fetchPlayerTimelineV2(state.urlA.reportId, fightA, Number(state.selectedA.id), state.selectedA.job), 'TIMELINE A'),
+      tracked(fetchPlayerTimelineV2(state.urlB.reportId, fightB, Number(state.selectedB.id), state.selectedB.job), 'TIMELINE B'),
+      tracked(fetchPlayerDamageV2(state.urlA.reportId, fightA, Number(state.selectedA.id)), 'DAMAGE A'),
+      tracked(fetchPlayerDamageV2(state.urlB.reportId, fightB, Number(state.selectedB.id)), 'DAMAGE B'),
+      tracked(fetchPlayerHealingV2(state.urlA.reportId, fightA, Number(state.selectedA.id)), 'HEALING A'),
+      tracked(fetchPlayerHealingV2(state.urlB.reportId, fightB, Number(state.selectedB.id)), 'HEALING B'),
+      tracked(fetchPartySynergyCastsV2(state.urlA.reportId, fightA, state.playersA, Number(state.selectedA.id)), 'BUFFS A'),
+      tracked(fetchPartySynergyCastsV2(state.urlB.reportId, fightB, state.playersB, Number(state.selectedB.id)), 'BUFFS B'),
+      tracked(fetchBossCastsV2(state.urlA.reportId, fightA, state.reportA), 'BOSS A'),
+      tracked(fetchBossCastsV2(state.urlB.reportId, fightB, state.reportB), 'BOSS B'),
+      tracked(fetchPlayerDebuffsV2(state.urlA.reportId, fightA, Number(state.selectedA.id)), 'DEBUFFS A'),
+      tracked(fetchPlayerDebuffsV2(state.urlB.reportId, fightB, Number(state.selectedB.id)), 'DEBUFFS B'),
     ]);
     state.timelineA = deduplicateTimeline(tlA);
     state.timelineB = deduplicateTimeline(tlB);
@@ -760,7 +772,7 @@ async function handleCompare(options = {}) {
     el.step2Message.textContent = t('compareFailed')(e.message);
   }
   el.step4.classList.remove('hidden');
-  setMcPower(100, 'COMPLETE');
+  setMcPower(state.compareError ? 0 : 100, state.compareError ? 'ERROR' : 'COMPLETE');
   setActiveTab('all');
   setTimelineView('personal');
   renderPhaseButtons();
@@ -953,6 +965,8 @@ async function checkUsageBeforeCompare() {
   if (res.status === 429) {
     const message = t('usageLimitReached');
     if (el.step2Message) el.step2Message.textContent = message;
+    globalThis.AuthUIModule?.updateMothercrystalLimitStatus?.(data || { remaining: 0 });
+    setMcPower(0, 'LIMIT');
     return { ok: false, limited: true, data };
   }
   if (!res.ok || !data?.ok) {
@@ -1037,9 +1051,11 @@ bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
 bindClick(el.compareBtn, 'compareBtn', async () => {
   logDebug('click: compare', {playerA: el.playerA.value, playerB: el.playerB.value});
   setLoadingWorkflowDisabled(true);
+  setMcPower(0, 'CHECKING');
   try {
     const usage = await checkUsageBeforeCompare();
     if (!usage.ok) return;
+    setMcPower(8, 'LOADING');
     await handleCompare();
   } finally {
     setLoadingWorkflowDisabled(false);

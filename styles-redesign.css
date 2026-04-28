@@ -232,7 +232,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-image: url("assets/ui/bg-hero.png");
+  background-image: url("assets/ui/bg-hero.webp");
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;
@@ -488,11 +488,11 @@
 
 #loadBtn::before,
 #loadPlayersBtn::before {
-  background-image: url("assets/ui/icon-load.png");
+  background-image: url("assets/ui/icon-load.webp");
 }
 
 #compareBtn::before {
-  background-image: url("assets/ui/icon-compare.png");
+  background-image: url("assets/ui/icon-compare.webp");
 }
 
 /* Topbar button icons (also survive textContent replacement) */
@@ -514,7 +514,7 @@
   height: 14px;
   vertical-align: middle;
   margin-right: 5px;
-  background: url("assets/ui/icon-guide.png") center/contain no-repeat;
+  background: url("assets/ui/icon-guide.webp") center/contain no-repeat;
   opacity: 0.65;
 }
 
@@ -908,11 +908,11 @@
 /* ─── All cards: image (28) base + corners (19-22) ──────────────────── */
 .card {
   background:
-    url("assets/ui/corner-tl.png")      left top     / 54px auto no-repeat,
-    url("assets/ui/corner-tr.png")      right top    / 54px auto no-repeat,
-    url("assets/ui/corner-bl.png")      left bottom  / 54px auto no-repeat,
-    url("assets/ui/corner-br.png")      right bottom / 54px auto no-repeat,
-    url("assets/ui/card-window-bg.png") center       / 100% 100% no-repeat;
+    url("assets/ui/corner-tl.webp")      left top     / 54px auto no-repeat,
+    url("assets/ui/corner-tr.webp")      right top    / 54px auto no-repeat,
+    url("assets/ui/corner-bl.webp")      left bottom  / 54px auto no-repeat,
+    url("assets/ui/corner-br.webp")      right bottom / 54px auto no-repeat,
+    url("assets/ui/card-window-bg.webp") center       / 100% 100% no-repeat;
   border-color: rgba(43, 134, 217, 0.28);
   /* suppress the base gradient from styles-base.css — card-window-bg handles it */
 }
@@ -925,11 +925,11 @@
 /* ─── Step cards: image (30) warm bg, no ornate corner ──────────────── */
 .step-card {
   background:
-    url("assets/ui/corner-tl.png")         left top     / 54px auto no-repeat,
-    url("assets/ui/corner-tr.png")         right top    / 54px auto no-repeat,
-    url("assets/ui/corner-bl.png")         left bottom  / 54px auto no-repeat,
-    url("assets/ui/corner-br.png")         right bottom / 54px auto no-repeat,
-    url("assets/ui/card-window-warm.png")  center       / 100% 100% no-repeat;
+    url("assets/ui/corner-tl.webp")         left top     / 54px auto no-repeat,
+    url("assets/ui/corner-tr.webp")         right top    / 54px auto no-repeat,
+    url("assets/ui/corner-bl.webp")         left bottom  / 54px auto no-repeat,
+    url("assets/ui/corner-br.webp")         right bottom / 54px auto no-repeat,
+    url("assets/ui/card-window-warm.webp")  center       / 100% 100% no-repeat;
 }
 
 /* Remove the old step-corner-ornament class (now CSS-driven) */
@@ -965,11 +965,11 @@
 /* ─── Mothercrystal panel: base (image 28) only, no border-frame/corners */
 .mothercrystal-panel {
   background:
-    url("assets/ui/corner-tl.png")      left top     / 54px auto no-repeat,
-    url("assets/ui/corner-tr.png")      right top    / 54px auto no-repeat,
-    url("assets/ui/corner-bl.png")      left bottom  / 54px auto no-repeat,
-    url("assets/ui/corner-br.png")      right bottom / 54px auto no-repeat,
-    url("assets/ui/card-window-bg.png") center       / 100% 100% no-repeat;
+    url("assets/ui/corner-tl.webp")      left top     / 54px auto no-repeat,
+    url("assets/ui/corner-tr.webp")      right top    / 54px auto no-repeat,
+    url("assets/ui/corner-bl.webp")      left bottom  / 54px auto no-repeat,
+    url("assets/ui/corner-br.webp")      right bottom / 54px auto no-repeat,
+    url("assets/ui/card-window-bg.webp") center       / 100% 100% no-repeat;
   border-color: rgba(43, 134, 217, 0.28);
   box-shadow: var(--shadow), 0 0 40px rgba(43, 134, 217, 0.1) inset;
   align-self: stretch;
@@ -979,7 +979,7 @@
 #loadBtn,
 #loadPlayersBtn,
 #compareBtn {
-  background: url("assets/ui/btn-blue-dark.png") center / 100% 100% no-repeat;
+  background: url("assets/ui/btn-blue-dark.webp") center / 100% 100% no-repeat;
   border: none !important;
   color: #e8f6ff;
   text-shadow: 0 0 10px rgba(123, 198, 255, 0.55);
@@ -992,7 +992,7 @@
 #loadBtn:hover,
 #loadPlayersBtn:hover,
 #compareBtn:hover {
-  background: url("assets/ui/btn-blue-bright.png") center / 100% 100% no-repeat;
+  background: url("assets/ui/btn-blue-bright.webp") center / 100% 100% no-repeat;
   transform: translateY(-1px);
   box-shadow: 0 10px 28px rgba(43, 134, 217, 0.35);
 }
@@ -1042,11 +1042,11 @@
 /* ─── Step4 card: image (29) alt panel, no corners ──────────────────── */
 #step4 {
   background:
-    url("assets/ui/corner-tl.png")       left top     / 54px auto no-repeat,
-    url("assets/ui/corner-tr.png")       right top    / 54px auto no-repeat,
-    url("assets/ui/corner-bl.png")       left bottom  / 54px auto no-repeat,
-    url("assets/ui/corner-br.png")       right bottom / 54px auto no-repeat,
-    url("assets/ui/panel-step4.png")     center       / 100% 100% no-repeat;
+    url("assets/ui/corner-tl.webp")       left top     / 54px auto no-repeat,
+    url("assets/ui/corner-tr.webp")       right top    / 54px auto no-repeat,
+    url("assets/ui/corner-bl.webp")       left bottom  / 54px auto no-repeat,
+    url("assets/ui/corner-br.webp")       right bottom / 54px auto no-repeat,
+    url("assets/ui/panel-step4.webp")     center       / 100% 100% no-repeat;
   min-height: 300px;
 }
 

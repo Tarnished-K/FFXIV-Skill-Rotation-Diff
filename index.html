@@ -49,21 +49,21 @@
             <img src="assets/ui/icon-home.png" alt="" class="sidebar-nav-icon" />
             <span id="navHome">ホーム</span>
           </a>
-          <a href="#step1" class="sidebar-nav-item">
-            <img src="assets/ui/icon-load.png" alt="" class="sidebar-nav-icon" />
-            <span id="navLoad">読み込み</span>
+          <a href="/contact.html" class="sidebar-nav-item">
+            <img src="assets/ui/icon-request.png" alt="" class="sidebar-nav-icon" />
+            <span id="navLoad">ご要望フォーム</span>
           </a>
-          <a href="#step4" class="sidebar-nav-item">
-            <img src="assets/ui/icon-compare.png" alt="" class="sidebar-nav-icon" />
-            <span id="navCompare">比較</span>
-          </a>
-          <a href="#bookmarkControls" class="sidebar-nav-item" id="sidebarBookmarkLink">
-            <img src="assets/ui/icon-bookmark.png" alt="" class="sidebar-nav-icon" />
-            <span id="navBookmark">ブックマーク</span>
-          </a>
+          <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLoginBtn" onclick="document.getElementById('headerAuthArea')?.querySelector('button')?.click()">
+            <img src="assets/ui/icon-login-new.png" alt="" class="sidebar-nav-icon" />
+            <span id="navCompare">ログイン</span>
+          </button>
+          <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLangBtn" onclick="document.getElementById('langToggle')?.click()">
+            <img src="assets/ui/icon-lang-switch.png" alt="" class="sidebar-nav-icon" />
+            <span id="navLang">言語切り替え</span>
+          </button>
           <a href="/tutorial.html" class="sidebar-nav-item">
             <img src="assets/ui/icon-guide.png" alt="" class="sidebar-nav-icon" />
-            <span id="navGuide">ガイド</span>
+            <span id="navGuide">初めての方はこちら</span>
           </a>
         </nav>
 
@@ -72,12 +72,12 @@
         </div>
 
         <div class="sidebar-data-section">
-          <div class="sidebar-section-label" id="sidebarDataSourceLabel">データソース</div>
+          <div class="sidebar-section-label" id="sidebarDataSourceLabel">ユーザー名</div>
           <div class="sidebar-source-item">
             <img src="assets/ui/crystal-emblem.png" alt="" class="sidebar-source-icon" />
             <div class="sidebar-source-info">
-              <div class="sidebar-source-name">FFLOGS</div>
-              <div class="sidebar-source-type">Public Logs</div>
+              <div class="sidebar-source-name" id="sidebarUsername">—</div>
+              <div class="sidebar-source-type" id="sidebarUserRole">ゲスト</div>
             </div>
           </div>
         </div>
@@ -93,6 +93,7 @@
 
         <div class="sidebar-api-section">
           <div class="sidebar-section-label">APIリミット</div>
+          <div id="headerStatusArea" class="header-status-area" aria-live="polite"></div>
           <div class="sidebar-api-value" id="headerUsageAreaSidebar">
             <div id="headerUsageArea" class="header-usage-area" aria-live="polite"></div>
           </div>
@@ -116,10 +117,8 @@
             <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
           </div>
           <div class="topbar-actions">
-            <div id="headerStatusArea" class="header-status-area" aria-live="polite"></div>
             <a id="contactBtn" class="topbar-btn ghost" href="/contact.html">ご要望フォーム</a>
-            <a id="tutorialBtn" class="topbar-btn ghost tutorial-launch-btn" href="/tutorial.html">初めての方はこちら</a>
-            <button id="langToggle" type="button" class="topbar-btn lang-btn">EN</button>
+            <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
             <div id="headerAuthArea" class="header-auth-area topbar-auth"></div>
           </div>
         </header>
@@ -194,14 +193,14 @@
               <span class="mc-online-dot"></span>
               <span class="mc-online-text">SYSTEM ONLINE</span>
             </div>
-            <p class="mc-desc" id="mcDesc">解析準備完了<br>高精度タイムライン解析を実行します</p>
+            <p class="mc-desc" id="mcDesc" style="display:none;"></p>
             <div class="mc-power-section">
-              <div class="mc-power-label">CRYSTAL POWER</div>
+              <div class="mc-power-label" id="mcPowerLabel">LOADING</div>
               <div class="mc-power-bar-wrap">
                 <div class="mc-power-bar">
-                  <div class="mc-power-fill" style="width:100%"></div>
+                  <div class="mc-power-fill" id="mcPowerFill" style="width:0%"></div>
                 </div>
-                <span class="mc-power-value">100%</span>
+                <span class="mc-power-value" id="mcPowerValue">0%</span>
               </div>
             </div>
           </div>

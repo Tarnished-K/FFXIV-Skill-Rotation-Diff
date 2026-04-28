@@ -62,6 +62,15 @@ function setComparisonControlsDisabled(disabled) {
   if (el.zoomOutBtn) el.zoomOutBtn.disabled = disabled;
 }
 
+function setMcPower(pct, label) {
+  const fill = document.getElementById('mcPowerFill');
+  const value = document.getElementById('mcPowerValue');
+  const labelEl = document.getElementById('mcPowerLabel');
+  if (fill) fill.style.width = pct + '%';
+  if (value) value.textContent = pct + '%';
+  if (labelEl && label) labelEl.textContent = label;
+}
+
 function setLoadingWorkflowDisabled(disabled) {
   workflowDisableDepth = disabled ? workflowDisableDepth + 1 : Math.max(0, workflowDisableDepth - 1);
   state.isLoadingWorkflow = workflowDisableDepth > 0;
@@ -480,6 +489,7 @@ async function handleLoadReports(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step2.classList.remove('hidden');
+    setMcPower(50, 'LOADING');
     el.msg.textContent = t('killFightsLoaded')(fightsA.length, fightsB.length);
     sendAnalyticsEvent('reports_loaded', {
       reportCodeA: state.urlA.reportId,
@@ -542,6 +552,7 @@ async function handleLoadPlayers(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step3.classList.remove('hidden');
+    setMcPower(80, 'LOADING');
     el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
     if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
@@ -749,6 +760,7 @@ async function handleCompare(options = {}) {
     el.step2Message.textContent = t('compareFailed')(e.message);
   }
   el.step4.classList.remove('hidden');
+  setMcPower(100, 'COMPLETE');
   setActiveTab('all');
   setTimelineView('personal');
   renderPhaseButtons();

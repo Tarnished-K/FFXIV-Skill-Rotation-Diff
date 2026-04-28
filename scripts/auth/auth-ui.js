@@ -51,8 +51,31 @@ async function requirePremiumFeature(featureName) {
   return false;
 }
 
+function updateSidebarAuth(user, usageData) {
+  const usernameEl = document.getElementById('sidebarUsername');
+  const roleEl = document.getElementById('sidebarUserRole');
+  const loginBtn = document.getElementById('sidebarLoginBtn');
+  const loginLabel = loginBtn?.querySelector('span');
+  if (!user) {
+    if (usernameEl) usernameEl.textContent = '—';
+    if (roleEl) roleEl.textContent = 'ゲスト';
+    if (loginLabel) loginLabel.textContent = 'ログイン';
+    if (loginBtn) loginBtn.onclick = () => openAuthModal('login');
+  } else {
+    const name = user.user_metadata?.full_name || user.email || '';
+    if (usernameEl) usernameEl.textContent = name;
+    if (roleEl) roleEl.textContent = usageData?.isPremium ? 'サポーター' : '無料会員';
+    if (loginLabel) loginLabel.textContent = 'ログアウト';
+    if (loginBtn) loginBtn.onclick = async () => {
+      await globalThis.AuthModule.signOut();
+      renderHeaderAuth(null, null);
+    };
+  }
+}
+
 function renderHeaderAuth(user, usageData) {
   const container = document.getElementById('headerAuthArea');
+  updateSidebarAuth(user, usageData);
   if (globalThis.state) {
     globalThis.state.isPremium = Boolean(user && usageData?.isPremium);
   }

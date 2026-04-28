@@ -156,15 +156,14 @@ function renderHeaderStatus(usageData) {
 function renderHeaderUsage(usageData) {
   const container = document.getElementById('headerUsageArea');
   const sidebarRemaining = document.getElementById('sidebarRemainingUsage');
-  if (!container) return;
   if (!usageData || typeof usageData.remaining !== 'number') {
-    container.textContent = '';
+    if (container) container.textContent = '';
     if (sidebarRemaining) sidebarRemaining.textContent = '—';
     return;
   }
   const remaining = usageData.remaining;
   const text = authText('usageRemaining', '本日残り回数：' + remaining, remaining);
-  container.textContent = text;
+  if (container) container.textContent = text;
   if (sidebarRemaining) {
     sidebarRemaining.textContent = remaining >= 9999
       ? (globalThis.state?.lang === 'en' ? 'Unlimited' : '無制限')

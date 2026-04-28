@@ -94,6 +94,11 @@ function renderTimeline() {
   const width = Math.max(1800, maxT * pxPerSec + 220);
   const labelA = state.selectedA?.name || 'A';
   const labelB = state.selectedB?.name || 'B';
+  const escapeAttr = (value) => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 
   const hasDps = state.rollingDpsA.length > 0 || state.rollingDpsB.length > 0;
   const dpsGraphHeight = hasDps ? 80 : 0;
@@ -108,8 +113,8 @@ function renderTimeline() {
   };
   const trackATop = playerAStart;
   const trackAHeight = 110;
-  const dividerTop = trackATop + trackAHeight + 16;
-  const trackBTop = dividerTop + 30;
+  const dividerTop = trackATop + trackAHeight + 14;
+  const trackBTop = dividerTop + 24;
   const trackBHeight = 110;
   laneTop.b_ogcd = trackBTop + 10;
   laneTop.b_gcd = trackBTop + 64;
@@ -141,6 +146,15 @@ function renderTimeline() {
       }).join(' ');
       return `<polyline points="${coords}" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.8" />`;
     };
+    const toHitPoints = (points, color, label) => {
+      if (!points.length) return '';
+      return points.map((point) => {
+        const x = 60 + point.t * pxPerSec;
+        const y = dpsGraphTop + graphHeight - (point.dps / maxDps) * (graphHeight - 5);
+        const tooltip = `${label} ${coreFormatTimelineTime(point.t)} DPS: ${Math.round(point.dps).toLocaleString()}`;
+        return `<circle class="dps-graph-hit" cx="${x}" cy="${y}" r="6" fill="${color}" opacity="0.01"><title>${escapeAttr(tooltip)}</title></circle>`;
+      }).join('');
+    };
     const labels = [];
     for (let i = 0; i <= 2; i += 1) {
       const dps = maxDps * i / 2;
@@ -155,6 +169,8 @@ function renderTimeline() {
       <text x="${62 + labelA.length * 7 + 10}" y="${dpsGraphTop + 10}" fill="#f97316" font-size="9">${labelB}</text>
       ${toPoints(dpsA, '#38bdf8')}
       ${toPoints(dpsB, '#f97316')}
+      ${toHitPoints(dpsA, '#38bdf8', labelA)}
+      ${toHitPoints(dpsB, '#f97316', labelB)}
     </svg>`;
   };
 

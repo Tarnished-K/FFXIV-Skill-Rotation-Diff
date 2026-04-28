@@ -75,7 +75,7 @@ const ROLE_ORDER = ['T','H','D'];
 
 const I18N = {
   en: {
-    siteTitle: 'FFXIV Skill Rotation Diff',
+    siteTitle: 'XIV Skill Rotation Diff',
     siteDesc: 'Compare skill rotations from 2 public FFLogs URLs',
     step1Title: '1. Load Public FFLogs Logs',
     publicOnlyNote: 'Public FFLogs logs only. No FFLogs sign-in is required.',
@@ -187,7 +187,7 @@ const I18N = {
     usageCheckFailed: 'Failed to check usage. Please try again later.',
   },
   ja: {
-    siteTitle: 'FFXIV Skill Codex',
+    siteTitle: 'XIV Skill Rotation Diff',
     siteDesc: 'FFLogs の公開ログ URL 2 件からスキル回しを比較します',
     step1Title: '1. 公開 FFLogs ログを読み込む',
     logUrlA: 'ログURL A',

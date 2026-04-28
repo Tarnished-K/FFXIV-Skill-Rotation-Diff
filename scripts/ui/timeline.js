@@ -1017,6 +1017,12 @@ function renderPartyTimeline() {
       const y = yBase - (point.dps / maxDps) * plotHeight;
       return `${x},${y}`;
     }).join(' ');
+    const hitPoints = (values, color, label) => values.map((point) => {
+      const x = xStart + point.t * pxPerSec;
+      const y = yBase - (point.dps / maxDps) * plotHeight;
+      const tooltip = `${label} ${formatTimelineTimeShared(point.t)} DPS: ${Math.round(point.dps).toLocaleString()}`;
+      return `<circle class="dps-graph-hit" cx="${x}" cy="${y}" r="6" fill="${color}" opacity="0.01"><title>${escapeHtml(tooltip)}</title></circle>`;
+    }).join('');
     const maxLabel = maxDps >= 1000 ? `${Math.round(maxDps / 1000)}k` : String(Math.round(maxDps));
     return `<svg class="pt-dps-graph" style="position:absolute; left:0; top:0; width:${width}px; height:${totalHeight}px; pointer-events:none; overflow:visible;">
       <rect x="${xStart}" y="${graphTop}" width="${maxT * pxPerSec}" height="${graphHeight}" rx="6" fill="rgba(15, 23, 42, 0.48)" stroke="rgba(105, 146, 185, 0.14)" />
@@ -1026,6 +1032,8 @@ function renderPartyTimeline() {
       <text x="${xStart - 6}" y="${graphTop + 14}" text-anchor="end" fill="#64748b" font-size="9">${maxLabel}</text>
       ${dpsA.length ? `<polyline points="${points(dpsA)}" fill="none" stroke="#38bdf8" stroke-width="1.6" opacity="0.86" />` : ''}
       ${dpsB.length ? `<polyline points="${points(dpsB)}" fill="none" stroke="#f97316" stroke-width="1.6" opacity="0.86" />` : ''}
+      ${hitPoints(dpsA, '#38bdf8', 'Log A')}
+      ${hitPoints(dpsB, '#f97316', 'Log B')}
     </svg>`;
   };
 

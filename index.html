@@ -54,7 +54,7 @@
             <img src="assets/ui/icon-guide.png" alt="" class="sidebar-nav-icon" />
             <span id="navGuide">初めての方はこちら</span>
           </a>
-          <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLoginBtn" onclick="document.getElementById('headerAuthArea')?.querySelector('button')?.click()">
+          <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLoginBtn" onclick="globalThis.AuthUIModule?.openAuthModal?.('login')">
             <img src="assets/ui/icon-login-new.png" alt="" class="sidebar-nav-icon" />
             <span id="navCompare">ログイン</span>
           </button>
@@ -79,29 +79,29 @@
             <div class="sidebar-ranking-type-content" id="rankingTypeDamage" aria-hidden="true">
               <div class="sidebar-ranking-group">
                 <div class="sidebar-ranking-group-label">ヘビー級</div>
-                <a href="#" class="sidebar-ranking-item">零式1層：ヴァンプファタール</a>
-                <a href="#" class="sidebar-ranking-item">零式2層：エクストリームズ</a>
-                <a href="#" class="sidebar-ranking-item">零式3層：ザ・タイラント</a>
-                <a href="#" class="sidebar-ranking-item">零式4層/前半：リンドブルム</a>
-                <a href="#" class="sidebar-ranking-item">零式4層/後半：リンドブルム</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=101&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式1層：ヴァンプファタール</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=102&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式2層：エクストリームズ</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=103&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式3層：ザ・タイラント</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=104&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式4層/前半：リンドブルム</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=105&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式4層/後半：リンドブルム</a>
               </div>
               <div class="sidebar-ranking-group">
                 <div class="sidebar-ranking-group-label">絶</div>
-                <a href="#" class="sidebar-ranking-item">絶もう一つの未来</a>
-                <a href="#" class="sidebar-ranking-item">絶オメガ検証戦</a>
-                <a href="#" class="sidebar-ranking-item">絶竜詩戦争</a>
-                <a href="#" class="sidebar-ranking-item">絶アレキサンダー討滅戦</a>
-                <a href="#" class="sidebar-ranking-item">絶アルテマウェポン破壊作戦</a>
-                <a href="#" class="sidebar-ranking-item">絶バハムート討滅戦</a>
+                <a href="https://ja.fflogs.com/zone/rankings/65?metric=dps&dpstype=rdps&boss=1079" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶もう一つの未来</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1077&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶オメガ検証戦</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1076&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶竜詩戦争</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1075&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶アレキサンダー討滅戦</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1074&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶アルテマウェポン破壊作戦</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1073&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶バハムート討滅戦</a>
               </div>
               <div class="sidebar-ranking-group">
                 <div class="sidebar-ranking-group-label">極</div>
-                <a href="#" class="sidebar-ranking-item">エヌ・オー</a>
-                <a href="#" class="sidebar-ranking-item">グラシャラボラス</a>
+                <a href="https://ja.fflogs.com/zone/rankings/72?boss=1084&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">エヌ・オー</a>
+                <a href="https://ja.fflogs.com/zone/rankings/72?boss=1083&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">グラシャラボラス</a>
               </div>
               <div class="sidebar-ranking-group">
                 <div class="sidebar-ranking-group-label">アナザーダンジョン</div>
-                <a href="#" class="sidebar-ranking-item">商客物語</a>
+                <a href="https://ja.fflogs.com/zone/rankings/74?metric=dps&boss=4550&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">商客物語</a>
               </div>
             </div>
             <button type="button" class="sidebar-ranking-type-btn" aria-expanded="false" aria-controls="rankingTypeSpeed">
@@ -111,29 +111,29 @@
             <div class="sidebar-ranking-type-content" id="rankingTypeSpeed" aria-hidden="true">
               <div class="sidebar-ranking-group">
                 <div class="sidebar-ranking-group-label">ヘビー級</div>
-                <a href="#" class="sidebar-ranking-item">零式1層：ヴァンプファタール</a>
-                <a href="#" class="sidebar-ranking-item">零式2層：エクストリームズ</a>
-                <a href="#" class="sidebar-ranking-item">零式3層：ザ・タイラント</a>
-                <a href="#" class="sidebar-ranking-item">零式4層/前半：リンドブルム</a>
-                <a href="#" class="sidebar-ranking-item">零式4層/後半：リンドブルム</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=101" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式1層：ヴァンプファタール</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=102" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式2層：エクストリームズ</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=103" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式3層：ザ・タイラント</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=104" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式4層/前半：リンドブルム</a>
+                <a href="https://ja.fflogs.com/zone/rankings/73?boss=105" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式4層/後半：リンドブルム</a>
               </div>
               <div class="sidebar-ranking-group">
                 <div class="sidebar-ranking-group-label">絶</div>
-                <a href="#" class="sidebar-ranking-item">絶もう一つの未来</a>
-                <a href="#" class="sidebar-ranking-item">絶オメガ検証戦</a>
-                <a href="#" class="sidebar-ranking-item">絶竜詩戦争</a>
-                <a href="#" class="sidebar-ranking-item">絶アレキサンダー討滅戦</a>
-                <a href="#" class="sidebar-ranking-item">絶アルテマウェポン破壊作戦</a>
-                <a href="#" class="sidebar-ranking-item">絶バハムート討滅戦</a>
+                <a href="https://ja.fflogs.com/zone/rankings/65?boss=1079" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶もう一つの未来</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1077" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶オメガ検証戦</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1076" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶竜詩戦争</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1075" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶アレキサンダー討滅戦</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1074" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶アルテマウェポン破壊作戦</a>
+                <a href="https://ja.fflogs.com/zone/rankings/59?boss=1073" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">絶バハムート討滅戦</a>
               </div>
               <div class="sidebar-ranking-group">
                 <div class="sidebar-ranking-group-label">極</div>
-                <a href="#" class="sidebar-ranking-item">エヌ・オー</a>
-                <a href="#" class="sidebar-ranking-item">グラシャラボラス</a>
+                <a href="https://ja.fflogs.com/zone/rankings/72?boss=1084&metric=speed" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">エヌ・オー</a>
+                <a href="https://ja.fflogs.com/zone/rankings/72?boss=1083&metric=speed" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">グラシャラボラス</a>
               </div>
               <div class="sidebar-ranking-group">
                 <div class="sidebar-ranking-group-label">アナザーダンジョン</div>
-                <a href="#" class="sidebar-ranking-item">商客物語</a>
+                <a href="https://ja.fflogs.com/zone/rankings/74?metric=speed&boss=4550" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">商客物語</a>
               </div>
             </div>
           </div>
@@ -166,13 +166,6 @@
           </div>
         </div>
 
-        <div class="sidebar-api-section">
-          <div class="sidebar-section-label">APIリミット</div>
-          <div id="headerStatusArea" class="header-status-area" aria-live="polite"></div>
-          <div class="sidebar-api-value" id="headerUsageAreaSidebar">
-            <div id="headerUsageArea" class="header-usage-area" aria-live="polite"></div>
-          </div>
-        </div>
       </aside>
 
       <!-- ===== MAIN CONTENT ===== -->
@@ -181,7 +174,7 @@
         <!-- TOP BAR -->
         <header class="topbar">
           <div class="topbar-identity">
-            <h1 id="siteTitle">FFXIV Skill Rotation Diff</h1>
+            <h1 id="siteTitle">XIV Skill Rotation Diff</h1>
             <p class="topbar-subtitle" id="siteDesc">RAID OPERATIONS CONSOLE</p>
           </div>
           <div class="header-ad">
@@ -191,11 +184,7 @@
                  data-ad-slot="4407635592"></ins>
             <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
           </div>
-          <div class="topbar-actions">
-            <a id="contactBtn" class="topbar-btn ghost" href="/contact.html">ご要望フォーム</a>
-            <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
-            <div id="headerAuthArea" class="header-auth-area topbar-auth"></div>
-          </div>
+          <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
         </header>
 
         <!-- STEPS 1-3 + MOTHERCRYSTAL PANEL -->
@@ -297,7 +286,7 @@
                 <button class="tab" data-tab="even">偶数分TL</button>
               </div>
               <div class="zoom-controls">
-                <span class="zoom-label-prefix">ズーム</span>
+                <span class="zoom-label-prefix" aria-label="ズーム">🔍</span>
                 <button id="zoomOutBtn" type="button">−</button>
                 <span id="zoomLabel">100%</span>
                 <button id="zoomInBtn" type="button">＋</button>

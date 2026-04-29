@@ -1100,6 +1100,15 @@ body::before {
 ) {
   position: relative;
   overflow: hidden;
+  --frame-top-h: 30px;
+  --frame-bottom-h: 24px;
+  --frame-x-cap: 70px;
+  --frame-x-center: 74px;
+  --frame-side-w: 22px;
+  --frame-y-cap: 58px;
+  --frame-y-center: 42px;
+  --frame-x-bar: max(0px, calc((100% - (var(--frame-x-cap) * 2) - var(--frame-x-center)) / 2));
+  --frame-y-bar: max(0px, calc((100% - (var(--frame-y-cap) * 2) - var(--frame-y-center)) / 2));
 }
 
 :where(
@@ -1149,9 +1158,7 @@ body::before {
   .premium-benefit,
   .sidebar-source-item
 )::before {
-  background:
-    url("assets/ui/frame-top.webp") top center / 100% 28px no-repeat,
-    url("assets/ui/frame-bottom.webp") bottom center / 100% 22px no-repeat;
+  background: none;
 }
 
 :where(
@@ -1167,9 +1174,7 @@ body::before {
   .premium-benefit,
   .sidebar-source-item
 )::after {
-  background:
-    url("assets/ui/frame-left.webp") left center / 22px 100% no-repeat,
-    url("assets/ui/frame-right.webp") right center / 22px 100% no-repeat;
+  background: none;
 }
 
 .card::before,
@@ -1192,8 +1197,16 @@ body::before {
   pointer-events: none !important;
   border-radius: inherit !important;
   background:
-    url("assets/ui/frame-top.webp") top center / 100% 28px no-repeat,
-    url("assets/ui/frame-bottom.webp") bottom center / 100% 22px no-repeat !important;
+    url("assets/ui/frame-top-left.webp") left top / var(--frame-x-cap) var(--frame-top-h) no-repeat,
+    url("assets/ui/frame-top-bar-left.webp") left var(--frame-x-cap) top 0 / var(--frame-x-bar) var(--frame-top-h) no-repeat,
+    url("assets/ui/frame-top-center.webp") center top / var(--frame-x-center) var(--frame-top-h) no-repeat,
+    url("assets/ui/frame-top-bar-right.webp") right var(--frame-x-cap) top 0 / var(--frame-x-bar) var(--frame-top-h) no-repeat,
+    url("assets/ui/frame-top-right.webp") right top / var(--frame-x-cap) var(--frame-top-h) no-repeat,
+    url("assets/ui/frame-bottom-left.webp") left bottom / var(--frame-x-cap) var(--frame-bottom-h) no-repeat,
+    url("assets/ui/frame-bottom-bar-left.webp") left var(--frame-x-cap) bottom 0 / var(--frame-x-bar) var(--frame-bottom-h) no-repeat,
+    url("assets/ui/frame-bottom-center.webp") center bottom / var(--frame-x-center) var(--frame-bottom-h) no-repeat,
+    url("assets/ui/frame-bottom-bar-right.webp") right var(--frame-x-cap) bottom 0 / var(--frame-x-bar) var(--frame-bottom-h) no-repeat,
+    url("assets/ui/frame-bottom-right.webp") right bottom / var(--frame-x-cap) var(--frame-bottom-h) no-repeat !important;
 }
 
 .card::after,
@@ -1216,8 +1229,16 @@ body::before {
   pointer-events: none !important;
   border-radius: inherit !important;
   background:
-    url("assets/ui/frame-left.webp") left center / 22px 100% no-repeat,
-    url("assets/ui/frame-right.webp") right center / 22px 100% no-repeat !important;
+    url("assets/ui/frame-left-top.webp") left top / var(--frame-side-w) var(--frame-y-cap) no-repeat,
+    url("assets/ui/frame-left-bar-top.webp") left 0 top var(--frame-y-cap) / var(--frame-side-w) var(--frame-y-bar) no-repeat,
+    url("assets/ui/frame-left-center.webp") left center / var(--frame-side-w) var(--frame-y-center) no-repeat,
+    url("assets/ui/frame-left-bar-bottom.webp") left 0 bottom var(--frame-y-cap) / var(--frame-side-w) var(--frame-y-bar) no-repeat,
+    url("assets/ui/frame-left-bottom.webp") left bottom / var(--frame-side-w) var(--frame-y-cap) no-repeat,
+    url("assets/ui/frame-right-top.webp") right top / var(--frame-side-w) var(--frame-y-cap) no-repeat,
+    url("assets/ui/frame-right-bar-top.webp") right 0 top var(--frame-y-cap) / var(--frame-side-w) var(--frame-y-bar) no-repeat,
+    url("assets/ui/frame-right-center.webp") right center / var(--frame-side-w) var(--frame-y-center) no-repeat,
+    url("assets/ui/frame-right-bar-bottom.webp") right 0 bottom var(--frame-y-cap) / var(--frame-side-w) var(--frame-y-bar) no-repeat,
+    url("assets/ui/frame-right-bottom.webp") right bottom / var(--frame-side-w) var(--frame-y-cap) no-repeat !important;
 }
 
 .mothercrystal-panel {

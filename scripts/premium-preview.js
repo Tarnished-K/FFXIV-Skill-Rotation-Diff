@@ -301,6 +301,28 @@
 
   // ---- Snapshot injection ----
 
+  function compactPersonalPreview(slot) {
+    if (currentView !== 'personal') return;
+    const timeline = slot.querySelector('.timeline');
+    if (!timeline || timeline.dataset.previewCompacted === '1') return;
+
+    const playerB = timeline.querySelector('.player-label-b');
+    const playerBTop = playerB ? parseFloat(playerB.style.top || '') : NaN;
+    if (!Number.isFinite(playerBTop)) return;
+
+    const shift = 22;
+    const threshold = Math.max(0, playerBTop - 28);
+    timeline.querySelectorAll('[style*="top"]').forEach((node) => {
+      const top = parseFloat(node.style.top || '');
+      if (!Number.isFinite(top) || top < threshold) return;
+      node.style.top = `${Math.max(0, top - shift)}px`;
+    });
+
+    const height = parseFloat(timeline.style.height || '');
+    if (Number.isFinite(height)) timeline.style.height = `${Math.max(240, height - shift)}px`;
+    timeline.dataset.previewCompacted = '1';
+  }
+
   function injectSnapshot(outer, html) {
     const doc  = new DOMParser().parseFromString(html, 'text/html');
     const src  = doc.querySelector('.timeline-wrap');
@@ -316,6 +338,7 @@
     slot.appendChild(document.adoptNode(src));
 
     anonymizeNames(slot);
+    compactPersonalPreview(slot);
     buildPhaseButtons(outer, slot);
     if (currentView === 'party') wirePartyFilter(outer, slot);
 

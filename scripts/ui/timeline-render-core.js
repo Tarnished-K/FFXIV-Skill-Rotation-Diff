@@ -113,8 +113,8 @@ function renderTimeline() {
   };
   const trackATop = playerAStart;
   const trackAHeight = 110;
-  const dividerTop = trackATop + trackAHeight + 14;
-  const trackBTop = dividerTop + 24;
+  const dividerTop = trackATop + trackAHeight + 10;
+  const trackBTop = dividerTop + 18;
   const trackBHeight = 110;
   laneTop.b_ogcd = trackBTop + 10;
   laneTop.b_gcd = trackBTop + 64;

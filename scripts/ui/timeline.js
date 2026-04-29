@@ -489,8 +489,8 @@ function renderTimeline() {
   const trackATop = playerAStart;
   laneTop.a_debuff = laneTop.a_synergy + synergyBlockHeightA + 8;
   const trackAHeight = Math.max(110, synergyBaseOffset + synergyBlockHeightA + debuffLaneHeightA + 14);
-  const dividerTop = trackATop + trackAHeight + 16;
-  const laneAreaTopB = dividerTop + 30;
+  const dividerTop = trackATop + trackAHeight + 10;
+  const laneAreaTopB = dividerTop + 22;
   const castLaneTopsB = assignCastLaneTops(castLanesB, laneAreaTopB);
   const trackBTop = laneAreaTopB + castLanesB.totalHeight + (castLanesB.hasAnyLane ? 12 : 0);
   const trackBHeight = Math.max(110, synergyBaseOffset + synergyBlockHeightB + debuffLaneHeightB + 14);

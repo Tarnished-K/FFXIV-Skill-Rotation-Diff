@@ -41,7 +41,7 @@ function updateMcLoaderMotion(pct, label = '') {
   const safePct = Math.max(0, Math.min(100, Number(pct) || 0));
   const complete = safePct >= 100 && label === 'COMPLETE';
   loader.style.setProperty('--loader-intensity', String(complete ? 1 : safePct / 100));
-  mcLoaderTargetSpeed = complete ? 720 : safePct * 5.2;
+  mcLoaderTargetSpeed = complete ? 1440 : safePct * 10.4;
   if (safePct <= 0) {
     mcLoaderTargetSpeed = 0;
     mcLoaderSpeed = 0;
@@ -77,9 +77,9 @@ function tickMcLoaderMotion(ts) {
   const dt = Math.min(0.05, Math.max(0, (ts - mcLoaderLastTs) / 1000));
   mcLoaderLastTs = ts;
   if (mcLoaderStopStartedAt && ts >= mcLoaderStopStartedAt) {
-    const elapsed = Math.min(1, (ts - mcLoaderStopStartedAt) / 2000);
+    const elapsed = Math.min(1, (ts - mcLoaderStopStartedAt) / 4000);
     const easeOut = 1 - Math.pow(1 - elapsed, 3);
-    mcLoaderTargetSpeed = 720 * (1 - easeOut);
+    mcLoaderTargetSpeed = 1440 * (1 - easeOut);
     loader.style.setProperty('--loader-intensity', String(Math.max(0, 1 - easeOut)));
   }
 
@@ -1256,8 +1256,10 @@ function applyLang() {
   if (el.publicOnlyNote) el.publicOnlyNote.textContent = s.publicOnlyNote;
   if (el.loadBtn) el.loadBtn.textContent = s.loadBtn;
   if (el.step2Title) el.step2Title.textContent = s.step2Title;
+  if (el.step2HelpText) el.step2HelpText.textContent = s.step2HelpText;
   if (el.loadPlayersBtn) el.loadPlayersBtn.textContent = s.loadPlayersBtn;
   if (el.step3Title) el.step3Title.textContent = s.step3Title;
+  if (el.step3HelpText) el.step3HelpText.textContent = s.step3HelpText;
   if (el.compareBtn) el.compareBtn.textContent = s.compareBtn;
   if (el.step4Title) el.step4Title.textContent = s.step4Title;
   if (el.personalTimelineViewBtn) el.personalTimelineViewBtn.textContent = s.personalTimelineView;

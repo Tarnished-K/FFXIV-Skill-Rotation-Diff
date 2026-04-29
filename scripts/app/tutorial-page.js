@@ -623,11 +623,6 @@
           <span>${escapeHtml(t.labels.sampleResult)}</span>
           <strong>${escapeHtml(timelineTitle(result))}</strong>
         </div>
-        <div class="guide-mini-tabs" aria-hidden="true">
-          <span class="is-active">${escapeHtml(t.labels.all)}</span>
-          <span>${escapeHtml(t.labels.odd)}</span>
-          <span>${escapeHtml(t.labels.even)}</span>
-        </div>
       </div>
       ${result ? `
         <div class="guide-result-controls">

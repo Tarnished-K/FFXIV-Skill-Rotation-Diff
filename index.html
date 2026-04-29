@@ -222,7 +222,7 @@
               <span class="step-number-badge">2</span>
             </div>
             <h2 id="step2Title">戦闘データを選択する</h2>
-            <p class="submessage">各レポートから比較する戦闘を選択してください。</p>
+            <p id="step2HelpText" class="submessage">各レポートから比較する戦闘を選択してください。</p>
             <div class="player-grid">
               <label id="logAFightLabel">A レポートの戦闘
                 <select id="fightA"></select></label>
@@ -239,7 +239,7 @@
               <span class="step-number-badge">3</span>
             </div>
             <h2 id="step3Title">比較するプレイヤーを選択</h2>
-            <p class="submessage">比較したいプレイヤー（ジョブ・ロール）を選択してください。</p>
+            <p id="step3HelpText" class="submessage">比較したいプレイヤー（ジョブ・ロール）を選択してください。</p>
             <div class="player-grid">
               <label id="logAPlayerLabel">A プレイヤー（比較元）
                 <select id="playerA"></select></label>
@@ -251,31 +251,34 @@
 
           <!-- MOTHERCRYSTAL STATUS PANEL -->
           <div class="mothercrystal-panel">
-            <div class="mc-header">
-              <div class="mc-header-text">
-                <div class="mc-title">Server Status</div>
-                <div class="mc-subtitle">— 分析エンジン稼働中 —</div>
-              </div>
-            </div>
-            <div class="mc-crystal-wrap">
-              <div class="crystal-loader" aria-label="Loading">
-                <img class="magic-circle" src="assets/ui/loader-line.webp" alt="" aria-hidden="true" decoding="async" />
-                <img class="loader-crystal" src="assets/ui/loader-crystal.webp" alt="Loading" decoding="async" />
-                <div class="crystal-loader-text">Loading...</div>
-              </div>
-            </div>
-            <div class="mc-status-row">
-              <span class="mc-online-dot"></span>
-              <span class="mc-online-text" id="mcOnlineText">SYSTEM ONLINE</span>
-            </div>
-            <p class="mc-desc" id="mcDesc" style="display:none;"></p>
-            <div class="mc-power-section">
-              <div class="mc-power-label" id="mcPowerLabel">LOADING</div>
-              <div class="mc-power-bar-wrap">
-                <div class="mc-power-bar">
-                  <div class="mc-power-fill" id="mcPowerFill" style="width:0%"></div>
+            <div class="mc-status-card">
+              <div class="mc-header">
+                <div class="mc-header-text">
+                  <div class="mc-title">Server Status</div>
+                  <div class="mc-subtitle">— 分析エンジン稼働中 —</div>
                 </div>
-                <span class="mc-power-value" id="mcPowerValue">0%</span>
+              </div>
+              <div class="mc-status-row">
+                <span class="mc-online-dot"></span>
+                <span class="mc-online-text" id="mcOnlineText">SYSTEM ONLINE</span>
+              </div>
+              <p class="mc-desc" id="mcDesc" style="display:none;"></p>
+            </div>
+            <div class="mc-loader-card">
+              <div class="mc-crystal-wrap">
+                <div class="crystal-loader" aria-label="Loading">
+                  <img class="magic-circle" src="assets/ui/loader-line.webp" alt="" aria-hidden="true" decoding="async" />
+                  <img class="loader-crystal" src="assets/ui/loader-crystal.webp" alt="Loading" decoding="async" />
+                </div>
+              </div>
+              <div class="mc-power-section">
+                <div class="mc-power-label" id="mcPowerLabel">LOADING</div>
+                <div class="mc-power-bar-wrap">
+                  <div class="mc-power-bar">
+                    <div class="mc-power-fill" id="mcPowerFill" style="width:0%"></div>
+                  </div>
+                  <span class="mc-power-value" id="mcPowerValue">0%</span>
+                </div>
               </div>
             </div>
           </div>

@@ -92,7 +92,7 @@
   }
 
   .guide-interactive-main {
-    width: min(calc(100vw - 24px), 1180px);
+    width: min(calc(100vw - 24px), 1280px);
   }
 
   .guide-experience {
@@ -799,7 +799,7 @@
 
 .premium-preview-card {
   margin-top: 20px;
-  width: min(1180px, 100%);
+  width: min(1280px, 100%);
   overflow: hidden;
 }
 

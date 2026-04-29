@@ -558,7 +558,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 16px 18px;
+  gap: 10px;
+  padding: 16px 14px 16px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 18%),
     linear-gradient(135deg, rgba(43, 134, 217, 0.12), rgba(21, 68, 136, 0.1) 50%, rgba(8, 17, 27, 0.9));
@@ -568,6 +569,31 @@
   backdrop-filter: blur(12px);
   text-align: center;
   overflow: hidden;
+}
+
+.mc-status-card,
+.mc-loader-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border: 1px solid rgba(123, 198, 255, 0.16);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 30%),
+    rgba(4, 10, 18, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  box-sizing: border-box;
+}
+
+.mc-status-card {
+  padding: 12px 12px 11px;
+}
+
+.mc-loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 12px 12px;
 }
 
 .mothercrystal-panel::before {
@@ -600,7 +626,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   z-index: 1;
 }
 
@@ -633,11 +659,11 @@
 .mc-crystal-wrap {
   position: relative;
   width: clamp(118px, 10vw, 150px);
-  height: clamp(142px, 12vw, 176px);
+  height: clamp(118px, 10vw, 150px);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 6px 0 12px;
+  margin: 0 0 8px;
   z-index: 1;
 }
 
@@ -673,17 +699,17 @@
   inset: 21%;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(77, 210, 255, 0.28), rgba(43, 134, 217, 0.08) 46%, transparent 70%);
-  filter: blur(calc(7px + (8px * var(--loader-intensity))));
-  opacity: calc(0.22 + (0.62 * var(--loader-intensity)));
-  transform: scale(calc(0.88 + (0.24 * var(--loader-intensity))));
+  filter: blur(calc(7px + (16px * var(--loader-intensity))));
+  opacity: calc(0.22 + (0.78 * var(--loader-intensity)));
+  transform: scale(calc(0.88 + (0.42 * var(--loader-intensity))));
   transition: opacity 0.28s ease, transform 0.28s ease, filter 0.28s ease;
   z-index: 1;
 }
 
 .crystal-loader::after {
   inset: 33%;
-  filter: blur(calc(12px + (10px * var(--loader-intensity))));
-  opacity: calc(0.18 + (0.56 * var(--loader-intensity)));
+  filter: blur(calc(12px + (20px * var(--loader-intensity))));
+  opacity: calc(0.18 + (0.82 * var(--loader-intensity)));
 }
 
 .magic-circle,
@@ -705,8 +731,8 @@
   z-index: 0;
   transform: translate(-50%, -50%) rotate(0deg);
   filter:
-    drop-shadow(0 0 calc(5px + (18px * var(--loader-intensity))) rgba(59, 190, 255, calc(0.22 + (0.5 * var(--loader-intensity)))))
-    brightness(calc(0.9 + (0.38 * var(--loader-intensity))));
+    drop-shadow(0 0 calc(5px + (36px * var(--loader-intensity))) rgba(59, 190, 255, calc(0.22 + (0.78 * var(--loader-intensity)))))
+    brightness(calc(0.9 + (0.76 * var(--loader-intensity))));
   transition: opacity 0.28s ease, filter 0.28s ease;
 }
 
@@ -717,8 +743,8 @@
   z-index: 2;
   transform: translate(-50%, -50%) translateY(0) scale(1);
   filter:
-    drop-shadow(0 0 calc(10px + (22px * var(--loader-intensity))) rgba(53, 197, 255, calc(0.48 + (0.42 * var(--loader-intensity)))))
-    brightness(calc(1 + (0.32 * var(--loader-intensity))));
+    drop-shadow(0 0 calc(10px + (44px * var(--loader-intensity))) rgba(53, 197, 255, calc(0.48 + (0.52 * var(--loader-intensity)))))
+    brightness(calc(1 + (0.64 * var(--loader-intensity))));
   transition: filter 0.28s ease;
 }
 
@@ -785,8 +811,9 @@
 .mc-status-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  margin-bottom: 8px;
+  margin: 0;
   z-index: 1;
 }
 
@@ -810,7 +837,7 @@
   font-size: 11px;
   color: var(--text-secondary);
   line-height: 1.6;
-  margin: 0 0 14px;
+  margin: 8px 0 0;
   z-index: 1;
 }
 

@@ -17,6 +17,85 @@ const {
 } = globalThis.TutorialModule;
 
 let workflowDisableDepth = 0;
+let mcLoaderAngle = 0;
+let mcLoaderSpeed = 0;
+let mcLoaderTargetSpeed = 0;
+let mcLoaderFrame = 0;
+let mcLoaderLastTs = 0;
+let mcLoaderStopStartedAt = 0;
+
+function updateMcLoaderMotion(pct, label = '') {
+  if (
+    typeof document === 'undefined' ||
+    typeof document.querySelector !== 'function' ||
+    typeof requestAnimationFrame === 'undefined' ||
+    typeof performance === 'undefined' ||
+    typeof performance.now !== 'function'
+  ) {
+    return;
+  }
+  const loader = document.querySelector('.crystal-loader');
+  const circle = loader?.querySelector('.magic-circle');
+  if (!loader || !circle) return;
+
+  const safePct = Math.max(0, Math.min(100, Number(pct) || 0));
+  const complete = safePct >= 100 && label === 'COMPLETE';
+  loader.style.setProperty('--loader-intensity', String(complete ? 1 : safePct / 100));
+  mcLoaderTargetSpeed = complete ? 720 : safePct * 5.2;
+  if (safePct <= 0) {
+    mcLoaderTargetSpeed = 0;
+    mcLoaderSpeed = 0;
+    mcLoaderStopStartedAt = 0;
+    circle.style.transform = `translate(-50%, -50%) rotate(${mcLoaderAngle}deg)`;
+    if (mcLoaderFrame) {
+      cancelAnimationFrame(mcLoaderFrame);
+      mcLoaderFrame = 0;
+    }
+    return;
+  }
+
+  if (complete && !mcLoaderStopStartedAt) {
+    mcLoaderStopStartedAt = performance.now() + 220;
+  } else if (!complete) {
+    mcLoaderStopStartedAt = 0;
+  }
+
+  if (!mcLoaderFrame) {
+    mcLoaderLastTs = performance.now();
+    mcLoaderFrame = requestAnimationFrame(tickMcLoaderMotion);
+  }
+}
+
+function tickMcLoaderMotion(ts) {
+  const loader = document.querySelector('.crystal-loader');
+  const circle = loader?.querySelector('.magic-circle');
+  if (!loader || !circle) {
+    mcLoaderFrame = 0;
+    return;
+  }
+
+  const dt = Math.min(0.05, Math.max(0, (ts - mcLoaderLastTs) / 1000));
+  mcLoaderLastTs = ts;
+  if (mcLoaderStopStartedAt && ts >= mcLoaderStopStartedAt) {
+    const elapsed = Math.min(1, (ts - mcLoaderStopStartedAt) / 2000);
+    const easeOut = 1 - Math.pow(1 - elapsed, 3);
+    mcLoaderTargetSpeed = 720 * (1 - easeOut);
+    loader.style.setProperty('--loader-intensity', String(Math.max(0, 1 - easeOut)));
+  }
+
+  mcLoaderSpeed += (mcLoaderTargetSpeed - mcLoaderSpeed) * Math.min(1, dt * 5.5);
+  mcLoaderAngle = (mcLoaderAngle + mcLoaderSpeed * dt) % 360;
+  circle.style.transform = `translate(-50%, -50%) rotate(${mcLoaderAngle}deg)`;
+
+  if (mcLoaderTargetSpeed <= 0.5 && mcLoaderSpeed <= 1) {
+    mcLoaderSpeed = 0;
+    mcLoaderTargetSpeed = 0;
+    mcLoaderStopStartedAt = 0;
+    mcLoaderFrame = 0;
+    return;
+  }
+  mcLoaderFrame = requestAnimationFrame(tickMcLoaderMotion);
+}
 
 function resetComparisonData() {
   state.timelineA = [];
@@ -70,6 +149,7 @@ function setMcPower(pct, label) {
   if (fill) fill.style.width = safePct + '%';
   if (value) value.textContent = safePct + '%';
   if (labelEl && label) labelEl.textContent = label;
+  updateMcLoaderMotion(safePct, label);
 }
 
 function createMcProgressTracker(totalSteps, start = 0, end = 100) {

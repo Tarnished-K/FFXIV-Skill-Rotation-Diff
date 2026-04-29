@@ -151,7 +151,7 @@
           <span id="navCompare">${text.login}</span>
         </button>
         <a href="/premium.html${suffix}" class="sidebar-nav-item${active('supporter')}">
-          <img src="assets/UI asset/sap.png" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
+          <img src="assets/ui/sap-icon.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
           <span id="navSupporter">${text.supporter}</span>
         </a>
         <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLangBtn" onclick="document.getElementById('langToggle')?.click()">

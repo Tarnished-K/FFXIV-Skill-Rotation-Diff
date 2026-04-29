@@ -522,7 +522,7 @@
   position: relative;
   background:
     linear-gradient(90deg, rgba(4, 10, 18, 0.92), rgba(4, 10, 18, 0.72)),
-    url("assets/UI asset/image sampe 1.png") center / cover no-repeat;
+    url("assets/ui/premium-hero-bg.webp") center / cover no-repeat;
 }
 
 /* Two-column layout: benefits left, price panel right */
@@ -540,7 +540,7 @@
 }
 
 .premium-hero-right {
-  flex: 0 0 252px;
+  flex: 0 0 286px;
 }
 
 /* Inline kicker | heading with left accent bar */
@@ -624,7 +624,7 @@
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 16px;
   padding: 15px;
   border: 1px solid rgba(123, 198, 255, 0.18);
   border-radius: 8px;
@@ -643,8 +643,8 @@
 
 .premium-benefit-icon {
   flex: 0 0 auto;
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   border-radius: 8px;
   object-fit: cover;
   object-position: center;
@@ -681,15 +681,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   text-align: center;
   height: 100%;
-  padding: 28px 20px 22px;
-  border: 1px solid rgba(110, 231, 216, 0.22);
-  border-radius: 10px;
-  background:
-    linear-gradient(180deg, rgba(5, 10, 18, 0.58), rgba(4, 10, 22, 0.86)),
-    url("assets/UI asset/support.png") center 42% / cover no-repeat;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 38px rgba(0,0,0,0.18);
+  min-height: 430px;
+  padding: 250px 28px 34px;
+  border: 0;
+  border-radius: 0;
+  background: url("assets/ui/support-panel.webp") center top / contain no-repeat;
+  box-shadow: none;
   box-sizing: border-box;
 }
 
@@ -698,15 +698,7 @@
   z-index: 1;
 }
 
-.premium-price-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 38%, rgba(77, 210, 255, 0.16), transparent 42%),
-    linear-gradient(180deg, transparent 0%, rgba(2, 6, 12, 0.44) 66%, rgba(2, 6, 12, 0.72) 100%);
-  pointer-events: none;
-}
+.premium-price-panel::before { content: none; }
 
 .premium-price-label {
   font-size: 12px;
@@ -720,7 +712,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .premium-price strong {
@@ -736,7 +728,7 @@
 }
 
 .premium-checkout-btn {
-  width: 100%;
+  width: min(100%, 188px);
   border: 1px solid rgba(110, 231, 216, 0.18);
   background: linear-gradient(135deg, rgba(45, 181, 163, 0.94), rgba(43, 134, 217, 0.94));
   color: #f7fffe;
@@ -779,12 +771,21 @@
     max-width: 380px;
     align-self: center;
   }
+  .premium-price-panel {
+    min-height: 430px;
+    padding-top: 250px;
+  }
   .premium-benefits {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 500px) {
+  .premium-price-panel {
+    min-height: 390px;
+    padding: 220px 24px 28px;
+  }
+
   .premium-benefits {
     grid-template-columns: 1fr;
   }

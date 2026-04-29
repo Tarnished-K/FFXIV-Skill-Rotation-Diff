@@ -575,10 +575,12 @@
    ===================================================================== */
 
 .mc-title {
-  font-size: 12px;
+  font-size: clamp(18px, 1.55vw, 24px);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   color: var(--gold-light);
+  white-space: nowrap;
+  text-shadow: 0 0 12px rgba(59, 190, 255, 0.38);
 }
 
 .mc-subtitle {

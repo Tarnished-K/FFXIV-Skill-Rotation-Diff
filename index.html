@@ -9,7 +9,8 @@
       content="FFLogs の公開ログ URL を 2 つ読み込み、プレイヤーごとのスキル回しとタイムラインを比較できるツールです。"
     />
     <link rel="canonical" href="https://xiv-srd.com/" />
-    <link rel="preload" as="image" href="assets/UI asset/image999.png" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/ui/bg-main-shell.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/ui/site-top.webp" fetchpriority="high" />
     <link rel="preload" as="image" href="assets/ui/crystal-emblem.webp" fetchpriority="high" />
     <link rel="preload" as="image" href="assets/ui/card-window-bg.webp" fetchpriority="high" />
     <link rel="preload" as="image" href="assets/ui/card-window-warm.webp" fetchpriority="high" />
@@ -20,7 +21,7 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="styles-redesign.css" />
     <link rel="stylesheet" href="styles-neuform.css" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/assets/ui/favicon-crystal.png" />
     <script type="importmap">
 {
   "imports": {
@@ -64,7 +65,7 @@
             <span id="navCompare">ログイン</span>
           </button>
           <a href="/premium.html" class="sidebar-nav-item">
-            <img src="assets/UI asset/sap.png" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
+            <img src="assets/ui/sap-icon.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
             <span id="navSupporter">サポーター登録</span>
           </a>
           <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLangBtn" onclick="document.getElementById('langToggle')?.click()">
@@ -183,7 +184,7 @@
         <!-- TOP BAR -->
         <header class="topbar">
           <div class="topbar-brand-art" aria-label="XIV Skill Rotation Diff">
-            <img src="assets/UI asset/site top.png" alt="XIV Skill Rotation Diff" decoding="async" />
+            <img src="assets/ui/site-top.webp" alt="XIV Skill Rotation Diff" decoding="async" />
           </div>
           <div class="header-ad">
             <ins class="adsbygoogle"
@@ -251,16 +252,15 @@
           <!-- MOTHERCRYSTAL STATUS PANEL -->
           <div class="mothercrystal-panel">
             <div class="mc-header">
-              <img src="assets/ui/crystal-emblem.webp" alt="" class="mc-logo" width="36" height="36" decoding="async" />
               <div class="mc-header-text">
-                <div class="mc-title">Mothercrystal Status</div>
+                <div class="mc-title">Server Status</div>
                 <div class="mc-subtitle">— 分析エンジン稼働中 —</div>
               </div>
             </div>
             <div class="mc-crystal-wrap">
               <div class="crystal-loader" aria-label="Loading">
-                <img class="magic-circle" src="assets/UI asset/line.png" alt="" aria-hidden="true" decoding="async" />
-                <img class="loader-crystal" src="assets/UI asset/crystal.png" alt="Loading" decoding="async" />
+                <img class="magic-circle" src="assets/ui/loader-line.webp" alt="" aria-hidden="true" decoding="async" />
+                <img class="loader-crystal" src="assets/ui/loader-crystal.webp" alt="Loading" decoding="async" />
                 <div class="crystal-loader-text">Loading...</div>
               </div>
             </div>

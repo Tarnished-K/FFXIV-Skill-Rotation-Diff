@@ -521,8 +521,8 @@
 
 /* Gem divider: keep the image but reduce visual weight */
 .sidebar-divider-img {
-  opacity: 0.45;
-  filter: saturate(0.55) brightness(0.85);
+  opacity: 0.72;
+  filter: saturate(0.9) brightness(1.18) drop-shadow(0 0 10px rgba(43, 134, 217, 0.18));
 }
 
 /* Connection dot */

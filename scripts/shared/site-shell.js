@@ -9,6 +9,7 @@
       home: 'ホーム',
       guide: '初めての方はこちら',
       login: 'ログイン',
+      supporter: 'サポーター登録',
       lang: '言語切り替え',
       request: 'ご要望フォーム',
       ranking: 'ランキング',
@@ -41,6 +42,7 @@
       home: 'Home',
       guide: 'First time here?',
       login: 'Login',
+      supporter: 'Supporter',
       lang: 'Language',
       request: 'Feedback / Request',
       ranking: 'Ranking',
@@ -148,6 +150,10 @@
           <img src="assets/ui/icon-login-new.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
           <span id="navCompare">${text.login}</span>
         </button>
+        <a href="/premium.html${suffix}" class="sidebar-nav-item${active('supporter')}">
+          <img src="assets/UI asset/sap.png" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
+          <span id="navSupporter">${text.supporter}</span>
+        </a>
         <button type="button" class="sidebar-nav-item sidebar-lang-btn" id="sidebarLangBtn" onclick="document.getElementById('langToggle')?.click()">
           <img src="assets/ui/icon-lang-switch.webp" alt="" class="sidebar-nav-icon" width="28" height="28" decoding="async" />
           <span id="navLang">${text.lang}</span>
@@ -209,6 +215,7 @@
     setText('navHome', text.home);
     setText('navGuide', text.guide);
     setText('navCompare', text.login);
+    setText('navSupporter', text.supporter);
     setText('navLang', text.lang);
     setText('navLoad', text.request);
     setText('navRanking', text.ranking);

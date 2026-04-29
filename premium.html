@@ -8,10 +8,13 @@
       name="description"
       content="FFXIV Skill Rotation Diff のサポータープラン案内ページです。"
     />
+    <link rel="preload" as="image" href="assets/UI asset/image999.png" fetchpriority="high" />
     <link rel="stylesheet" href="styles-base.css" />
     <link rel="stylesheet" href="styles-layout.css" />
     <link rel="stylesheet" href="styles-timeline.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles-redesign.css" />
+    <link rel="stylesheet" href="styles-neuform.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script type="importmap">
 {
@@ -22,19 +25,18 @@
 </script>
   </head>
   <body class="feedback-page premium-page">
-    <header>
-      <div class="header-row">
-        <div>
+    <div class="app-shell">
+      <aside class="sidebar" data-site-sidebar data-active-page="supporter"></aside>
+      <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-identity">
           <h1>サポーター登録</h1>
           <p>比較回数を気にせず使いたい方向けの月額プランです。</p>
-        </div>
-        <div class="header-actions">
-          <a class="button-link ghost tutorial-launch-btn" href="/">トップへ戻る</a>
-        </div>
       </div>
+      <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
     </header>
 
-    <main class="feedback-main premium-main">
+    <main class="feedback-main premium-main shell-page-main">
       <section class="card premium-hero-card">
         <div class="premium-hero-layout">
           <!-- Left: header + benefits -->
@@ -49,42 +51,42 @@
             </p>
             <div class="premium-benefits">
               <div class="premium-benefit">
-                <span class="premium-benefit-icon" aria-hidden="true">⚡</span>
+                <span class="premium-benefit-icon" aria-hidden="true">S</span>
                 <div class="premium-benefit-body">
                   <strong>シナジーTL分析</strong>
                   <span>パーティ全員のバフ発動タイミングを可視化。バーストウィンドウのずれを一目で確認できます。</span>
                 </div>
               </div>
               <div class="premium-benefit">
-                <span class="premium-benefit-icon" aria-hidden="true">🎯</span>
+                <span class="premium-benefit-icon" aria-hidden="true">D</span>
                 <div class="premium-benefit-body">
                   <strong>デバフTL分析</strong>
                   <span>致命的な傷・弱点露出などのデバフ付与タイミングを比較し、与ダメ増加の活用状況を分析できます。</span>
                 </div>
               </div>
               <div class="premium-benefit">
-                <span class="premium-benefit-icon" aria-hidden="true">📜</span>
+                <span class="premium-benefit-icon" aria-hidden="true">B</span>
                 <div class="premium-benefit-body">
                   <strong>ボス詠唱TL分析</strong>
                   <span>ボスの詠唱スケジュールをタイムライン上に重ねて表示。日本語アクション名に対応。</span>
                 </div>
               </div>
               <div class="premium-benefit">
-                <span class="premium-benefit-icon" aria-hidden="true">🔖</span>
+                <span class="premium-benefit-icon" aria-hidden="true">M</span>
                 <div class="premium-benefit-body">
                   <strong>ブックマーク最大100件</strong>
                   <span>比較状態をワンクリックで保存。後から呼び出してURLなしで再比較できます。</span>
                 </div>
               </div>
               <div class="premium-benefit">
-                <span class="premium-benefit-icon" aria-hidden="true">👥</span>
+                <span class="premium-benefit-icon" aria-hidden="true">P</span>
                 <div class="premium-benefit-body">
                   <strong>パーティ比較</strong>
                   <span>2件のレポートからパーティ全体のDPS・行動を横断比較できます。</span>
                 </div>
               </div>
               <div class="premium-benefit">
-                <span class="premium-benefit-icon" aria-hidden="true">✨</span>
+                <span class="premium-benefit-icon" aria-hidden="true">∞</span>
                 <div class="premium-benefit-body">
                   <strong>広告非表示・比較回数無制限</strong>
                   <span>ヘッダー広告を非表示にし、無料版の1日10回制限なく何度でも比較できます。</span>
@@ -119,13 +121,15 @@
       </section>
     </main>
 
-    <footer>
+    <footer class="site-footer">
       <div class="footer-legal">
         <small>FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD. All Rights Reserved. This is an unofficial fan tool, not affiliated with or endorsed by Square Enix.</small>
         <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>. &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a></small>
       </div>
       <small class="build-info" data-build-info>Version loading...</small>
     </footer>
+      </div>
+    </div>
 
     <div id="authModal" class="auth-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
       <div id="authModalBackdrop" class="auth-modal-backdrop"></div>
@@ -152,8 +156,22 @@
       </div>
     </div>
 
+    <script src="./scripts/shared/site-shell.js"></script>
     <script src="./scripts/shared/build-info.js"></script>
     <script src="./scripts/premium-preview.js"></script>
+    <script>
+      (function () {
+        const btn = document.getElementById('langToggle');
+        if (!btn) return;
+        const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
+        btn.textContent = lang === 'ja' ? 'EN' : 'JA';
+        btn.addEventListener('click', function () {
+          const url = new URL(location.href);
+          url.searchParams.set('lang', lang === 'ja' ? 'en' : 'ja');
+          location.href = url.toString();
+        });
+      }());
+    </script>
     <script type="module" src="scripts/auth/auth.js"></script>
     <script type="module" src="scripts/auth/auth-ui.js"></script>
     <script type="module">

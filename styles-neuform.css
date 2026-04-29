@@ -988,7 +988,7 @@ body::before {
 
 .main-content::before {
   background:
-    linear-gradient(180deg, rgba(4, 10, 18, 0.50) 0%, rgba(6, 14, 24, 0.66) 40%, rgba(6, 10, 16, 0.78) 100%);
+    linear-gradient(180deg, rgba(4, 10, 18, 0.34) 0%, rgba(6, 14, 24, 0.46) 40%, rgba(6, 10, 16, 0.58) 100%);
 }
 
 .step-card {
@@ -1031,6 +1031,56 @@ body::before {
 .mothercrystal-panel.is-offline .mc-online-dot {
   background: #ef4444;
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+}
+
+.shell-page-main {
+  width: min(1280px, calc(100% - 48px));
+  margin: 28px auto 36px;
+}
+
+.guide-page .topbar h1,
+.feedback-page .topbar h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 38px);
+  letter-spacing: 0;
+  color: var(--text-primary);
+}
+
+.guide-page .topbar p,
+.feedback-page .topbar p {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+}
+
+.guide-page .site-footer,
+.feedback-page .site-footer {
+  margin-top: auto;
+}
+
+.feedback-main.shell-page-main {
+  display: flex;
+  justify-content: center;
+}
+
+.feedback-form-card {
+  width: min(900px, 100%);
+}
+
+.guide-page .guide-experience {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+}
+
+.premium-page .premium-main.shell-page-main {
+  display: grid;
+  gap: 22px;
+}
+
+.premium-page .premium-hero-card,
+.premium-page .premium-preview-card {
+  margin-inline: auto;
+}
 }
 
 @media (max-width: 680px) {

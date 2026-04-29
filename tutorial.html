@@ -6,27 +6,28 @@
     <title data-guide-text="pageTitle">初めての方向けガイド | FFXIV Skill Rotation Diff</title>
     <meta name="description" content="FFXIV Skill Rotation Diff の初回ガイドです。公開 FFLogs ログを比較結果の表示まで読み込む流れを体験できます。" />
     <link rel="canonical" href="https://xiv-srd.com/tutorial.html" />
+    <link rel="preload" as="image" href="assets/UI asset/image999.png" fetchpriority="high" />
     <link rel="stylesheet" href="styles-base.css" />
     <link rel="stylesheet" href="styles-layout.css" />
     <link rel="stylesheet" href="styles-timeline.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles-redesign.css" />
+    <link rel="stylesheet" href="styles-neuform.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body class="guide-page guide-page-interactive">
-    <header>
-      <div class="header-row">
-        <div>
+    <div class="app-shell">
+      <aside class="sidebar" data-site-sidebar data-active-page="guide"></aside>
+      <div class="main-content">
+        <header class="topbar">
+          <div class="topbar-identity">
           <h1 data-guide-text="heading">初めての方向けガイド</h1>
           <p data-guide-text="subheading">公開 FFLogs ログを読み込み、比較結果へ進む流れをこのページ内で体験できます。</p>
-        </div>
-        <div class="header-actions">
-          <a class="button-link ghost tutorial-launch-btn" data-guide-text="backBtn" data-guide-href-ja="/" data-guide-href-en="/?lang=en" href="/">比較ページへ戻る</a>
-          <button id="langToggle" type="button" class="lang-btn">EN</button>
-        </div>
-      </div>
-    </header>
+          </div>
+          <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
+        </header>
 
-    <main class="guide-main guide-interactive-main" data-guide-root>
+    <main class="guide-main guide-interactive-main shell-page-main" data-guide-root>
       <section class="guide-experience" aria-labelledby="guideStageTitle">
         <div class="guide-progress" data-guide-progress aria-label="ガイドの進行状況"></div>
 
@@ -51,14 +52,17 @@
       </section>
     </main>
 
-    <footer>
+    <footer class="site-footer">
       <div class="footer-legal">
         <small>FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD. All Rights Reserved. This is an unofficial fan tool, not affiliated with or endorsed by Square Enix.</small>
         <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>. &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a></small>
       </div>
       <small class="build-info" data-build-info>Version loading...</small>
     </footer>
+      </div>
+    </div>
 
+    <script src="./scripts/shared/site-shell.js"></script>
     <script src="./scripts/shared/build-info.js"></script>
     <script src="./scripts/app/tutorial-page.js?v=20260423-4" defer></script>
   </body>

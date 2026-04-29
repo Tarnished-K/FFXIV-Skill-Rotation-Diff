@@ -9,7 +9,7 @@
       content="FFLogs の公開ログ URL を 2 つ読み込み、プレイヤーごとのスキル回しとタイムラインを比較できるツールです。"
     />
     <link rel="canonical" href="https://xiv-srd.com/" />
-    <link rel="preload" as="image" href="assets/ui/bg-hero.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/UI asset/image999.png" fetchpriority="high" />
     <link rel="preload" as="image" href="assets/ui/crystal-emblem.webp" fetchpriority="high" />
     <link rel="preload" as="image" href="assets/ui/card-window-bg.webp" fetchpriority="high" />
     <link rel="preload" as="image" href="assets/ui/card-window-warm.webp" fetchpriority="high" />
@@ -83,7 +83,7 @@
             </button>
             <div class="sidebar-ranking-type-content" id="rankingTypeDamage" aria-hidden="true">
               <div class="sidebar-ranking-group">
-                <div class="sidebar-ranking-group-label">ヘビー級</div>
+                <div class="sidebar-ranking-group-label">ヘビー級：零式</div>
                 <a href="https://ja.fflogs.com/zone/rankings/73?boss=101&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式1層：ヴァンプファタール</a>
                 <a href="https://ja.fflogs.com/zone/rankings/73?boss=102&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式2層：エクストリームズ</a>
                 <a href="https://ja.fflogs.com/zone/rankings/73?boss=103&metric=dps&dpstype=rdps" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式3層：ザ・タイラント</a>
@@ -115,7 +115,7 @@
             </button>
             <div class="sidebar-ranking-type-content" id="rankingTypeSpeed" aria-hidden="true">
               <div class="sidebar-ranking-group">
-                <div class="sidebar-ranking-group-label">ヘビー級</div>
+                <div class="sidebar-ranking-group-label">ヘビー級：零式</div>
                 <a href="https://ja.fflogs.com/zone/rankings/73?boss=101" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式1層：ヴァンプファタール</a>
                 <a href="https://ja.fflogs.com/zone/rankings/73?boss=102" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式2層：エクストリームズ</a>
                 <a href="https://ja.fflogs.com/zone/rankings/73?boss=103" target="_blank" rel="noopener noreferrer" class="sidebar-ranking-item">零式3層：ザ・タイラント</a>
@@ -414,43 +414,7 @@
       </div>
     </div>
 
-    <script>
-      (function() {
-        function initRankingMenu() {
-          var rankingBtn = document.getElementById('sidebarRankingBtn');
-          var rankingMenu = document.getElementById('sidebarRankingMenu');
-          var rankingChevron = document.getElementById('rankingChevron');
-          if (rankingBtn && rankingMenu) {
-            rankingBtn.addEventListener('click', function() {
-              var isOpen = rankingMenu.classList.contains('is-open');
-              rankingMenu.classList.toggle('is-open', !isOpen);
-              rankingBtn.setAttribute('aria-expanded', String(!isOpen));
-              rankingMenu.setAttribute('aria-hidden', String(isOpen));
-              if (rankingChevron) rankingChevron.textContent = isOpen ? '▶' : '▼';
-            });
-          }
-          document.querySelectorAll('.sidebar-ranking-type-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-              var targetId = btn.getAttribute('aria-controls');
-              var targetEl = document.getElementById(targetId);
-              var chevron = btn.querySelector('.sidebar-ranking-chevron');
-              if (targetEl) {
-                var isOpen = targetEl.classList.contains('is-open');
-                targetEl.classList.toggle('is-open', !isOpen);
-                btn.setAttribute('aria-expanded', String(!isOpen));
-                targetEl.setAttribute('aria-hidden', String(isOpen));
-                if (chevron) chevron.textContent = isOpen ? '▶' : '▼';
-              }
-            });
-          });
-        }
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', initRankingMenu);
-        } else {
-          initRankingMenu();
-        }
-      })();
-    </script>
+    <script src="./scripts/shared/site-shell.js"></script>
     <script type="module" src="scripts/auth/auth.js"></script>
     <script type="module" src="scripts/auth/auth-ui.js"></script>
     <script src="./scripts/shared/build-info.js"></script>

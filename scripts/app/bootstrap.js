@@ -1221,6 +1221,7 @@ function applyLang() {
   if (navRankingDamageEl) navRankingDamageEl.textContent = s.navRankingDamage || 'ダメージランキング';
   const navRankingSpeedEl = document.getElementById('navRankingSpeed');
   if (navRankingSpeedEl) navRankingSpeedEl.textContent = s.navRankingSpeed || 'スピードランキング';
+  globalThis.SiteShell?.applyLanguage?.();
   // Sidebar data section labels
   const sidebarDataSourceLabelEl = document.getElementById('sidebarDataSourceLabel');
   if (sidebarDataSourceLabelEl) sidebarDataSourceLabelEl.textContent = s.sidebarDataSourceLabel || 'ユーザー名';

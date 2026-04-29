@@ -4,27 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title data-i18n="pageTitle">ご要望フォーム | FFXIV Skill Rotation Diff</title>
+    <link rel="preload" as="image" href="assets/UI asset/image999.png" fetchpriority="high" />
     <link rel="stylesheet" href="styles-base.css" />
     <link rel="stylesheet" href="styles-layout.css" />
     <link rel="stylesheet" href="styles-timeline.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles-redesign.css" />
+    <link rel="stylesheet" href="styles-neuform.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body class="feedback-page">
-    <header>
-      <div class="header-row">
-        <div>
+    <div class="app-shell">
+      <aside class="sidebar" data-site-sidebar data-active-page="request"></aside>
+      <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-identity">
           <h1 data-i18n="heading">ご要望フォーム</h1>
           <p data-i18n="subheading">改善要望や不具合報告を送信できます。</p>
-        </div>
-        <div class="header-actions">
-          <a class="button-link ghost tutorial-launch-btn" data-i18n="backBtn" data-i18n-href-ja="/" data-i18n-href-en="/?lang=en" href="/">トップへ戻る</a>
-          <button id="langToggle" type="button" class="lang-btn">EN</button>
-        </div>
       </div>
+      <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
     </header>
 
-    <main class="feedback-main">
+    <main class="feedback-main shell-page-main">
       <section class="card feedback-form-card">
         <h2 data-i18n="formTitle">送信内容</h2>
         <label for="feedbackCategory" data-i18n="categoryLabel">カテゴリ</label>
@@ -57,7 +58,7 @@
       </section>
     </main>
 
-    <footer>
+    <footer class="site-footer">
       <small data-i18n="footerNote">送信内容は確認のうえ順次対応します。</small>
       <div class="footer-legal">
         <small>FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD. All Rights Reserved. This is an unofficial fan tool, not affiliated with or endorsed by Square Enix.</small>
@@ -65,7 +66,10 @@
       </div>
       <small class="build-info" data-build-info>Version loading...</small>
     </footer>
+      </div>
+    </div>
 
+    <script src="./scripts/shared/site-shell.js"></script>
     <script src="./scripts/shared/build-info.js"></script>
     <script src="./scripts/shared/feedback-shared.js"></script>
     <script src="./scripts/shared/feedback-form.js"></script>

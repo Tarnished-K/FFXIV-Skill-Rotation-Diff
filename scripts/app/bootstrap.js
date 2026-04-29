@@ -572,10 +572,14 @@ async function handleLoadReports(options = {}) {
     if (!fightsA.length || !fightsB.length) throw new Error('選択可能なKill戦闘が見つかりませんでした。');
     fillFightSelect(el.fightA, fightsA, state.reportA);
     fillFightSelect(el.fightB, fightsB, state.reportB);
-    el.playerA.innerHTML = '';
-    el.playerB.innerHTML = '';
+    const playerPlaceholder = `<option value="">${t('playersNeedReload')}</option>`;
+    el.playerA.innerHTML = playerPlaceholder;
+    el.playerB.innerHTML = playerPlaceholder;
+    if (el.compareBtn) el.compareBtn.disabled = !el.step3.classList.contains('hidden');
     resetComparisonData();
     clearComparisonError();
+    state.playersA = [];
+    state.playersB = [];
     state.selectedFightA = null;
     state.selectedFightB = null;
     state.selectedA = null;
@@ -600,6 +604,9 @@ async function handleLoadReports(options = {}) {
     return false;
   } finally {
     setLoadingWorkflowDisabled(false);
+    if (!el.step3.classList.contains('hidden') && (!state.playersA.length || !state.playersB.length)) {
+      if (el.compareBtn) el.compareBtn.disabled = true;
+    }
     if (state.tutorial.active) renderTutorial();
   }
 }
@@ -643,6 +650,7 @@ async function handleLoadPlayers(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step3.classList.remove('hidden');
+    if (el.compareBtn) el.compareBtn.disabled = false;
     el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
     if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
@@ -1158,28 +1166,22 @@ el.bookmarkList?.addEventListener('click', (event) => {
 });
 el.playerA?.addEventListener('change', syncShareStateUrl);
 el.playerB?.addEventListener('change', syncShareStateUrl);
-el.fightA?.addEventListener('change', () => {
+function handleFightSelectionChanged() {
   if (!el.step3.classList.contains('hidden')) {
-    el.step3.classList.add('hidden');
-    el.playerA.innerHTML = '';
-    el.playerB.innerHTML = '';
+    const placeholder = `<option value="">${t('playersNeedReload')}</option>`;
+    el.playerA.innerHTML = placeholder;
+    el.playerB.innerHTML = placeholder;
+    if (el.compareBtn) el.compareBtn.disabled = true;
+    state.playersA = [];
+    state.playersB = [];
     resetComparisonData();
     clearComparisonError();
-    el.step2Message.textContent = '';
+    el.step2Message.textContent = t('playersNeedReload');
   }
   syncShareStateUrl();
-});
-el.fightB?.addEventListener('change', () => {
-  if (!el.step3.classList.contains('hidden')) {
-    el.step3.classList.add('hidden');
-    el.playerA.innerHTML = '';
-    el.playerB.innerHTML = '';
-    resetComparisonData();
-    clearComparisonError();
-    el.step2Message.textContent = '';
-  }
-  syncShareStateUrl();
-});
+}
+el.fightA?.addEventListener('change', handleFightSelectionChanged);
+el.fightB?.addEventListener('change', handleFightSelectionChanged);
 el.phaseContainer?.addEventListener('click', (event) => {
   if (event.target.closest('.phase-btn')) syncShareStateUrl();
 });

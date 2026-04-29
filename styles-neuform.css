@@ -1083,6 +1083,173 @@ body::before {
 .premium-page .premium-preview-card {
   margin-inline: auto;
 }
+
+/* Ornate window edge treatment from top/bottom/left/right frame assets. */
+:where(
+  .card,
+  .mc-status-card,
+  .mc-loader-card,
+  .guide-experience,
+  .guide-result-board,
+  .guide-form-window,
+  .auth-modal-card,
+  .bookmark-modal-card,
+  .feedback-form-card,
+  .premium-benefit,
+  .sidebar-source-item
+) {
+  position: relative;
+  overflow: hidden;
+}
+
+:where(
+  .card,
+  .mc-status-card,
+  .mc-loader-card,
+  .guide-experience,
+  .guide-result-board,
+  .guide-form-window,
+  .auth-modal-card,
+  .bookmark-modal-card,
+  .feedback-form-card,
+  .premium-benefit,
+  .sidebar-source-item
+)::before,
+:where(
+  .card,
+  .mc-status-card,
+  .mc-loader-card,
+  .guide-experience,
+  .guide-result-board,
+  .guide-form-window,
+  .auth-modal-card,
+  .bookmark-modal-card,
+  .feedback-form-card,
+  .premium-benefit,
+  .sidebar-source-item
+)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+:where(
+  .card,
+  .mc-status-card,
+  .mc-loader-card,
+  .guide-experience,
+  .guide-result-board,
+  .guide-form-window,
+  .auth-modal-card,
+  .bookmark-modal-card,
+  .feedback-form-card,
+  .premium-benefit,
+  .sidebar-source-item
+)::before {
+  background:
+    url("assets/ui/frame-top.webp") top center / 100% 28px no-repeat,
+    url("assets/ui/frame-bottom.webp") bottom center / 100% 22px no-repeat;
+}
+
+:where(
+  .card,
+  .mc-status-card,
+  .mc-loader-card,
+  .guide-experience,
+  .guide-result-board,
+  .guide-form-window,
+  .auth-modal-card,
+  .bookmark-modal-card,
+  .feedback-form-card,
+  .premium-benefit,
+  .sidebar-source-item
+)::after {
+  background:
+    url("assets/ui/frame-left.webp") left center / 22px 100% no-repeat,
+    url("assets/ui/frame-right.webp") right center / 22px 100% no-repeat;
+}
+
+.card::before,
+.mc-status-card::before,
+.mc-loader-card::before,
+.guide-experience::before,
+.guide-result-board::before,
+.guide-form-window::before,
+.auth-modal-card::before,
+.bookmark-modal-card::before,
+.feedback-form-card::before,
+.premium-benefit::before,
+.sidebar-source-item::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  z-index: 3 !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  background:
+    url("assets/ui/frame-top.webp") top center / 100% 28px no-repeat,
+    url("assets/ui/frame-bottom.webp") bottom center / 100% 22px no-repeat !important;
+}
+
+.card::after,
+.mc-status-card::after,
+.mc-loader-card::after,
+.guide-experience::after,
+.guide-result-board::after,
+.guide-form-window::after,
+.auth-modal-card::after,
+.bookmark-modal-card::after,
+.feedback-form-card::after,
+.premium-benefit::after,
+.sidebar-source-item::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  z-index: 3 !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  background:
+    url("assets/ui/frame-left.webp") left center / 22px 100% no-repeat,
+    url("assets/ui/frame-right.webp") right center / 22px 100% no-repeat !important;
+}
+
+.mothercrystal-panel {
+  padding: 0;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
+  overflow: visible;
+}
+
+.mothercrystal-panel::before,
+.mothercrystal-panel::after {
+  content: none !important;
+}
+
+.premium-page .premium-main.shell-page-main {
+  width: min(1600px, calc(100vw - 280px));
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.premium-page .premium-hero-card,
+.premium-page .premium-preview-card {
+  width: 100%;
+  max-width: none;
+}
+
+@media (max-width: 900px) {
+  .premium-page .premium-main.shell-page-main {
+    width: min(100%, calc(100vw - 24px));
+  }
 }
 
 @media (max-width: 680px) {

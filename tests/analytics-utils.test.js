@@ -20,6 +20,12 @@ describe('summarizeEvents', () => {
   it('summarizes recent analytics rows into totals, daily stats, and top jobs', () => {
     const rows = [
       {
+        event_type: 'supporter_cta_clicked',
+        pathname: '/',
+        details: { sessionId: 'sess-1', source: 'sidebar' },
+        created_at: '2026-04-15T03:00:00.000Z',
+      },
+      {
         event_type: 'comparison_completed',
         pathname: '/',
         details: { jobA: 'BLM', jobB: 'PCT', sessionId: 'sess-1' },
@@ -53,15 +59,19 @@ describe('summarizeEvents', () => {
 
     const summary = summarizeEvents(rows, 2, Date.parse('2026-04-15T12:00:00.000Z'));
 
-    expect(summary.windowEvents).toBe(4);
+    expect(summary.windowEvents).toBe(5);
     expect(summary.totals).toEqual({
       sessions: 2,
       pageViews: 1,
       reportsLoaded: 1,
       comparisons: 1,
       apiErrors: 1,
+      supporterCtaClicks: 1,
       comparePerViewRate: 1,
       comparePerLoadRate: 1,
+      errorPerViewRate: 1,
+      errorPerLoadRate: 1,
+      supporterCtaClickRate: 1,
     });
     expect(summary.daily).toEqual([
       {
@@ -71,6 +81,7 @@ describe('summarizeEvents', () => {
         reportsLoaded: 0,
         comparisons: 0,
         errors: 1,
+        supporterClicks: 0,
       },
       {
         date: '2026-04-15',
@@ -79,6 +90,7 @@ describe('summarizeEvents', () => {
         reportsLoaded: 1,
         comparisons: 1,
         errors: 0,
+        supporterClicks: 1,
       },
     ]);
     expect(summary.topJobs).toEqual([
@@ -86,7 +98,7 @@ describe('summarizeEvents', () => {
       { job: 'PCT', count: 1 },
     ]);
     expect(summary.topPaths).toEqual([
-      { pathname: '/', count: 3 },
+      { pathname: '/', count: 4 },
       { pathname: '/analytics.html', count: 1 },
     ]);
     expect(summary.topErrorCauses).toEqual([

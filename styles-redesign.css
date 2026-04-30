@@ -520,7 +520,7 @@
   height: 14px;
   vertical-align: middle;
   margin-right: 5px;
-  background: url("assets/ui/icon-external.png") center/contain no-repeat;
+  background: url("assets/ui/icon-external.webp") center/contain no-repeat;
   opacity: 0.65;
 }
 
@@ -542,7 +542,7 @@
   height: 14px;
   vertical-align: middle;
   margin-right: 5px;
-  background: url("assets/ui/icon-lang.png") center/contain no-repeat;
+  background: url("assets/ui/icon-lang-switch.webp") center/contain no-repeat;
   opacity: 0.65;
 }
 
@@ -1105,7 +1105,7 @@
 
 /* ─── Step card h2 headers: same banner as sidebar labels (image 25) ── */
 .step-card h2 {
-  background: url("assets/ui/banner-ornate.png") center / 100% 100% no-repeat;
+  background: url("assets/ui/banner-ornate.webp") center / 100% 100% no-repeat;
   padding: 9px 16px;
   margin: 2px -8px 12px;
   border-radius: 0;
@@ -1165,7 +1165,7 @@
 
 /* ─── Sidebar section labels: small banner (image 25) ───────────────── */
 .sidebar-section-label {
-  background: url("assets/ui/banner-ornate.png") center / 100% 100% no-repeat;
+  background: url("assets/ui/banner-ornate.webp") center / 100% 100% no-repeat;
   padding: 5px 12px;
   margin-bottom: 10px;
   font-size: 9px;
@@ -1185,7 +1185,7 @@
   right: 0px;
   width: 6px;
   height: calc(100% - 200px);
-  background: url("assets/ui/divider-v-light.png") center top / 100% auto repeat-y;
+  background: url("assets/ui/divider-v-light.webp") center top / 100% auto repeat-y;
   opacity: 0.25;
   pointer-events: none;
   z-index: 2;
@@ -1199,7 +1199,7 @@
   left: 0;
   width: 80px;
   height: 80px;
-  background: url("assets/ui/corner-tl-ornate.png") top left / contain no-repeat;
+  background: url("assets/ui/corner-tl-ornate.webp") top left / contain no-repeat;
   opacity: 0.25;
   pointer-events: none;
   z-index: 0;

@@ -133,6 +133,33 @@ function resetComparisonData() {
   state.partyTimelineLoading = false;
 }
 
+function isLoadWorkflowCurrent(version) {
+  return version === state.loadResetVersion;
+}
+
+function normalizeLoadingWorkflowDisabled() {
+  workflowDisableDepth = 0;
+  state.isLoadingWorkflow = false;
+  [
+    el.loadBtn,
+    el.loadPlayersBtn,
+    el.compareBtn,
+    el.fightA,
+    el.fightB,
+    el.playerA,
+    el.playerB,
+    el.personalTimelineViewBtn,
+    el.partyTimelineViewBtn,
+  ].forEach((node) => {
+    if (node) node.disabled = false;
+  });
+  el.timelineViewBtns?.forEach((button) => {
+    button.disabled = false;
+  });
+  setComparisonControlsDisabled(false);
+  updateTimelineLayerControls();
+}
+
 function setComparisonControlsDisabled(disabled) {
   el.tabs.forEach((tab) => {
     tab.disabled = disabled;
@@ -430,6 +457,59 @@ function syncShareStateUrl() {
   window.history.replaceState({}, '', url);
 }
 
+function clearShareStateUrl() {
+  const url = new URL(window.location.href);
+  const lang = url.searchParams.get('lang');
+  url.search = '';
+  if (lang === 'en') url.searchParams.set('lang', 'en');
+  window.history.replaceState({}, '', url);
+}
+
+function resetLoadingWorkflow() {
+  state.loadResetVersion += 1;
+  normalizeLoadingWorkflowDisabled();
+  state.urlA = null;
+  state.urlB = null;
+  state.reportA = null;
+  state.reportB = null;
+  state.selectedFightA = null;
+  state.selectedFightB = null;
+  state.playersA = [];
+  state.playersB = [];
+  state.selectedA = null;
+  state.selectedB = null;
+  state.dpsDataA = null;
+  state.dpsDataB = null;
+  state.fightA = null;
+  state.fightB = null;
+  state.abilityById = new Map();
+  resetComparisonData();
+  clearComparisonError();
+  if (el.urlA) el.urlA.value = '';
+  if (el.urlB) el.urlB.value = '';
+  if (el.fightA) el.fightA.innerHTML = '';
+  if (el.fightB) el.fightB.innerHTML = '';
+  if (el.playerA) el.playerA.innerHTML = '';
+  if (el.playerB) el.playerB.innerHTML = '';
+  if (el.msg) el.msg.textContent = '';
+  if (el.step2Message) el.step2Message.textContent = '';
+  if (el.step4Message) {
+    el.step4Message.textContent = '';
+    el.step4Message.classList.add('hidden');
+  }
+  el.step2?.classList.add('hidden');
+  el.step3?.classList.add('hidden');
+  el.timelineWrap?.classList.add('hidden');
+  if (el.timelineWrap) el.timelineWrap.innerHTML = '';
+  if (el.phaseContainer) el.phaseContainer.innerHTML = '';
+  setActiveTab('all');
+  setTimelineView('personal');
+  updateBookmarkControls();
+  clearShareStateUrl();
+  setMcPower(0, 'IDLE');
+  sendAnalyticsEvent('load_workflow_reset', { source: 'step1' });
+}
+
 function buildCurrentBookmarkData() {
   const parsedA = state.urlA || parseFFLogsUrl(el.urlA?.value?.trim?.() || '');
   const parsedB = state.urlB || parseFFLogsUrl(el.urlB?.value?.trim?.() || '');
@@ -545,6 +625,7 @@ function selectHasValue(select, value) {
 
 async function handleLoadReports(options = {}) {
   const { skipShareUrl = false } = options;
+  const workflowVersion = state.loadResetVersion;
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
   if (!parsedA || !parsedB) {
@@ -562,7 +643,9 @@ async function handleLoadReports(options = {}) {
       el.msg.textContent = '警告: アイコン対応表JSONが見つかりません。UN表示になります。';
     }
     state.reportA = await fetchReportDataV2(parsedA.reportId);
+    if (!isLoadWorkflowCurrent(workflowVersion)) return false;
     state.reportB = await fetchReportDataV2(parsedB.reportId);
+    if (!isLoadWorkflowCurrent(workflowVersion)) return false;
     state.abilityById = new Map();
     indexAbilities(state.reportA);
     indexAbilities(state.reportB);
@@ -613,6 +696,7 @@ async function handleLoadReports(options = {}) {
 
 async function handleLoadPlayers(options = {}) {
   const { skipShareUrl = false } = options;
+  const workflowVersion = state.loadResetVersion;
   setLoadingWorkflowDisabled(true);
   try {
     state.selectedFightA = Number(el.fightA.value);
@@ -639,6 +723,7 @@ async function handleLoadPlayers(options = {}) {
       fetchFightDpsV2(state.urlA.reportId, state.selectedFightA),
       fetchFightDpsV2(state.urlB.reportId, state.selectedFightB),
     ]);
+    if (!isLoadWorkflowCurrent(workflowVersion)) return false;
     state.dpsDataA = dpsA;
     state.dpsDataB = dpsB;
     const durA = fightAObj ? (fightAObj.endTime - fightAObj.startTime) : 1;
@@ -667,6 +752,7 @@ async function handleLoadPlayers(options = {}) {
 
 async function handleCompare(options = {}) {
   const { skipShareUrl = false, deferTimelineRender = false } = options;
+  const workflowVersion = state.loadResetVersion;
   state.selectedA = state.playersA.find(p => p.id === el.playerA.value);
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
   if (!state.selectedA || !state.selectedB) return false;
@@ -746,6 +832,7 @@ async function handleCompare(options = {}) {
       tracked(fetchPlayerDebuffsV2(state.urlA.reportId, fightA, Number(state.selectedA.id)), 'DEBUFFS A'),
       tracked(fetchPlayerDebuffsV2(state.urlB.reportId, fightB, Number(state.selectedB.id)), 'DEBUFFS B'),
     ]);
+    if (!isLoadWorkflowCurrent(workflowVersion)) return false;
     state.timelineA = deduplicateTimeline(tlA);
     state.timelineB = deduplicateTimeline(tlB);
     state.damageA = dmgA;
@@ -1132,6 +1219,10 @@ bindClick(el.loadBtn, 'loadBtn', async () => {
   logDebug('click: load reports', {urlA: el.urlA.value, urlB: el.urlB.value});
   await handleLoadReports();
 });
+bindClick(el.loadResetBtn, 'loadResetBtn', () => {
+  logDebug('click: reset loading workflow');
+  resetLoadingWorkflow();
+});
 bindClick(el.loadPlayersBtn, 'loadPlayersBtn', async () => {
   logDebug('click: load players', {fightA: el.fightA.value, fightB: el.fightB.value});
   await handleLoadPlayers();
@@ -1257,6 +1348,7 @@ function applyLang() {
   if (el.step1Title) el.step1Title.textContent = s.step1Title;
   if (el.publicOnlyNote) el.publicOnlyNote.textContent = s.publicOnlyNote;
   if (el.loadBtn) el.loadBtn.textContent = s.loadBtn;
+  if (el.loadResetBtn) el.loadResetBtn.textContent = state.lang === 'en' ? (s.loadResetBtn || 'Reset') : 'リセット';
   if (el.step2Title) el.step2Title.textContent = s.step2Title;
   if (el.step2HelpText) el.step2HelpText.textContent = s.step2HelpText;
   if (el.loadPlayersBtn) el.loadPlayersBtn.textContent = s.loadPlayersBtn;

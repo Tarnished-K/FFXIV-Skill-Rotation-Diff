@@ -181,7 +181,7 @@
         </div>
       </nav>
       <div class="sidebar-divider">
-        <img src="assets/ui/divider-gem.png" alt="" class="sidebar-divider-img" />
+        <img src="assets/ui/divider-gem.webp" alt="" class="sidebar-divider-img" />
       </div>
       <div class="sidebar-data-section">
         <div class="sidebar-section-label" id="sidebarDataSourceLabel">${text.username}</div>

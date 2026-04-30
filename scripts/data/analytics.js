@@ -51,3 +51,17 @@ Object.assign(globalThis, {
   getAnalyticsSessionId,
   sendAnalyticsEvent,
 });
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (event) => {
+    const target = event.target?.closest?.('[data-supporter-cta], a[href*="premium.html"]');
+    if (!target) return;
+    const href = target.getAttribute('href') || '';
+    const source = target.getAttribute('data-supporter-cta') || target.id || 'premium-link';
+    sendAnalyticsEvent('supporter_cta_clicked', {
+      href,
+      source,
+      text: (target.textContent || '').trim().slice(0, 80),
+    });
+  });
+}

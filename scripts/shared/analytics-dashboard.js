@@ -151,6 +151,9 @@
     setText(document, 'metricSessions', formatNumber(totals.sessions));
     setText(document, 'metricComparePerView', formatPercent(totals.comparePerViewRate));
     setText(document, 'metricComparePerLoad', formatPercent(totals.comparePerLoadRate));
+    setText(document, 'metricErrorPerView', formatPercent(totals.errorPerViewRate));
+    setText(document, 'metricSupporterCtr', formatPercent(totals.supporterCtaClickRate));
+    setText(document, 'metricSupporterClicks', formatNumber(totals.supporterCtaClicks));
     setText(document, 'metricSampledEvents', formatNumber(analytics.sampledEvents));
     setText(document, 'analyticsWindowLabel', `過去 ${analytics.windowDays} 日`);
 

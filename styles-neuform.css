@@ -145,7 +145,10 @@
 #step3::after {
   content: "";
   position: absolute;
-  inset: 0;
+  top: -24px;
+  right: -8px;
+  bottom: -18px;
+  left: -8px;
   width: auto;
   height: auto;
   z-index: 1;

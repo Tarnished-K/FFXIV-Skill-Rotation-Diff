@@ -4,12 +4,18 @@
 }
 
 .header-ad {
-  flex: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 728px;
+  max-width: min(728px, calc(100% - 620px));
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 0;
   overflow: hidden;
+  z-index: 1;
 }
 
 .footer-ad {

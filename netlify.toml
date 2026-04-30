@@ -2,6 +2,12 @@
   publish = "."
   functions = "netlify/functions"
 
+[[headers]]
+  for = "/ads.txt"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
+    Cache-Control = "public, max-age=300"
+
 [[redirects]]
   from = "/api/fflogs-proxy"
   to = "/.netlify/functions/fflogs-proxy"

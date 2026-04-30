@@ -1098,6 +1098,18 @@ body::before {
   content: none !important;
 }
 
+.mc-status-card,
+.mc-loader-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 18%),
+    linear-gradient(135deg, rgba(123, 198, 255, 0.05), transparent 34%),
+    var(--n-s2);
+  border-color: var(--n-border-dim);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.38),
+    0 6px 16px rgba(0, 0, 0, 0.20);
+}
+
 .premium-page .premium-main.shell-page-main {
   width: min(1600px, calc(100vw - 280px));
   max-width: 100%;

@@ -134,35 +134,6 @@
   border-color: var(--n-border-default);
 }
 
-#step1,
-#step2,
-#step3 {
-  background-image: none;
-}
-
-#step1::after,
-#step2::after,
-#step3::after {
-  content: "";
-  position: absolute;
-  top: -24px;
-  right: -8px;
-  bottom: -18px;
-  left: -8px;
-  width: auto;
-  height: auto;
-  z-index: 1;
-  background: url("assets/ui/window-frame-step-card.png") center / 100% 100% no-repeat;
-  pointer-events: none;
-}
-
-#step1 > *,
-#step2 > *,
-#step3 > * {
-  position: relative;
-  z-index: 2;
-}
-
 /* ─── Timeline card ──────────────────────────────────────────────────── */
 #step4 {
   background: var(--n-s2);

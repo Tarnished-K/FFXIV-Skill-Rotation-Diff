@@ -38,7 +38,10 @@ describe('page asset loading', () => {
 
     expect(premium).toContain('デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます');
     expect(premium).toContain('FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません');
+    expect(premium).toContain('将来的な追加利便性・新機能へのアクセス');
     expect(premium).not.toContain(['Supporter', 'unlocks', 'analysis', 'lanes'].join(' '));
     expect(premium).not.toContain(['比較回数', '\u7121\u5236\u9650'].join(''));
+    expect(premium).not.toContain(['\u9ad8\u983b\u5ea6', '\u30ad\u30e3\u30c3\u30b7\u30e5\u66f4\u65b0'].join(''));
+    expect(premium).not.toContain(['\u5c65\u6b74\u4fdd\u5b58', ' / ', '\u4fdd\u5b58\u6570\u62e1\u5f35'].join(''));
   });
 });

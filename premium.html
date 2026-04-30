@@ -32,7 +32,7 @@
     <header class="topbar">
       <div class="topbar-identity">
           <h1 data-premium-i18n="pageTitle">サポーター登録</h1>
-          <p data-premium-i18n="pageLead">当サイト独自の解析処理、保存機能、FF Logs連携上限、広告非表示などを拡張するプランです。</p>
+          <p data-premium-i18n="pageLead">当サイト独自の解析処理、保存機能、広告非表示などを拡張するプランです。</p>
       </div>
       <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
     </header>
@@ -48,27 +48,27 @@
               <h2 data-premium-i18n="benefitsTitle">サポーター特典</h2>
             </div>
             <p class="premium-lead" data-premium-i18n="benefitsLead">
-              Proプランは、当サイト独自の解析処理、保存機能、FF Logs連携上限、広告非表示などを提供するものです。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。
+              Proプランは、当サイト独自の解析処理、保存機能、広告非表示などを提供するものです。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。
             </p>
             <div class="premium-feature-focus">
               <div>
                 <strong data-premium-i18n="focusTitle">Pro expands site-side convenience</strong>
-                <span data-premium-i18n="focusBody">デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。Proでは、FF Logs連携上限や保存・利便性機能が拡張されます。</span>
+                <span data-premium-i18n="focusBody">デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。Proでは、解析回数上限や保存・利便性機能が拡張されます。</span>
               </div>
             </div>
             <div class="premium-benefits">
               <div class="premium-benefit">
                 <img class="premium-benefit-icon" src="assets/ui/icon-load.webp" alt="" loading="lazy" decoding="async" />
                 <div class="premium-benefit-body">
-                  <strong data-premium-i18n="benefitLimitTitle">FF Logs連携上限の拡張</strong>
-                  <span data-premium-i18n="benefitLimitBody">当サイト側の連携・解析回数の上限を拡張します。</span>
+                  <strong data-premium-i18n="benefitAnalyzeTitle">解析回数の上限拡張</strong>
+                  <span data-premium-i18n="benefitAnalyzeBody">日々の比較検証をしやすいように、通常より高い利用上限を提供します。</span>
                 </div>
               </div>
               <div class="premium-benefit">
                 <img class="premium-benefit-icon" src="assets/ui/benefit-add-block.webp" alt="" loading="lazy" decoding="async" />
                 <div class="premium-benefit-body">
-                  <strong data-premium-i18n="benefitAnalyzeTitle">解析回数の上限拡張</strong>
-                  <span data-premium-i18n="benefitAnalyzeBody">日々の比較検証をしやすいように、通常より高い利用上限を提供します。</span>
+                  <strong data-premium-i18n="benefitAdTitle">広告非表示</strong>
+                  <span data-premium-i18n="benefitAdBody">比較画面や主要ページの広告を非表示にし、作業に集中しやすくします。</span>
                 </div>
               </div>
               <div class="premium-benefit">
@@ -86,17 +86,10 @@
                 </div>
               </div>
               <div class="premium-benefit">
-                <img class="premium-benefit-icon" src="assets/ui/icon-bookmark.png" alt="" loading="lazy" decoding="async" />
-                <div class="premium-benefit-body">
-                  <strong data-premium-i18n="benefitSaveTitle">履歴保存 / 保存数拡張</strong>
-                  <span data-premium-i18n="benefitSaveBody">保存数や履歴まわりの利便性を拡張します。</span>
-                </div>
-              </div>
-              <div class="premium-benefit">
                 <img class="premium-benefit-icon" src="assets/ui/sap-icon.webp" alt="" loading="lazy" decoding="async" />
                 <div class="premium-benefit-body">
-                  <strong data-premium-i18n="benefitAdTitle">広告非表示・高頻度キャッシュ更新</strong>
-                  <span data-premium-i18n="benefitAdBody">広告を非表示にし、今後追加予定の高度な利便性機能もPro向けに拡張します。</span>
+                  <strong data-premium-i18n="benefitConvenienceTitle">将来的な追加利便性・新機能へのアクセス</strong>
+                  <span data-premium-i18n="benefitConvenienceBody">今後追加予定の高度な利便性機能を、Pro向けに順次提供します。</span>
                 </div>
               </div>
             </div>
@@ -118,6 +111,14 @@
           </div>
         </div>
       </section>
+      <section class="card premium-preview-card">
+        <div class="guide-kicker" data-premium-i18n="previewKicker">実際の画面</div>
+        <h2 data-premium-i18n="previewTitle">機能プレビュー</h2>
+        <p class="premium-lead" data-premium-i18n="previewLead">
+          実際の FFLogs データから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は無料ユーザーでも利用できます。Proではボス詠唱表示、保存機能、解析回数上限などが拡張されます。新機能が追加され次第、こちらのプレビューでも公開します。
+        </p>
+        <div id="premiumPreviewOuter" class="premium-preview-outer"></div>
+      </section>
       <section id="donation" class="card premium-donation-card">
         <div class="premium-donation-copy">
           <div class="guide-kicker" data-premium-i18n="donationKicker">Donation / 任意支援</div>
@@ -125,14 +126,6 @@
           <p data-premium-i18n="donationBody">このサイトは無料で利用できる非公式ファンツールです。支援は任意であり、支援の有無によって機能差はありません。いただいた支援は、サーバー費用・開発環境の維持に充てられます。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。</p>
         </div>
         <a class="premium-donation-btn" href="#" target="_blank" rel="noopener noreferrer" data-donation-link data-donation-disabled="true" data-premium-i18n="donationButton">Donation（準備中）</a>
-      </section>
-      <section class="card premium-preview-card">
-        <div class="guide-kicker" data-premium-i18n="previewKicker">実際の画面</div>
-        <h2 data-premium-i18n="previewTitle">機能プレビュー</h2>
-        <p class="premium-lead" data-premium-i18n="previewLead">
-          実際の FFLogs データから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は無料ユーザーでも利用できます。Proではボス詠唱表示、保存機能、連携上限などが拡張されます。
-        </p>
-        <div id="premiumPreviewOuter" class="premium-preview-outer"></div>
       </section>
     </main>
 
@@ -194,23 +187,21 @@
         const copy = {
           ja: {
             pageTitle: 'サポーター登録',
-            pageLead: '当サイト独自の解析処理、保存機能、FF Logs連携上限、広告非表示などを拡張するプランです。',
+            pageLead: '当サイト独自の解析処理、保存機能、広告非表示などを拡張するプランです。',
             benefitsTitle: 'サポーター特典',
-            benefitsLead: 'Proプランは、当サイト独自の解析処理、保存機能、FF Logs連携上限、広告非表示などを提供するものです。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。',
+            benefitsLead: 'Proプランは、当サイト独自の解析処理、保存機能、広告非表示などを提供するものです。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。',
             focusTitle: 'Pro expands site-side convenience',
-            focusBody: 'デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。Proでは、FF Logs連携上限や保存・利便性機能が拡張されます。',
-            benefitLimitTitle: 'FF Logs連携上限の拡張',
-            benefitLimitBody: '当サイト側の連携・解析回数の上限を拡張します。',
+            focusBody: 'デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。Proでは、解析回数上限や保存・利便性機能が拡張されます。',
             benefitAnalyzeTitle: '解析回数の上限拡張',
             benefitAnalyzeBody: '日々の比較検証をしやすいように、通常より高い利用上限を提供します。',
             benefitBossTitle: 'ボス詠唱表示',
             benefitBossBody: '詠唱タイミングと行動の噛み合いを確認できます。',
             benefitBookmarkTitle: 'ブックマーク最大100件',
             benefitBookmarkBody: '重要な比較状態を保存し、あとから開き直せます。',
-            benefitSaveTitle: '履歴保存 / 保存数拡張',
-            benefitSaveBody: '保存数や履歴まわりの利便性を拡張します。',
-            benefitAdTitle: '広告非表示・高頻度キャッシュ更新',
-            benefitAdBody: '広告を非表示にし、今後追加予定の高度な利便性機能もPro向けに拡張します。',
+            benefitAdTitle: '広告非表示',
+            benefitAdBody: '比較画面や主要ページの広告を非表示にし、作業に集中しやすくします。',
+            benefitConvenienceTitle: '将来的な追加利便性・新機能へのアクセス',
+            benefitConvenienceBody: '今後追加予定の高度な利便性機能を、Pro向けに順次提供します。',
             monthly: '月額',
             priceAmount: '200円',
             taxIncluded: '税込',
@@ -222,27 +213,25 @@
             donationButton: 'Donation（準備中）',
             previewKicker: '実際の画面',
             previewTitle: '機能プレビュー',
-            previewLead: '実際の FFLogs データから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は無料ユーザーでも利用できます。Proではボス詠唱表示、保存機能、連携上限などが拡張されます。',
+            previewLead: '実際の FFLogs データから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は無料ユーザーでも利用できます。Proではボス詠唱表示、保存機能、解析回数上限などが拡張されます。新機能が追加され次第、こちらのプレビューでも公開します。',
           },
           en: {
             pageTitle: 'Supporter Plan',
-            pageLead: 'Pro expands this site’s analysis processing, saved workflows, FF Logs integration limits, and ad-free convenience.',
+            pageLead: 'Pro expands this site’s analysis processing, saved workflows, ad-free convenience, and related site features.',
             benefitsTitle: 'Supporter Benefits',
-            benefitsLead: 'Pro provides this site’s own analysis processing, saved workflows, expanded FF Logs integration limits, and ad-free convenience. It does not sell access to FINAL FANTASY XIV images, names, icons, or related materials.',
+            benefitsLead: 'Pro provides this site’s own analysis processing, saved workflows, ad-free convenience, and related site features. It does not sell access to FINAL FANTASY XIV images, names, icons, or related materials.',
             focusTitle: 'Pro expands site-side convenience',
-            focusBody: 'Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users. Pro expands FF Logs integration limits, saved workflows, and convenience features.',
-            benefitLimitTitle: 'Expanded FF Logs Integration Limits',
-            benefitLimitBody: 'Raises the site-side limits for linked analysis workflows.',
+            focusBody: 'Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users. Pro expands analysis limits, saved workflows, and convenience features.',
             benefitAnalyzeTitle: 'Expanded Analysis Limits',
             benefitAnalyzeBody: 'Provides higher daily analysis limits for repeated comparison work.',
             benefitBossTitle: 'Boss Cast Display',
             benefitBossBody: 'Review boss cast timing against player actions.',
             benefitBookmarkTitle: 'Up to 100 Bookmarks',
             benefitBookmarkBody: 'Save important comparison states and reopen them later.',
-            benefitSaveTitle: 'History / Saved Workflow Expansion',
-            benefitSaveBody: 'Expands saved workflow and history convenience around your analysis.',
-            benefitAdTitle: 'Ad-free / Higher Cache Refresh',
-            benefitAdBody: 'Removes ads and reserves upcoming advanced convenience features for Pro.',
+            benefitAdTitle: 'Ad-free',
+            benefitAdBody: 'Removes ads from comparison and primary pages so analysis stays easier to focus on.',
+            benefitConvenienceTitle: 'Future Convenience Features and New Feature Access',
+            benefitConvenienceBody: 'Upcoming advanced convenience features will be offered to Pro as they are added.',
             monthly: 'Monthly',
             priceAmount: '¥200',
             taxIncluded: 'tax included',
@@ -254,7 +243,7 @@
             donationButton: 'Donation (coming soon)',
             previewKicker: 'Preview',
             previewTitle: 'Feature Preview',
-            previewLead: 'This preview is generated from real FFLogs data. Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users. Pro expands boss cast display, saved workflows, and integration limits.',
+            previewLead: 'This preview is generated from real FFLogs data. Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users. Pro expands boss cast display, saved workflows, and analysis limits. Newly added features will also be published in this preview as they become available.',
           },
         };
         const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';

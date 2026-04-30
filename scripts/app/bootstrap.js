@@ -179,6 +179,31 @@ function setMcPower(pct, label) {
   updateMcLoaderMotion(safePct, label);
 }
 
+function setStepMessage(step, message = '', isError = false) {
+  const target = step === 1 ? el.msg : step === 2 ? el.step2Message : el.step3Message;
+  if (!target) return;
+  target.textContent = message || '';
+  target.classList.toggle('step-message-error', Boolean(isError && message));
+}
+
+function clearStepMessages() {
+  setStepMessage(1, '');
+  setStepMessage(2, '');
+  setStepMessage(3, '');
+}
+
+function getResetPlaceholder(kind) {
+  if (state.lang === 'en') {
+    return kind === 'fight' ? 'Load reports first.' : 'Load players first.';
+  }
+  return kind === 'fight' ? 'ログ読み込み後に選択できます。' : 'プレイヤー取得後に選択できます。';
+}
+
+function setSelectPlaceholder(select, text) {
+  if (!select) return;
+  select.innerHTML = `<option value="">${escapeHtml(text)}</option>`;
+}
+
 function createMcProgressTracker(totalSteps, start = 0, end = 100) {
   const total = Math.max(1, Number(totalSteps) || 1);
   let done = 0;
@@ -479,18 +504,19 @@ function resetLoadingWorkflow() {
   clearComparisonError();
   if (el.urlA) el.urlA.value = '';
   if (el.urlB) el.urlB.value = '';
-  if (el.fightA) el.fightA.innerHTML = '';
-  if (el.fightB) el.fightB.innerHTML = '';
-  if (el.playerA) el.playerA.innerHTML = '';
-  if (el.playerB) el.playerB.innerHTML = '';
-  if (el.msg) el.msg.textContent = '';
-  if (el.step2Message) el.step2Message.textContent = '';
+  setSelectPlaceholder(el.fightA, getResetPlaceholder('fight'));
+  setSelectPlaceholder(el.fightB, getResetPlaceholder('fight'));
+  setSelectPlaceholder(el.playerA, getResetPlaceholder('player'));
+  setSelectPlaceholder(el.playerB, getResetPlaceholder('player'));
+  if (el.loadPlayersBtn) el.loadPlayersBtn.disabled = true;
+  if (el.compareBtn) el.compareBtn.disabled = true;
+  clearStepMessages();
   if (el.step4Message) {
     el.step4Message.textContent = '';
     el.step4Message.classList.add('hidden');
   }
-  el.step2?.classList.add('hidden');
-  el.step3?.classList.add('hidden');
+  el.step2?.classList.remove('hidden');
+  el.step3?.classList.remove('hidden');
   el.timelineWrap?.classList.add('hidden');
   if (el.timelineWrap) el.timelineWrap.innerHTML = '';
   if (el.phaseContainer) el.phaseContainer.innerHTML = '';
@@ -621,12 +647,13 @@ async function handleLoadReports(options = {}) {
   const parsedA = parseFFLogsUrl(el.urlA.value.trim());
   const parsedB = parseFFLogsUrl(el.urlB.value.trim());
   if (!parsedA || !parsedB) {
-    el.msg.textContent = t('badUrl');
+    setStepMessage(1, t('badUrl'), true);
     return false;
   }
   setLoadingWorkflowDisabled(true);
-  el.msg.textContent = t('loading');
-  el.step2Message.textContent = '';
+  setStepMessage(1, t('loading'));
+  setStepMessage(2, '');
+  setStepMessage(3, '');
   try {
     state.urlA = parsedA;
     state.urlB = parsedB;
@@ -660,7 +687,8 @@ async function handleLoadReports(options = {}) {
     state.selectedA = null;
     state.selectedB = null;
     el.step2.classList.remove('hidden');
-    el.msg.textContent = t('killFightsLoaded')(fightsA.length, fightsB.length);
+    if (el.loadPlayersBtn) el.loadPlayersBtn.disabled = false;
+    setStepMessage(1, t('killFightsLoaded')(fightsA.length, fightsB.length));
     sendAnalyticsEvent('reports_loaded', {
       reportCodeA: state.urlA.reportId,
       reportCodeB: state.urlB.reportId,
@@ -675,7 +703,7 @@ async function handleLoadReports(options = {}) {
     return true;
   } catch (e) {
     sendAnalyticsEvent('api_error', { stage: 'load_reports', message: e.message });
-    el.msg.textContent = `取得失敗: ${e.message}`;
+    setStepMessage(1, `取得失敗: ${e.message}`, true);
     return false;
   } finally {
     setLoadingWorkflowDisabled(false);
@@ -705,7 +733,7 @@ async function handleLoadPlayers(options = {}) {
         if (floorA !== null && floorB !== null && floorA !== floorB) mismatch = true;
       }
       if (mismatch) {
-        el.step2Message.textContent = t('encounterMismatch');
+        setStepMessage(2, t('encounterMismatch'), true);
         return false;
       }
     }
@@ -728,13 +756,14 @@ async function handleLoadPlayers(options = {}) {
     state.selectedB = null;
     el.step3.classList.remove('hidden');
     if (el.compareBtn) el.compareBtn.disabled = false;
-    el.step2Message.textContent = t('playersLoaded')(state.playersA.length, state.playersB.length);
+    setStepMessage(2, t('playersLoaded')(state.playersA.length, state.playersB.length));
+    setStepMessage(3, '');
     if (!skipShareUrl) syncShareStateUrl();
     syncTutorialProgress();
     return true;
   } catch (e) {
     sendAnalyticsEvent('api_error', { stage: 'load_players', message: e.message });
-    el.step2Message.textContent = `プレイヤー取得失敗: ${e.message}`;
+    setStepMessage(2, `プレイヤー取得失敗: ${e.message}`, true);
     return false;
   } finally {
     setLoadingWorkflowDisabled(false);
@@ -747,7 +776,10 @@ async function handleCompare(options = {}) {
   const workflowVersion = state.loadResetVersion;
   state.selectedA = state.playersA.find(p => p.id === el.playerA.value);
   state.selectedB = state.playersB.find(p => p.id === el.playerB.value);
-  if (!state.selectedA || !state.selectedB) return false;
+  if (!state.selectedA || !state.selectedB) {
+    setStepMessage(3, state.lang === 'en' ? 'Select players for both logs.' : '比較するプレイヤーを両方選択してください。', true);
+    return false;
+  }
   const fightA = (state.reportA?.fights || []).find(f => Number(f.id) === Number(state.selectedFightA));
   const fightB = (state.reportB?.fights || []).find(f => Number(f.id) === Number(state.selectedFightB));
   state.fightA = fightA;
@@ -757,6 +789,7 @@ async function handleCompare(options = {}) {
   if (!fightA || !fightB) {
     const message = '戦闘データの選択状態が更新されました。もう一度プレイヤー一覧を取得してください。';
     setComparisonError('validation', message);
+    setStepMessage(3, message, true);
     el.step4.classList.remove('hidden');
     renderComparisonError();
     return false;
@@ -764,6 +797,7 @@ async function handleCompare(options = {}) {
   if (fightA && fightB && Number(fightA.encounterID) !== Number(fightB.encounterID)) {
     const message = t('encounterMismatch');
     setComparisonError('validation', message);
+    setStepMessage(3, message, true);
     logError('encounterID不一致のため比較を中止', { a: fightA.encounterID, b: fightB.encounterID });
     sendAnalyticsEvent('api_error', {
       stage: 'compare',
@@ -787,6 +821,7 @@ async function handleCompare(options = {}) {
     if (floorA !== null && floorB !== null && floorA !== floorB) {
       const message = t('encounterMismatch');
       setComparisonError('validation', message);
+      setStepMessage(3, message, true);
       logError('ボス名フロア不一致のため比較を中止', { nameA: fightA.name, nameB: fightB.name, floorA, floorB });
       sendAnalyticsEvent('api_error', {
         stage: 'compare',
@@ -806,7 +841,7 @@ async function handleCompare(options = {}) {
     }
   }
 
-  el.step2Message.textContent = t('tlLoading');
+  setStepMessage(3, t('tlLoading'));
   try {
     const markProgress = createMcProgressTracker(12, 8, 90);
     const tracked = (promise, label) => promise.finally(() => markProgress(label));
@@ -914,7 +949,7 @@ async function handleCompare(options = {}) {
       if (unknownsA.length) logDebug('[A] 未分類サンプル', unknownsA.map(e => `${e.action}(id:${e.actionId})`));
       if (unknownsB.length) logDebug('[B] 未分類サンプル', unknownsB.map(e => `${e.action}(id:${e.actionId})`));
     }
-    el.step2Message.textContent = '';
+    setStepMessage(3, '');
     sendAnalyticsEvent('comparison_completed', {
       reportCodeA: state.urlA?.reportId || '',
       reportCodeB: state.urlB?.reportId || '',
@@ -936,7 +971,7 @@ async function handleCompare(options = {}) {
     resetComparisonData();
     setComparisonError('compare', e.message);
     logError('TL取得失敗', {error: e.message});
-    el.step2Message.textContent = t('compareFailed')(e.message);
+    setStepMessage(3, t('compareFailed')(e.message), true);
   }
   el.step4.classList.remove('hidden');
   setMcPower(state.compareError ? 0 : 100, state.compareError ? 'ERROR' : 'COMPLETE');
@@ -953,7 +988,7 @@ async function handleCompare(options = {}) {
         setComparisonError('render', renderErr.message);
         sendAnalyticsEvent('api_error', { stage: 'render', message: renderErr.message });
         logError('renderTimeline エラー', { error: renderErr.message, stack: renderErr.stack?.split('\n').slice(0, 3).join(' | ') });
-        el.step2Message.textContent = t('timelineRenderFailed')(renderErr.message);
+        setStepMessage(3, t('timelineRenderFailed')(renderErr.message), true);
       }
     }
   }
@@ -1131,14 +1166,14 @@ async function checkUsageBeforeCompare() {
   const data = await res.json().catch(() => null);
   if (res.status === 429) {
     const message = t('usageLimitReached');
-    if (el.step2Message) el.step2Message.textContent = message;
+    setStepMessage(3, message, true);
     globalThis.AuthUIModule?.updateMothercrystalLimitStatus?.(data || { remaining: 0 });
     setMcPower(0, 'LIMIT');
     return { ok: false, limited: true, data };
   }
   if (!res.ok || !data?.ok) {
     const message = data?.error || t('usageCheckFailed');
-    if (el.step2Message) el.step2Message.textContent = message;
+    setStepMessage(3, message, true);
     return { ok: false, data };
   }
   const user = session?.user || null;
@@ -1259,7 +1294,8 @@ function handleFightSelectionChanged() {
     state.playersB = [];
     resetComparisonData();
     clearComparisonError();
-    el.step2Message.textContent = t('playersNeedReload');
+    setStepMessage(2, t('playersNeedReload'));
+    setStepMessage(3, '');
   }
   syncShareStateUrl();
 }

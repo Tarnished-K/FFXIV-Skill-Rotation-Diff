@@ -1130,13 +1130,18 @@ body::before {
 .mc-status-card,
 .mc-loader-card {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 18%),
-    linear-gradient(135deg, rgba(123, 198, 255, 0.05), transparent 34%),
-    var(--n-s2);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0) 18%),
+    linear-gradient(135deg, rgba(123, 198, 255, 0.07), rgba(123, 198, 255, 0) 34%),
+    rgb(11, 18, 30);
   border-color: var(--n-border-dim);
   box-shadow:
     0 20px 48px rgba(0, 0, 0, 0.38),
     0 6px 16px rgba(0, 0, 0, 0.20);
+}
+
+.step-message-error {
+  color: #ffb7b7 !important;
+  text-shadow: 0 0 12px rgba(255, 78, 78, 0.2);
 }
 
 .premium-page .premium-main.shell-page-main {

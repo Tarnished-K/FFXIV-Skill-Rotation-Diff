@@ -378,6 +378,7 @@ const el = {
   step4: document.getElementById('step4'),
   msg: document.getElementById('step1Message'),
   step2Message: document.getElementById('step2Message'),
+  step3Message: document.getElementById('step3Message'),
   step4Message: document.getElementById('step4Message'),
   fightA: document.getElementById('fightA'),
   fightB: document.getElementById('fightB'),

@@ -100,6 +100,7 @@ function loadCompareHarness(options = {}) {
     step4: createNode('step4'),
     step1Message: createNode('step1Message'),
     step2Message: createNode('step2Message'),
+    step3Message: createNode('step3Message'),
     step4Message: createNode('step4Message'),
     timelineWrap: createNode('timelineWrap'),
     zoomLabel: createNode('zoomLabel'),

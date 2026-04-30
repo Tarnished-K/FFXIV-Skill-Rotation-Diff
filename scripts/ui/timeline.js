@@ -46,9 +46,7 @@ function getActiveSynergies(t, allRecords, partyBuffRecords) {
   });
 }
 async function ensureSynergyTimelineAccess() {
-  return globalThis.AuthUIModule?.requirePremiumFeature
-    ? globalThis.AuthUIModule.requirePremiumFeature('synergy-timeline')
-    : true;
+  return true;
 }
 function buildFightPhasesFromFFLogs(reportJson, fight, lang = 'en') {
   return buildFightPhasesFromFFLogsShared(reportJson, fight, {
@@ -394,7 +392,7 @@ function renderTimeline() {
   const labelB = state.selectedB?.name || 'B';
   const jobA = state.selectedA?.job || '';
   const jobB = state.selectedB?.job || '';
-  const showSynergyLane = Boolean(state.isPremium && state.showSynergyTimeline !== false);
+  const showSynergyLane = state.showSynergyTimeline !== false;
   const showDebuffLane = state.showDebuffTimeline !== false;
   const showCastLane = Boolean(state.isPremium && state.showCastTimeline !== false);
 

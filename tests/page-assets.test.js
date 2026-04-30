@@ -32,4 +32,13 @@ describe('page asset loading', () => {
     expect(mainModule.indexOf("'./tutorial.js'"))
       .toBeLessThan(mainModule.indexOf("'./bootstrap.js'"));
   });
+
+  it('keeps FF14 asset visualizations out of supporter-only pricing copy', () => {
+    const premium = readRootFile('premium.html');
+
+    expect(premium).toContain('デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます');
+    expect(premium).toContain('FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません');
+    expect(premium).not.toContain(['Supporter', 'unlocks', 'analysis', 'lanes'].join(' '));
+    expect(premium).not.toContain(['比較回数', '\u7121\u5236\u9650'].join(''));
+  });
 });

@@ -206,9 +206,9 @@ describe('renderTimeline', () => {
     expect(timelineWrap.innerHTML).toContain('kill-divider b');
   });
 
-  it('renders premium synergy records as compact per-action lanes with start icons', () => {
+  it('renders synergy records for free users as compact per-action lanes with start icons', () => {
     const { renderTimeline, timelineWrap, context } = loadTimelineHarness();
-    context.state.isPremium = true;
+    context.state.isPremium = false;
     context.state.partyBuffsA = [
       {
         t: 8,

@@ -12,6 +12,8 @@ describe('browser-loaded module syntax', () => {
       'scripts/ui/timeline-buffs.js',
       'scripts/ui/timeline-render-core.js',
       'scripts/ui/timeline.js',
+      'scripts/shared/donation-config.js',
+      'scripts/shared/donation.js',
       'scripts/app/bootstrap.js',
     ];
 

@@ -308,11 +308,11 @@ function updateTimelineLayerControls() {
     const label = input.closest('label')?.querySelector('[data-layer-label]');
     if (label) label.textContent = labels[layer] || layer;
     input.checked = state[key] !== false;
-    const supporterOnly = layer === 'synergy' || layer === 'cast';
+    const supporterOnly = layer === 'cast';
     const disabledByPlan = supporterOnly && !state.isPremium;
     const disabledByView = state.timelineView === 'party' && (layer === 'synergy' || layer === 'debuff');
     input.disabled = disabledByPlan || disabledByView || state.isLoadingWorkflow;
-    input.title = input.disabled ? t('supporterOnlySuffix') : '';
+    input.title = disabledByPlan ? t('supporterOnlySuffix') : '';
   }
 }
 
@@ -417,14 +417,6 @@ async function loadPartyTimelineComparison() {
 }
 
 async function activateTimelineView(view) {
-  if (view === 'party' && !state.isPremium) {
-    const url = new URL('/premium.html', window.location.origin);
-    url.searchParams.set('feature', 'party-timeline');
-    window.location.href = url.toString();
-    setTimelineView('personal');
-    if (state.timelineA.length && state.timelineB.length) renderTimeline();
-    return;
-  }
   setTimelineView(view);
   updateTimelineLayerControls();
   if (!state.timelineA.length || !state.timelineB.length) return;
@@ -1308,7 +1300,7 @@ el.timelineViewBtns?.forEach((button, i) => {
 el.timelineLayerToggles?.forEach((input, i) => {
   input.closest('label')?.addEventListener('click', (event) => {
     const layer = input.dataset.timelineLayer;
-    const supporterOnly = layer === 'synergy' || layer === 'cast';
+    const supporterOnly = layer === 'cast';
     if (supporterOnly && !state.isPremium) {
       event.preventDefault();
       const url = new URL('/premium.html', window.location.origin);
@@ -1325,7 +1317,7 @@ el.timelineLayerToggles?.forEach((input, i) => {
     };
     const key = stateKeys[layer];
     if (!key) return;
-    const supporterOnly = layer === 'synergy' || layer === 'cast';
+    const supporterOnly = layer === 'cast';
     if (input.checked && supporterOnly && !state.isPremium) {
       input.checked = false;
       const url = new URL('/premium.html', window.location.origin);

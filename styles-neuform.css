@@ -1108,6 +1108,7 @@ body::before {
 }
 
 .premium-page .premium-hero-card,
+.premium-page .premium-donation-card,
 .premium-page .premium-preview-card {
   margin-inline: auto;
 }
@@ -1145,6 +1146,7 @@ body::before {
 }
 
 .premium-page .premium-hero-card,
+.premium-page .premium-donation-card,
 .premium-page .premium-preview-card {
   width: 100%;
   max-width: none;

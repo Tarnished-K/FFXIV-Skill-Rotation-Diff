@@ -3,11 +3,26 @@
 let _usageRemaining = null;
 
 function authText(key, fallback, ...args) {
-  const lang = globalThis.state?.lang || 'ja';
+  const lang = globalThis.state?.lang
+    || (new URLSearchParams(globalThis.location?.search || '').get('lang') === 'en' ? 'en' : 'ja');
   const table = globalThis.I18N?.[lang] || globalThis.I18N?.ja || {};
   const value = table[key];
   if (typeof value === 'function') return value(...args);
-  return value || fallback;
+  const defaults = {
+    en: {
+      guestLabel: 'Guest',
+      authLoginLabel: 'Login',
+      statusSupporter: 'Supporter',
+      statusFreeLabel: 'Free Member',
+      logoutBtn: 'Log out',
+      authLoginSignup: 'Log in / Sign up',
+      statusLabel: 'Status:',
+      statusFree: 'Free',
+      statusRegister: 'Register',
+    },
+    ja: {},
+  };
+  return value || defaults[lang]?.[key] || fallback;
 }
 
 async function fetchUsageStatus(jwt) {
@@ -176,7 +191,7 @@ function renderHeaderUsage(usageData) {
   if (container) container.textContent = text;
   if (sidebarRemaining) {
     sidebarRemaining.textContent = remaining >= 9999
-      ? (globalThis.state?.lang === 'en' ? 'Unlimited' : '無制限')
+      ? (globalThis.state?.lang === 'en' ? 'Expanded' : '上限拡張中')
       : String(remaining);
   }
 }

@@ -54,6 +54,15 @@ Object.assign(globalThis, {
 
 if (typeof document !== 'undefined') {
   document.addEventListener('click', (event) => {
+    const donationTarget = event.target?.closest?.('[data-donation-link], a[href*="#donation"]');
+    if (donationTarget) {
+      sendAnalyticsEvent('donation_cta_clicked', {
+        href: donationTarget.getAttribute('href') || '',
+        source: donationTarget.id || 'donation-link',
+        text: (donationTarget.textContent || '').trim().slice(0, 80),
+      });
+      return;
+    }
     const target = event.target?.closest?.('[data-supporter-cta], a[href*="premium.html"]');
     if (!target) return;
     const href = target.getAttribute('href') || '';

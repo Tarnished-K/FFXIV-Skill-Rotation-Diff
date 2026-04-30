@@ -761,6 +761,54 @@
   line-height: 1.6;
 }
 
+.premium-donation-card {
+  width: min(1280px, 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.premium-donation-copy {
+  min-width: 0;
+}
+
+.premium-donation-copy h2 {
+  margin-top: 4px;
+  margin-bottom: 10px;
+}
+
+.premium-donation-copy p {
+  max-width: 980px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.premium-donation-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 176px;
+  min-height: 42px;
+  padding: 0 20px;
+  border: 1px solid rgba(242, 207, 122, 0.34);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(210, 168, 78, 0.24), rgba(43, 134, 217, 0.18));
+  color: var(--gold-light);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.premium-donation-btn[data-donation-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
 /* Responsive: stack at narrow viewport */
 @media (max-width: 860px) {
   .premium-hero-layout {
@@ -777,6 +825,15 @@
   }
   .premium-benefits {
     grid-template-columns: 1fr;
+  }
+
+  .premium-donation-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .premium-donation-btn {
+    width: 100%;
   }
 }
 

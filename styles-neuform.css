@@ -137,52 +137,10 @@
 #step1,
 #step2,
 #step3 {
-  width: 332px;
-  min-height: 337px;
-  box-sizing: border-box;
-  padding: 54px 48px 42px;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  overflow: visible;
-}
-
-#step1::before,
-#step2::before,
-#step3::before {
-  content: "";
-  position: absolute;
-  inset: 31px 38px 36px;
-  z-index: 0;
-  border-radius: 7px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 22%),
-    linear-gradient(135deg, rgba(43, 134, 217, 0.09), rgba(6, 13, 24, 0.9) 44%),
-    rgba(4, 9, 16, 0.78);
-  box-shadow: inset 0 0 24px rgba(43, 134, 217, 0.12);
-  pointer-events: none;
-}
-
-#step1::after,
-#step2::after,
-#step3::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: 0;
-  background: url("assets/ui/window-frame-332x337-v7.png") center / 100% 100% no-repeat;
-  pointer-events: none;
-}
-
-#step1 > *,
-#step2 > *,
-#step3 > * {
-  position: relative;
-  z-index: 1;
+  background-image: url("assets/ui/window-frame-332x337-v7.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
 /* ─── Timeline card ──────────────────────────────────────────────────── */
@@ -1057,66 +1015,6 @@ body::before {
 #loadPlayersBtn,
 #compareBtn {
   margin-top: auto;
-}
-
-#step1,
-#step2,
-#step3 {
-  height: 337px;
-  padding: 42px 46px 26px;
-  gap: 0;
-}
-
-#step1 h2,
-#step2 h2,
-#step3 h2 {
-  margin: 0 0 6px;
-  font-size: 13px;
-  line-height: 1.24;
-}
-
-#step1 .submessage,
-#step2 .submessage,
-#step3 .submessage {
-  margin: 0 0 5px;
-  font-size: 11px;
-  line-height: 1.42;
-}
-
-#step1 label,
-#step2 label,
-#step3 label {
-  margin-top: 5px;
-  font-size: 11px;
-  line-height: 1.22;
-}
-
-#step1 input[type="url"],
-#step2 select,
-#step3 select {
-  min-height: 29px;
-  margin-top: 3px;
-  padding: 6px 9px;
-  font-size: 11px;
-  border-radius: 7px;
-}
-
-#step1 .player-grid,
-#step2 .player-grid,
-#step3 .player-grid {
-  grid-template-columns: 1fr;
-  gap: 4px;
-}
-
-#step1 #loadBtn,
-#step2 #loadPlayersBtn,
-#step3 #compareBtn {
-  min-height: 34px;
-  margin-top: 7px;
-  padding: 7px 10px;
-  font-size: 11px;
-  line-height: 1.25;
-  border-radius: 7px;
 }
 
 .sidebar-section-label {

@@ -31,10 +31,6 @@ function getOrigin(event) {
   return host ? `${proto}://${host}` : 'https://xiv-srd.com';
 }
 
-function isTruthy(value) {
-  return ['1', 'true', 'yes', 'on'].includes(String(value || '').toLowerCase());
-}
-
 function isAllowedOrigin(origin) {
   const configured = readRuntimeEnv('SUPPORTER_ALLOWED_ORIGINS')
     .split(',')
@@ -52,12 +48,6 @@ function isAllowedOrigin(origin) {
   }
 }
 
-function checkoutUrl(name, origin, fallbackPath) {
-  const configured = readRuntimeEnv(name);
-  if (configured) return configured;
-  return `${origin}${fallbackPath}`;
-}
-
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: JSON_HEADERS, body: '' };
@@ -67,13 +57,8 @@ exports.handler = async (event) => {
   }
 
   const stripeSecretKey = readRuntimeEnv('STRIPE_SECRET_KEY');
-  const priceId = readRuntimeEnv('STRIPE_PRICE_ID');
-  const paymentsEnabled = isTruthy(readRuntimeEnv('SUPPORTER_PAYMENTS_ENABLED'));
-  if (!paymentsEnabled) {
-    return json(503, { ok: false, error: 'Supporter registration is not enabled yet.' });
-  }
-  if (!stripeSecretKey || !priceId) {
-    return json(503, { ok: false, error: 'Checkout is not configured.' });
+  if (!stripeSecretKey) {
+    return json(503, { ok: false, error: 'Customer Portal is not configured.' });
   }
 
   const jwt = extractJWT(event);
@@ -82,24 +67,22 @@ exports.handler = async (event) => {
     return json(401, { ok: false, error: 'Login required.' });
   }
 
+  const customer = await getBillingCustomer(userId);
+  if (!customer?.stripe_customer_id) {
+    return json(404, { ok: false, error: 'No supporter registration was found for this account.' });
+  }
+
   const origin = getOrigin(event);
   if (!isAllowedOrigin(origin)) {
-    return json(400, { ok: false, error: 'Origin is not allowed for checkout.' });
+    return json(400, { ok: false, error: 'Origin is not allowed for the portal.' });
   }
-  const customer = await getBillingCustomer(userId);
-  const params = new URLSearchParams();
-  params.set('mode', 'subscription');
-  params.set('line_items[0][price]', priceId);
-  params.set('line_items[0][quantity]', '1');
-  if (customer?.stripe_customer_id) {
-    params.set('customer', customer.stripe_customer_id);
-  }
-  params.set('metadata[user_id]', userId);
-  params.set('subscription_data[metadata][user_id]', userId);
-  params.set('success_url', checkoutUrl('STRIPE_SUCCESS_URL', origin, '/?payment=success'));
-  params.set('cancel_url', checkoutUrl('STRIPE_CANCEL_URL', origin, '/premium.html?checkout=cancel'));
 
-  const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+  const returnUrl = readRuntimeEnv('STRIPE_PORTAL_RETURN_URL') || `${origin}/premium.html`;
+  const params = new URLSearchParams();
+  params.set('customer', customer.stripe_customer_id);
+  params.set('return_url', returnUrl);
+
+  const res = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${stripeSecretKey}`,
@@ -108,10 +91,10 @@ exports.handler = async (event) => {
     body: params.toString(),
   });
   const data = await res.json().catch(() => null);
-  if (!res.ok || !data || !data.url) {
+  if (!res.ok || !data?.url) {
     return json(res.status || 502, {
       ok: false,
-      error: data?.error?.message || 'Failed to create checkout session.',
+      error: data?.error?.message || 'Failed to create Customer Portal session.',
     });
   }
 

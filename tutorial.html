@@ -14,6 +14,13 @@
     <link rel="stylesheet" href="styles-redesign.css" />
     <link rel="stylesheet" href="styles-neuform.css" />
     <link rel="icon" type="image/png" href="/assets/ui/favicon-crystal.png" />
+    <script type="importmap">
+{
+  "imports": {
+    "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+  }
+}
+    </script>
   </head>
   <body class="guide-page guide-page-interactive">
     <div class="app-shell">
@@ -62,10 +69,47 @@
       </div>
     </div>
 
+    <div id="authModal" class="auth-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <div id="authModalBackdrop" class="auth-modal-backdrop"></div>
+      <div class="auth-modal-card">
+        <div class="auth-modal-head">
+          <h2 id="authModalTitle">ログイン</h2>
+          <button id="authCloseBtn" type="button" class="auth-close-btn" aria-label="閉じる">×</button>
+        </div>
+        <form id="authForm" novalidate>
+          <label class="auth-label">
+            メールアドレス
+            <input id="authEmailInput" type="email" autocomplete="email" required class="auth-input" />
+          </label>
+          <label class="auth-label">
+            パスワード
+            <input id="authPasswordInput" type="password" autocomplete="current-password" required class="auth-input" />
+          </label>
+          <p id="authError" class="auth-error" aria-live="polite"></p>
+          <button id="authSubmitBtn" type="submit" class="auth-submit-btn">ログイン</button>
+        </form>
+        <div class="auth-divider"><span>または</span></div>
+        <button id="authGoogleBtn" type="button" class="auth-google-btn">Googleでログイン / 登録</button>
+        <p id="authSwitchText" class="auth-switch-text">アカウントをお持ちでない方は <a href="#" id="authSwitchLink">会員登録</a></p>
+      </div>
+    </div>
+
     <script src="./scripts/shared/donation-config.js"></script>
     <script src="./scripts/shared/site-shell.js"></script>
     <script src="./scripts/shared/build-info.js"></script>
     <script src="./scripts/shared/donation.js"></script>
     <script src="./scripts/app/tutorial-page.js?v=20260423-4" defer></script>
+    <script type="module" src="scripts/auth/auth.js"></script>
+    <script type="module" src="scripts/auth/auth-ui.js"></script>
+    <script type="module">
+      function initTutorialAuth() {
+        globalThis.AuthUIModule?.initAuthUI?.();
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTutorialAuth);
+      } else {
+        initTutorialAuth();
+      }
+    </script>
   </body>
 </html>

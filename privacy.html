@@ -25,29 +25,31 @@
 
     <main class="feedback-main">
       <section class="card feedback-form-card">
-        <h2 data-i18n="s1Title">1. 収集する情報</h2>
-        <p data-i18n="s1Body">本サービスは個人を特定する情報（氏名・メールアドレス等）を収集しません。ただし、サービス改善を目的として、以下の匿名利用データを収集する場合があります。</p>
+        <h2 data-i18n="s1Title">1. 取得する情報</h2>
+        <p data-i18n="s1Body">本サービスでは、サービス提供、ログイン、サポーター登録、改善およびセキュリティのため、以下の情報を取得・保存する場合があります。</p>
         <ul>
-          <li data-i18n="s1Item1">比較操作・ページ閲覧などの匿名イベントログ（Supabase に保存）</li>
-          <li data-i18n="s1Item2">エラーログ（発生した操作の種類・エラー内容のみ）</li>
+          <li data-i18n="s1Item1">アカウント登録・ログインに必要なメールアドレス、認証プロバイダー識別子、ユーザーID。</li>
+          <li data-i18n="s1Item2">Googleログインを利用した場合に認証プロバイダーから提供される識別子、メールアドレス、表示名など。</li>
+          <li data-i18n="s1Item3">利用回数、アクセス日時、ページ閲覧、比較操作、エラー内容などの利用ログ。</li>
+          <li data-i18n="s1Item4">サポーター登録に関連するStripe customer ID、subscription ID、登録状態、現在の利用期間終了日など。</li>
         </ul>
 
-        <h2 data-i18n="s2Title">2. FFLogs データの取り扱い</h2>
-        <p data-i18n="s2Body">本サービスは <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>（RPGLogs LLC）の公開 API を利用してログデータを取得します。取得したデータはタイムライン表示のためだけに使用され、サーバーには保存されません。</p>
+        <h2 data-i18n="s2Title">2. 決済情報の取り扱い</h2>
+        <p data-i18n="s2Body">サポーター登録の決済処理はStripeが行います。本サービスはクレジットカード番号の全桁、有効期限、セキュリティコードを保存しません。決済状態の確認やサポーター機能の提供に必要な範囲で、Stripeから提供される顧客ID、サブスクリプションID、支払い状態などを保存します。</p>
 
-        <h2 data-i18n="s3Title">3. 広告について</h2>
-        <p data-i18n="s3Body">本サービスでは Google AdSense による広告を表示しています。広告配信にあたり、Google のプライバシーポリシーに従って Cookie 等が使用される場合があります。</p>
+        <h2 data-i18n="s3Title">3. FFLogsデータ</h2>
+        <p data-i18n="s3Body">本サービスはFFLogs（RPGLogs LLC）の公開APIを利用してログデータを取得します。取得したデータはタイムライン比較表示のために使用されます。比較結果や入力ログURL、操作種別、エラー情報などを、サービス改善や障害調査の目的で記録する場合があります。</p>
 
-        <h2 data-i18n="s4Title">4. Cookie</h2>
-        <p data-i18n="s4Body">本サービス独自の Cookie は使用していませんが、Google AdSense による広告配信のため、Google 等の第三者が Cookie 等を使用する場合があります。</p>
+        <h2 data-i18n="s4Title">4. 広告とCookie</h2>
+        <p data-i18n="s4Body">本サービスではGoogle AdSenseによる広告を表示する場合があります。広告配信にあたり、Google等の第三者がCookieまたは類似技術を使用する場合があります。</p>
 
-        <h2 data-i18n="s5Title">5. 第三者への提供</h2>
-        <p data-i18n="s5Body">収集した情報を第三者に販売・提供することはありません。</p>
+        <h2 data-i18n="s5Title">5. 第三者提供</h2>
+        <p data-i18n="s5Body">法令に基づく場合、決済・認証・ホスティングなどサービス提供に必要な事業者へ委託する場合、または利用者の同意がある場合を除き、取得した情報を第三者に販売または提供しません。</p>
 
         <h2 data-i18n="s6Title">6. お問い合わせ</h2>
-        <p data-i18n="s6Body">プライバシーに関するご質問は<a data-i18n-href-ja="/contact.html" data-i18n-href-en="/contact.html?lang=en" href="/contact.html">ご要望フォーム</a>よりお問い合わせください。</p>
+        <p data-i18n="s6Body">プライバシーに関するお問い合わせは、お問い合わせフォームからご連絡ください。</p>
 
-        <p class="submessage" data-i18n="updated">最終更新: 2026年4月</p>
+        <p class="submessage" data-i18n="updated">最終更新: 2026年4月30日</p>
       </section>
     </main>
 
@@ -68,64 +70,42 @@
   document.documentElement.lang = LANG;
 
   const T = {
-    ja: {
-      pageTitle: 'プライバシーポリシー | FFXIV Skill Rotation Diff',
-      heading: 'プライバシーポリシー',
-      backBtn: 'トップへ戻る',
-      s1Title: '1. 収集する情報',
-      s1Body: '本サービスは個人を特定する情報（氏名・メールアドレス等）を収集しません。ただし、サービス改善を目的として、以下の匿名利用データを収集する場合があります。',
-      s1Item1: '比較操作・ページ閲覧などの匿名イベントログ（Supabase に保存）',
-      s1Item2: 'エラーログ（発生した操作の種類・エラー内容のみ）',
-      s2Title: '2. FFLogs データの取り扱い',
-      s2Body: '本サービスは FFLogs（RPGLogs LLC）の公開 API を利用してログデータを取得します。取得したデータはタイムライン表示のためだけに使用され、サーバーには保存されません。',
-      s3Title: '3. 広告について',
-      s3Body: '本サービスでは Google AdSense による広告を表示しています。広告配信にあたり、Google のプライバシーポリシーに従って Cookie 等が使用される場合があります。',
-      s4Title: '4. Cookie',
-      s4Body: '本サービス独自の Cookie は使用していませんが、Google AdSense による広告配信のため、Google 等の第三者が Cookie 等を使用する場合があります。',
-      s5Title: '5. 第三者への提供',
-      s5Body: '収集した情報を第三者に販売・提供することはありません。',
-      s6Title: '6. お問い合わせ',
-      s6Body: 'プライバシーに関するご質問はご要望フォームよりお問い合わせください。',
-      updated: '最終更新: 2026年4月',
-    },
+    ja: {},
     en: {
       pageTitle: 'Privacy Policy | FFXIV Skill Rotation Diff',
       heading: 'Privacy Policy',
       backBtn: 'Back to App',
       s1Title: '1. Information We Collect',
-      s1Body: 'This service does not collect personally identifiable information (such as names or email addresses). For the purpose of improving the service, we may collect the following anonymous usage data:',
-      s1Item1: 'Anonymous event logs (e.g. comparison actions, page views) stored in Supabase.',
-      s1Item2: 'Error logs (action type and error content only).',
-      s2Title: '2. FFLogs Data',
-      s2Body: 'This service uses the public API provided by FFLogs (RPGLogs LLC) to fetch log data. The retrieved data is used solely for rendering the timeline comparison and is not stored on our servers.',
-      s3Title: '3. Advertising',
-      s3Body: 'This service displays ads through Google AdSense. Cookies or similar technologies may be used for ad delivery in accordance with Google\'s Privacy Policy.',
-      s4Title: '4. Cookies',
-      s4Body: 'This service does not use proprietary cookies, but third parties such as Google may use cookies or similar technologies to deliver ads through Google AdSense.',
+      s1Body: 'We may collect and store the following information to provide the service, support login, manage Supporter registration, improve the service, and maintain security.',
+      s1Item1: 'Email address, authentication provider identifiers, and user ID required for account registration and login.',
+      s1Item2: 'If Google login is used, identifiers, email address, display name, and related data provided by the authentication provider.',
+      s1Item3: 'Usage logs such as usage counts, access times, page views, comparison actions, and error details.',
+      s1Item4: 'Stripe customer ID, subscription ID, subscription status, current period end, and related Supporter registration data.',
+      s2Title: '2. Payment Data',
+      s2Body: 'Supporter registration payments are processed by Stripe. This service does not store full card numbers, expiration dates, or security codes. We store Stripe customer IDs, subscription IDs, payment status, and related data only as needed to verify payment status and provide Supporter features.',
+      s3Title: '3. FFLogs Data',
+      s3Body: 'This service uses the public API provided by FFLogs (RPGLogs LLC) to fetch log data. Retrieved data is used to render timeline comparisons. We may record comparison results, submitted log URLs, action types, and error information for service improvement and incident investigation.',
+      s4Title: '4. Advertising and Cookies',
+      s4Body: 'This service may display ads through Google AdSense. Third parties such as Google may use cookies or similar technologies for ad delivery.',
       s5Title: '5. Data Sharing',
-      s5Body: 'We do not sell or share collected data with third parties.',
+      s5Body: 'We do not sell or provide collected data to third parties except where required by law, where necessary for service providers such as payment, authentication, or hosting, or where the user has consented.',
       s6Title: '6. Contact',
-      s6Body: 'For privacy-related inquiries, please use the Feedback Form.',
-      updated: 'Last updated: April 2026',
+      s6Body: 'For privacy-related inquiries, please use the contact form.',
+      updated: 'Last updated: April 30, 2026',
     },
   };
 
   const t = T[LANG];
-
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
       const key = el.getAttribute('data-i18n');
       if (t[key] !== undefined) {
-        if (el.tagName === 'TITLE') {
-          document.title = t[key];
-        } else {
-          el.textContent = t[key];
-        }
+        if (el.tagName === 'TITLE') document.title = t[key];
+        else el.textContent = t[key];
       }
       const hrefKey = 'data-i18n-href-' + LANG;
       if (el.hasAttribute(hrefKey)) el.href = el.getAttribute(hrefKey);
     });
-
     const btn = document.getElementById('langToggle');
     if (btn) {
       btn.textContent = LANG === 'ja' ? 'EN' : 'JA';

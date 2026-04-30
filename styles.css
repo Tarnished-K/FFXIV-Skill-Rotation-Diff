@@ -747,6 +747,12 @@
   opacity: 0.6;
 }
 
+.premium-secondary-action {
+  margin-top: 10px;
+  background: rgba(18, 26, 38, 0.82);
+  color: var(--text-primary);
+}
+
 .premium-message {
   min-height: 22px;
   margin-top: 10px;
@@ -759,6 +765,75 @@
   color: var(--text-secondary);
   opacity: 0.65;
   line-height: 1.6;
+}
+
+.supporter-confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.supporter-confirm-modal.hidden {
+  display: none;
+}
+
+.supporter-confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.68);
+}
+
+.supporter-confirm-card {
+  position: relative;
+  width: min(680px, 94vw);
+  max-height: min(86vh, 760px);
+  overflow: auto;
+  border: 1px solid rgba(126, 231, 216, 0.22);
+  border-radius: 8px;
+  background: rgba(17, 24, 38, 0.98);
+  color: var(--text-primary);
+  padding: 24px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.42);
+}
+
+.supporter-confirm-list {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.32fr) 1fr;
+  gap: 12px 18px;
+  margin: 18px 0;
+}
+
+.supporter-confirm-list dt {
+  color: var(--gold-light);
+  font-weight: 700;
+}
+
+.supporter-confirm-list dd {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.supporter-confirm-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin: 0 0 18px;
+  font-size: 13px;
+}
+
+.supporter-confirm-card .premium-checkout-btn {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .supporter-confirm-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .premium-donation-card {

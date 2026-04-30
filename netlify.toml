@@ -89,6 +89,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/create-portal-session"
+  to = "/.netlify/functions/create-portal-session"
+  status = 200
+
+[[redirects]]
   from = "/api/auth-status"
   to = "/.netlify/functions/auth-status"
   status = 200

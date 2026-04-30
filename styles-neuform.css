@@ -137,10 +137,27 @@
 #step1,
 #step2,
 #step3 {
-  background-image: url("assets/ui/window-frame-332x337-v7.png");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-image: none;
+}
+
+#step1::after,
+#step2::after,
+#step3::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  z-index: 1;
+  background: url("assets/ui/window-frame-step-card.png") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+#step1 > *,
+#step2 > *,
+#step3 > * {
+  position: relative;
+  z-index: 2;
 }
 
 /* ─── Timeline card ──────────────────────────────────────────────────── */

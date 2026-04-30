@@ -1,4 +1,4 @@
-// FFLogs report shaping helpers shared by bootstrap and data fetchers
+// FF Logs report shaping helpers shared by bootstrap and data fetchers
 const {
   detectSavageFloor: detectSavageFloorShared,
   getEncounterDisplayName: getEncounterDisplayNameShared,

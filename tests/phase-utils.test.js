@@ -56,7 +56,7 @@ describe('normalizePhaseTransitionStartTime', () => {
 });
 
 describe('buildFightPhasesFromFFLogs', () => {
-  it('builds labeled phases from FFLogs metadata and transitions', () => {
+  it('builds labeled phases from FF Logs metadata and transitions', () => {
     const phases = buildFightPhasesFromFFLogs({
       phases: [
         {

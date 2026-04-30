@@ -6,7 +6,7 @@
     ja: {
       pageTitle: '初めての方向けガイド | FFXIV Skill Rotation Diff',
       heading: '初めての方向けガイド',
-      subheading: '公開 FFLogs ログを読み込み、比較結果へ進む流れをこのページ内で体験できます。',
+      subheading: '公開 FF Logs ログを読み込み、比較結果へ進む流れをこのページ内で体験できます。',
       backBtn: '比較ページへ戻る',
       langToggle: 'EN',
       previous: '戻る',
@@ -18,7 +18,7 @@
         overview: {
           kicker: 'Step 1',
           title: 'スキル回しの差分を、同じ時間軸で見るサイトです',
-          body: '2つの公開 FFLogs レポートから戦闘とプレイヤーを選び、スキル使用タイミングを横並びのタイムラインで比較できます。下のサンプルはドラッグやアイコンクリックで触れます。',
+          body: '2つの公開 FF Logs レポートから戦闘とプレイヤーを選び、スキル使用タイミングを横並びのタイムラインで比較できます。下のサンプルはドラッグやアイコンクリックで触れます。',
           state: 'サンプルを触ったら次へ進んでください。',
         },
         urls: {
@@ -103,7 +103,7 @@
     en: {
       pageTitle: 'First-Time User Guide | FFXIV Skill Rotation Diff',
       heading: 'First-Time User Guide',
-      subheading: 'Walk through the flow from public FFLogs URLs to a comparison result on this page.',
+      subheading: 'Walk through the flow from public FF Logs URLs to a comparison result on this page.',
       backBtn: 'Back to App',
       langToggle: 'JA',
       previous: 'Back',
@@ -115,7 +115,7 @@
         overview: {
           kicker: 'Step 1',
           title: 'Compare rotations on the same timeline',
-          body: 'Choose fights and players from two public FFLogs reports, then compare skill timing on a shared timeline. You can drag the sample below or click its action icons.',
+          body: 'Choose fights and players from two public FF Logs reports, then compare skill timing on a shared timeline. You can drag the sample below or click its action icons.',
           state: 'Try the sample, then continue.',
         },
         urls: {

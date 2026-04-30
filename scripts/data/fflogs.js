@@ -1,4 +1,4 @@
-// FFLogs API access, icon lookup, and report/player data helpers
+// FF Logs API access, icon lookup, and report/player data helpers
 const { parseFFLogsUrl: parseFFLogsUrlShared } = globalThis.AppSharedUtils;
 const {
   detectSavageFloor: detectSavageFloorShared,
@@ -467,7 +467,7 @@ async function fetchActionNamesJa(actionIds) {
         result.set(id, name);
       }
     } catch {
-      // Keep English FFLogs names if XIVAPI is unavailable.
+      // Keep English FF Logs names if XIVAPI is unavailable.
     }
   }
   return result;

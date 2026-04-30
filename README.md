@@ -1,6 +1,6 @@
 # FFXIV Skill Rotation Diff
 
-FFLogs の公開ログを比較して、2 人のプレイヤーのタイムライン差分を確認するための静的サイトです。  
+FF Logs の公開ログを比較して、2 人のプレイヤーのタイムライン差分を確認するための静的サイトです。
 フロントは静的 HTML / JS、API は Netlify Functions、保存先は Supabase を使います。
 
 ## Main files

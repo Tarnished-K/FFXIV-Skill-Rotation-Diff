@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>サポーターページ | FFXIV Skill Rotation Diff</title>
+    <meta name="description" content="FFXIV Skill Rotation Diff のサポーター向けページです。" />
+    <link rel="preload" as="image" href="assets/ui/bg-main-shell.webp" fetchpriority="high" />
+    <link rel="stylesheet" href="styles-base.css" />
+    <link rel="stylesheet" href="styles-layout.css" />
+    <link rel="stylesheet" href="styles-timeline.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles-redesign.css" />
+    <link rel="stylesheet" href="styles-neuform.css" />
+    <link rel="icon" type="image/png" href="/assets/ui/favicon-crystal.png" />
+    <script type="importmap">
+{
+  "imports": {
+    "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+  }
+}
+    </script>
+  </head>
+  <body class="feedback-page premium-page supporter-page">
+    <div class="app-shell">
+      <aside class="sidebar" data-site-sidebar data-active-page="supporter"></aside>
+      <div class="main-content">
+        <header class="topbar">
+          <div class="topbar-identity">
+            <h1 data-supporter-i18n="pageTitle">サポーターページ</h1>
+            <p data-supporter-i18n="pageLead">登録状況の確認と、Stripe Customer Portal での登録・請求管理を行えます。</p>
+          </div>
+          <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
+        </header>
+
+        <main class="feedback-main premium-main shell-page-main supporter-main">
+          <section class="card supporter-status-card">
+            <div>
+              <h2 data-supporter-i18n="statusTitle">サポーター状況</h2>
+              <p id="supporterStatusText" class="supporter-status-text" data-supporter-i18n="statusLoading">ログイン状態を確認しています...</p>
+              <p id="supporterMessage" class="submessage premium-message" aria-live="polite"></p>
+            </div>
+            <div class="supporter-actions">
+              <button id="supporterLoginBtn" type="button" class="premium-checkout-btn" data-supporter-i18n="loginButton">ログイン / 会員登録</button>
+              <button id="supporterPortalBtn" type="button" class="premium-checkout-btn premium-secondary-action" data-supporter-i18n="portalButton">登録・請求を管理</button>
+              <a class="premium-supporter-area-link" href="/premium.html" data-supporter-i18n="registrationLink">サポーター登録ページへ</a>
+            </div>
+          </section>
+
+          <section class="card supporter-feature-card">
+            <h2 data-supporter-i18n="futureTitle">サポーター向け機能</h2>
+            <div class="supporter-feature-grid">
+              <div class="supporter-feature-item">
+                <strong data-supporter-i18n="featureBillingTitle">登録管理</strong>
+                <span data-supporter-i18n="featureBillingBody">支払い方法の変更、請求履歴の確認、解約手続きは Stripe Customer Portal で行えます。</span>
+              </div>
+              <div class="supporter-feature-item">
+                <strong data-supporter-i18n="featureShortcutsTitle">今後のショートカット</strong>
+                <span data-supporter-i18n="featureShortcutsBody">ブックマークや利用状況など、サポーター向けの便利な導線をここに追加していきます。</span>
+              </div>
+              <div class="supporter-feature-item">
+                <strong data-supporter-i18n="featureHelpTitle">困ったとき</strong>
+                <span data-supporter-i18n="featureHelpBody">登録状況が反映されない場合は、ログイン中のアカウントと決済時のアカウントが一致しているか確認してください。</span>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <footer class="site-footer">
+          <div class="footer-legal">
+            <small>© SQUARE ENIX. 本サイトは株式会社スクウェア・エニックスとは関係のない非公式ファンツールです。FINAL FANTASY XIV and related materials are trademarks and/or copyrighted works of SQUARE ENIX CO., LTD.</small>
+            <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FF Logs</a>. &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms</a> &nbsp;|&nbsp; <a href="/commercial-transactions.html">Specified Commercial Transactions Act</a></small>
+          </div>
+          <small class="build-info" data-build-info>Version loading...</small>
+        </footer>
+      </div>
+    </div>
+
+    <div id="authModal" class="auth-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <div id="authModalBackdrop" class="auth-modal-backdrop"></div>
+      <div class="auth-modal-card">
+        <div class="auth-modal-head">
+          <h2 id="authModalTitle">ログイン</h2>
+          <button id="authCloseBtn" type="button" class="auth-close-btn" aria-label="閉じる">×</button>
+        </div>
+        <form id="authForm" novalidate>
+          <label class="auth-label">
+            メールアドレス
+            <input id="authEmailInput" type="email" autocomplete="email" required class="auth-input" />
+          </label>
+          <label class="auth-label">
+            パスワード
+            <input id="authPasswordInput" type="password" autocomplete="current-password" required class="auth-input" />
+          </label>
+          <p id="authError" class="auth-error" aria-live="polite"></p>
+          <button id="authSubmitBtn" type="submit" class="auth-submit-btn">ログイン</button>
+        </form>
+        <div class="auth-divider"><span>または</span></div>
+        <button id="authGoogleBtn" type="button" class="auth-google-btn">Googleでログイン / 登録</button>
+        <p id="authSwitchText" class="auth-switch-text">アカウントをお持ちでない方は <a href="#" id="authSwitchLink">会員登録</a></p>
+      </div>
+    </div>
+
+    <script src="./scripts/shared/site-shell.js"></script>
+    <script src="./scripts/shared/build-info.js"></script>
+    <script type="module" src="scripts/auth/auth.js"></script>
+    <script type="module" src="scripts/auth/auth-ui.js"></script>
+    <script type="module">
+      let portalAfterLogin = false;
+
+      const copy = {
+        ja: {},
+        en: {
+          pageTitle: 'Supporter Page',
+          pageLead: 'Check your supporter status and manage registration or billing in Stripe Customer Portal.',
+          statusTitle: 'Supporter Status',
+          statusLoading: 'Checking your login status...',
+          loginButton: 'Log in / Sign up',
+          portalButton: 'Manage registration and billing',
+          registrationLink: 'Open Supporter registration',
+          futureTitle: 'Supporter Features',
+          featureBillingTitle: 'Registration management',
+          featureBillingBody: 'Payment method changes, billing history, and cancellation are handled in Stripe Customer Portal.',
+          featureShortcutsTitle: 'Future shortcuts',
+          featureShortcutsBody: 'Supporter shortcuts for bookmarks, usage, and related convenience features will be added here.',
+          featureHelpTitle: 'Troubleshooting',
+          featureHelpBody: 'If status does not update, check that the logged-in account matches the account used for checkout.',
+        },
+      };
+
+      const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-supporter-i18n]').forEach((node) => {
+        const value = copy[lang]?.[node.dataset.supporterI18n];
+        if (value) node.textContent = value;
+      });
+
+      function text(ja, en) {
+        return lang === 'en' ? en : ja;
+      }
+
+      function setMessage(value) {
+        const node = document.getElementById('supporterMessage');
+        if (node) node.textContent = value || '';
+      }
+
+      function setStatus(value) {
+        const node = document.getElementById('supporterStatusText');
+        if (node) node.textContent = value || '';
+      }
+
+      async function getSessionOrLogin() {
+        const auth = globalThis.AuthModule;
+        await auth?.init?.();
+        const session = await auth?.getSession?.();
+        if (session?.access_token) return session;
+        portalAfterLogin = true;
+        setMessage(text('先にログインまたは会員登録をしてください。', 'Please log in or sign up first.'));
+        globalThis.AuthUIModule?.openAuthModal?.('login');
+        return null;
+      }
+
+      async function refreshStatus() {
+        const auth = globalThis.AuthModule;
+        await auth?.init?.();
+        const session = await auth?.getSession?.();
+        if (!session?.access_token) {
+          setStatus(text('未ログインです。登録状況を確認するにはログインしてください。', 'You are not logged in. Log in to check supporter status.'));
+          return;
+        }
+        try {
+          const res = await fetch('/api/auth-status', {
+            headers: { Authorization: 'Bearer ' + session.access_token },
+          });
+          const data = await res.json().catch(() => null);
+          if (!res.ok) throw new Error(data?.error || text('登録状況を確認できませんでした。', 'Failed to check supporter status.'));
+          setStatus(data?.isPremium
+            ? text('現在サポーターとして登録されています。', 'You are currently registered as a Supporter.')
+            : text('現在はサポーター登録が有効ではありません。', 'You do not currently have active Supporter status.'));
+        } catch (error) {
+          setStatus(text('登録状況の確認に失敗しました。時間をおいて再度お試しください。', 'Failed to check status. Please try again later.'));
+          setMessage(error.message || '');
+        }
+      }
+
+      async function openPortal() {
+        const button = document.getElementById('supporterPortalBtn');
+        if (button) button.disabled = true;
+        try {
+          const session = await getSessionOrLogin();
+          if (!session) return;
+          const res = await fetch('/api/create-portal-session', {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + session.access_token },
+          });
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data?.url) {
+            throw new Error(data?.error || text('管理画面を開けませんでした。', 'Could not open the management page.'));
+          }
+          window.location.href = data.url;
+        } catch (error) {
+          setMessage(error.message || text('エラーが発生しました。', 'An error occurred.'));
+        } finally {
+          if (button) button.disabled = false;
+        }
+      }
+
+      function bindPage() {
+        globalThis.AuthUIModule?.initAuthUI?.();
+        document.getElementById('supporterLoginBtn')?.addEventListener('click', () => {
+          globalThis.AuthUIModule?.openAuthModal?.('login');
+        });
+        document.getElementById('supporterPortalBtn')?.addEventListener('click', openPortal);
+        globalThis.AuthModule?.onAuthStateChange?.(() => {
+          refreshStatus();
+          if (portalAfterLogin) {
+            portalAfterLogin = false;
+            openPortal();
+          }
+        });
+        refreshStatus();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindPage);
+      } else {
+        bindPage();
+      }
+    </script>
+  </body>
+</html>

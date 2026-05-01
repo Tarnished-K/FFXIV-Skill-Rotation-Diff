@@ -248,7 +248,8 @@ describe('renderTimeline', () => {
 
 describe('renderPartyTimeline', () => {
   it('renders compact party rows for both logs', () => {
-    const { renderPartyTimeline, timelineWrap } = loadTimelineHarness();
+    const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.isPremium = true;
 
     renderPartyTimeline();
 
@@ -263,6 +264,30 @@ describe('renderPartyTimeline', () => {
     expect(timelineWrap.innerHTML).toContain('data-party-filter="th"');
     expect((timelineWrap.innerHTML.match(/data-party-filter="/g) || []).length).toBe(4);
     expect(timelineWrap.innerHTML).not.toContain('data-party-graph-mode');
+  });
+
+  it('shows a supporter prompt instead of the personal DPS graph for free users', () => {
+    const { renderTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.isPremium = false;
+    context.state.rollingDpsA = [{ t: 8, dps: 1000 }, { t: 10, dps: 1200 }];
+    context.state.rollingDpsB = [{ t: 8, dps: 900 }, { t: 10, dps: 1100 }];
+
+    renderTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('DPS推移グラフはサポーター向け機能です');
+    expect(timelineWrap.innerHTML).toContain('基本のタイムライン比較、シナジー、デバフ、PT比較は無料で利用できます。');
+    expect(timelineWrap.innerHTML).not.toContain('dps-graph-svg');
+  });
+
+  it('shows a supporter prompt instead of the party DPS graph for free users', () => {
+    const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.isPremium = false;
+
+    renderPartyTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('PT DPS推移グラフはサポーター向け機能です');
+    expect(timelineWrap.innerHTML).toContain('PT比較の行動タイムラインと絞り込みは無料で利用できます。');
+    expect(timelineWrap.innerHTML).not.toContain('pt-dps-graph');
   });
 
   it('renders boss casts and tracked player debuffs on the personal timeline', () => {

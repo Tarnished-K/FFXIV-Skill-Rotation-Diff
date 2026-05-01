@@ -494,6 +494,7 @@ button:focus-visible {
   margin-top: 12px;
   font-size: 13px;
   color: #ff8d8d;
+  white-space: pre-line;
 }
 
 .submessage {
@@ -691,7 +692,7 @@ button:focus-visible {
 }
 
 #step2Message {
-  display: none;
+  display: block;
 }
 
 #step4.has-error #step4Message {

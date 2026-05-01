@@ -69,6 +69,13 @@
                     </div>
                   </div>
                   <div class="premium-benefit">
+                    <img class="premium-benefit-icon" src="assets/ui/benefit-party.webp" alt="" loading="lazy" decoding="async" />
+                    <div class="premium-benefit-body">
+                      <strong data-premium-i18n="benefitDpsGraphTitle">DPS推移グラフ</strong>
+                      <span data-premium-i18n="benefitDpsGraphBody">比較中の火力推移を波形で確認し、バーストや立て直しの流れを追いやすくします。</span>
+                    </div>
+                  </div>
+                  <div class="premium-benefit">
                     <img class="premium-benefit-icon" src="assets/ui/benefit-bookmark.webp" alt="" loading="lazy" decoding="async" />
                     <div class="premium-benefit-body">
                       <strong data-premium-i18n="benefitBookmarkTitle">ブックマーク最大100件</strong>
@@ -94,9 +101,7 @@
                   <button id="supporterCheckoutBtn" type="button" class="premium-checkout-btn" data-premium-i18n="checkoutStart">
                     登録内容を確認する
                   </button>
-                  <button id="supporterPortalBtn" type="button" class="premium-checkout-btn premium-secondary-action" data-premium-i18n="portalButton">
-                    サポーター登録を管理
-                  </button>
+                  <a class="premium-supporter-area-link" href="/supporter.html" data-premium-i18n="supporterAreaLink">登録済みの方はこちら</a>
                   <p id="premiumMessage" class="submessage premium-message"></p>
                   <p class="premium-reassurance" data-premium-i18n="reassurance">
                     サポーター登録は月額自動更新です。解約されるまで毎月決済されます。
@@ -109,7 +114,8 @@
           <section class="card premium-preview-card">
             <h2 data-premium-i18n="previewTitle">機能プレビュー</h2>
             <p class="premium-lead" data-premium-i18n="previewLead">
-              実際のFF Logsデータから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。サポータープランではボス詠唱表示、保存機能、解析回数上限などが拡張されます。新機能が追加され次第、こちらのプレビューでも公開します。
+              実際のFF Logsデータから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。
+              サポータープランではボス詠唱表示、DPS推移グラフ、保存機能、解析回数上限などが拡張されます。新機能が追加され次第、こちらのプレビューでも公開します。
             </p>
             <div id="premiumPreviewOuter" class="premium-preview-outer"></div>
           </section>
@@ -147,7 +153,7 @@
           <dt data-premium-i18n="confirmPriceLabel">料金</dt>
           <dd data-premium-i18n="confirmPriceBody">月額200円（税込）。初回決済日を起点に、解約されるまで毎月自動で決済されます。</dd>
           <dt data-premium-i18n="confirmCancelLabel">解約方法</dt>
-          <dd data-premium-i18n="confirmCancelBody">登録後は「サポーター登録を管理」からStripe Customer Portalを開き、いつでも解約できます。</dd>
+          <dd data-premium-i18n="confirmCancelBody">登録後はサポーターページからStripe Customer Portalを開き、いつでも解約できます。</dd>
           <dt data-premium-i18n="confirmPeriodLabel">解約後の利用可能期間</dt>
           <dd data-premium-i18n="confirmPeriodBody">解約後も、支払い済み期間の終了日まではサポーター向け機能を利用できます。</dd>
           <dt data-premium-i18n="confirmRefundLabel">返金条件</dt>
@@ -209,6 +215,8 @@
             benefitAdBody: 'Removes ads from comparison and primary pages so analysis stays easier to focus on.',
             benefitBossTitle: 'Boss Cast Display',
             benefitBossBody: 'Review boss cast timing against player actions.',
+            benefitDpsGraphTitle: 'DPS Trend Graph',
+            benefitDpsGraphBody: 'Review damage flow as a line graph to make burst windows and recovery patterns easier to inspect.',
             benefitBookmarkTitle: 'Up to 100 Bookmarks',
             benefitBookmarkBody: 'Save important comparison states and reopen them later.',
             benefitConvenienceTitle: 'Future Convenience Features',
@@ -217,10 +225,10 @@
             priceAmount: '¥200',
             taxIncluded: 'tax included, auto-renewing monthly',
             checkoutStart: 'Review registration details',
-            portalButton: 'Manage Supporter registration',
+            supporterAreaLink: 'Already registered? Open Supporter page',
             reassurance: 'Supporter registration is a monthly auto-renewing service. You will be charged every month until you cancel.',
             previewTitle: 'Feature Preview',
-            previewLead: 'This preview is generated from real FF Logs data. Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users. The Supporter plan expands boss cast display, saved workflows, and analysis limits. Newly added features will also be published in this preview as they become available.',
+            previewLead: 'This preview is generated from real FF Logs data. Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users. The Supporter plan expands boss cast display, DPS trend graphs, saved workflows, and analysis limits. Newly added features will also be published in this preview as they become available.',
             donationKicker: 'Donation / Optional Support',
             donationTitle: 'Optional Donation',
             donationBody: 'Donation is optional and separate from Supporter registration. Donations do not unlock site features. Support is used to help cover hosting and development costs. It does not sell access to FINAL FANTASY XIV images, names, icons, or related materials.',
@@ -231,7 +239,7 @@
             confirmPriceLabel: 'Price',
             confirmPriceBody: '¥200 per month including tax. Starting on the first payment date, you will be charged monthly until you cancel.',
             confirmCancelLabel: 'Cancellation',
-            confirmCancelBody: 'After registration, open Stripe Customer Portal from “Manage Supporter registration” to cancel at any time.',
+            confirmCancelBody: 'After registration, open Stripe Customer Portal from the Supporter page to cancel at any time.',
             confirmPeriodLabel: 'Access after cancellation',
             confirmPeriodBody: 'After cancellation, Supporter features remain available until the end of the paid billing period.',
             confirmRefundLabel: 'Refunds',
@@ -263,20 +271,18 @@
     <script type="module" src="scripts/auth/auth-ui.js"></script>
     <script type="module">
       let checkoutAfterLogin = false;
-      let portalAfterLogin = false;
 
       function setMessage(text) {
         const message = document.getElementById('premiumMessage');
         if (message) message.textContent = text || '';
       }
 
-      async function getSessionOrLogin(intent) {
+      async function getSessionOrLogin() {
         const auth = globalThis.AuthModule;
         await auth?.init?.();
         const session = await auth?.getSession?.();
         if (session?.access_token) return session;
-        if (intent === 'portal') portalAfterLogin = true;
-        else checkoutAfterLogin = true;
+        checkoutAfterLogin = true;
         setMessage('先にログインまたは会員登録をしてください。');
         globalThis.AuthUIModule?.openAuthModal?.('login');
         return null;
@@ -301,7 +307,7 @@
         const button = document.getElementById('supporterConfirmProceedBtn');
         if (button) button.disabled = true;
         try {
-          const session = await getSessionOrLogin('checkout');
+          const session = await getSessionOrLogin();
           if (!session) return;
           const res = await fetch('/api/create-checkout', {
             method: 'POST',
@@ -320,32 +326,10 @@
       }
 
       async function startCheckout() {
-        const session = await getSessionOrLogin('checkout');
+        const session = await getSessionOrLogin();
         if (!session) return;
         setMessage('');
         openConfirmModal();
-      }
-
-      async function openPortal() {
-        const button = document.getElementById('supporterPortalBtn');
-        if (button) button.disabled = true;
-        try {
-          const session = await getSessionOrLogin('portal');
-          if (!session) return;
-          const res = await fetch('/api/create-portal-session', {
-            method: 'POST',
-            headers: { Authorization: 'Bearer ' + session.access_token },
-          });
-          const data = await res.json().catch(() => null);
-          if (!res.ok || !data?.url) {
-            throw new Error(data?.error || '管理画面を開けませんでした。');
-          }
-          window.location.href = data.url;
-        } catch (error) {
-          setMessage(error.message || 'エラーが発生しました。');
-        } finally {
-          if (button) button.disabled = false;
-        }
       }
 
       function bindSupporterPage() {
@@ -355,13 +339,8 @@
             checkoutAfterLogin = false;
             startCheckout();
           }
-          if (portalAfterLogin) {
-            portalAfterLogin = false;
-            openPortal();
-          }
         });
         document.getElementById('supporterCheckoutBtn')?.addEventListener('click', startCheckout);
-        document.getElementById('supporterPortalBtn')?.addEventListener('click', openPortal);
         document.getElementById('supporterConfirmProceedBtn')?.addEventListener('click', requestCheckout);
         document.getElementById('supporterConfirmCloseBtn')?.addEventListener('click', closeConfirmModal);
         document.getElementById('supporterConfirmBackdrop')?.addEventListener('click', closeConfirmModal);

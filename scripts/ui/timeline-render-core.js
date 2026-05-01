@@ -101,6 +101,7 @@ function renderTimeline() {
     .replace(/>/g, '&gt;');
 
   const hasDps = state.rollingDpsA.length > 0 || state.rollingDpsB.length > 0;
+  const canShowDpsGraph = Boolean(state.isPremium);
   const dpsGraphHeight = hasDps ? 80 : 0;
   const dpsGraphTop = hasDps ? 4 : 0;
   const rulerTop = dpsGraphTop + dpsGraphHeight;
@@ -124,6 +125,18 @@ function renderTimeline() {
 
   const buildDpsGraph = () => {
     if (!hasDps) return '';
+    if (!canShowDpsGraph) {
+      const title = state.lang === 'ja' ? 'DPS推移グラフはサポーター向け機能です' : 'DPS trend graph is a Supporter feature';
+      const body = state.lang === 'ja'
+        ? '基本のタイムライン比較、シナジー、デバフ、PT比較は無料で利用できます。'
+        : 'Core timeline comparison, synergy, debuff, and party comparison remain available for free.';
+      const href = state.lang === 'en' ? '/premium.html?feature=dps-graph&lang=en' : '/premium.html?feature=dps-graph';
+      const cta = state.lang === 'ja' ? 'サポーター特典を見る' : 'View Supporter benefits';
+      return `<div class="dps-supporter-prompt" style="left:60px; top:${dpsGraphTop}px; width:${Math.max(360, Math.min(760, maxT * pxPerSec))}px; height:${dpsGraphHeight - 10}px">
+        <div><strong>${title}</strong><span>${body}</span></div>
+        <a href="${href}">${cta}</a>
+      </div>`;
+    }
     let dpsA = state.rollingDpsA;
     let dpsB = state.rollingDpsB;
     if (phaseA) dpsA = dpsA.filter((entry) => entry.t >= phaseA.startT && entry.t <= phaseA.endT);

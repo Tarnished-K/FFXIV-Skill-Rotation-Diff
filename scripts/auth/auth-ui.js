@@ -72,6 +72,7 @@ function updateSidebarAuth(user, usageData) {
   const memberStatusEl = document.getElementById('sidebarMemberStatus');
   const loginBtn = document.getElementById('sidebarLoginBtn');
   const loginLabel = loginBtn?.querySelector('span');
+  updateSidebarSupporterLink(Boolean(user && usageData?.isPremium));
   if (!user) {
     if (usernameEl) usernameEl.textContent = '—';
     if (roleEl) roleEl.textContent = authText('guestLabel', 'ゲスト');
@@ -90,6 +91,19 @@ function updateSidebarAuth(user, usageData) {
       renderHeaderAuth(null, null);
     };
   }
+}
+
+function updateSidebarSupporterLink(isSupporter) {
+  const link = document.getElementById('navSupporter')?.closest('a');
+  const label = document.getElementById('navSupporter');
+  if (!link || !label) return;
+  const lang = globalThis.state?.lang
+    || (new URLSearchParams(globalThis.location?.search || '').get('lang') === 'en' ? 'en' : 'ja');
+  const suffix = lang === 'en' ? '?lang=en' : '';
+  link.href = isSupporter ? `/supporter.html${suffix}` : `/premium.html${suffix}`;
+  label.textContent = isSupporter
+    ? (lang === 'en' ? 'Supporter Page' : 'サポーターページ')
+    : (lang === 'en' ? 'Supporter' : 'サポーター登録');
 }
 
 function updateMothercrystalLimitStatus(usageData) {

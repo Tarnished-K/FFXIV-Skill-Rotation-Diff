@@ -41,7 +41,6 @@
               <p id="supporterMessage" class="submessage premium-message" aria-live="polite"></p>
             </div>
             <div class="supporter-actions">
-              <button id="supporterLoginBtn" type="button" class="premium-checkout-btn" data-supporter-i18n="loginButton">ログイン / 会員登録</button>
               <button id="supporterPortalBtn" type="button" class="premium-checkout-btn premium-secondary-action" data-supporter-i18n="portalButton">登録・請求を管理</button>
               <a class="premium-supporter-area-link" href="/premium.html" data-supporter-i18n="registrationLink">サポーター登録ページへ</a>
             </div>
@@ -115,7 +114,6 @@
           pageLead: 'Check your supporter status and manage registration or billing in Stripe Customer Portal.',
           statusTitle: 'Supporter Status',
           statusLoading: 'Checking your login status...',
-          loginButton: 'Log in / Sign up',
           portalButton: 'Manage registration and billing',
           registrationLink: 'Open Supporter registration',
           futureTitle: 'Supporter Features',
@@ -215,8 +213,8 @@
 
       function bindPage() {
         globalThis.AuthUIModule?.initAuthUI?.();
-        document.getElementById('supporterLoginBtn')?.addEventListener('click', () => {
-          globalThis.AuthUIModule?.openAuthModal?.('login');
+        document.getElementById('langToggle')?.addEventListener('click', () => {
+          location.href = lang === 'en' ? '/supporter.html' : '/supporter.html?lang=en';
         });
         document.getElementById('supporterPortalBtn')?.addEventListener('click', openPortal);
         globalThis.AuthModule?.onAuthStateChange?.(() => {

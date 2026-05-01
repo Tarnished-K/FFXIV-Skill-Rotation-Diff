@@ -268,28 +268,30 @@ describe('renderPartyTimeline', () => {
     expect(timelineWrap.innerHTML).not.toContain('data-party-graph-mode');
   });
 
-  it('shows a supporter prompt instead of the personal DPS graph for free users', () => {
+  it('shows the first 30 seconds of the personal DPS graph for free users and masks the rest', () => {
     const { renderTimeline, timelineWrap, context } = loadTimelineHarness();
     context.state.isPremium = false;
-    context.state.rollingDpsA = [{ t: 8, dps: 1000 }, { t: 10, dps: 1200 }];
-    context.state.rollingDpsB = [{ t: 8, dps: 900 }, { t: 10, dps: 1100 }];
+    context.state.lang = 'en';
+    context.state.rollingDpsA = [{ t: 8, dps: 1000 }, { t: 40, dps: 1200 }];
+    context.state.rollingDpsB = [{ t: 8, dps: 900 }, { t: 40, dps: 1100 }];
 
     renderTimeline();
 
-    expect(timelineWrap.innerHTML).toContain('DPS推移グラフはサポーター向け機能です');
-    expect(timelineWrap.innerHTML).toContain('基本のタイムライン比較、シナジー、デバフ、PT比較は無料で利用できます。');
-    expect(timelineWrap.innerHTML).not.toContain('dps-graph-svg');
+    expect(timelineWrap.innerHTML).toContain('dps-graph-svg');
+    expect(timelineWrap.innerHTML).toContain('dps-supporter-mask');
+    expect(timelineWrap.innerHTML).toContain('DPS after 30s is a Supporter feature');
   });
 
-  it('shows a supporter prompt instead of the party DPS graph for free users', () => {
+  it('shows the first 30 seconds of the party DPS graph for free users and masks the rest', () => {
     const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
     context.state.isPremium = false;
+    context.state.lang = 'en';
 
     renderPartyTimeline();
 
-    expect(timelineWrap.innerHTML).toContain('PT DPS推移グラフはサポーター向け機能です');
-    expect(timelineWrap.innerHTML).toContain('PT比較の行動タイムラインと絞り込みは無料で利用できます。');
-    expect(timelineWrap.innerHTML).not.toContain('pt-dps-graph');
+    expect(timelineWrap.innerHTML).toContain('pt-dps-graph');
+    expect(timelineWrap.innerHTML).toContain('dps-supporter-mask party');
+    expect(timelineWrap.innerHTML).toContain('Party DPS after 30s is a Supporter feature');
   });
 
   it('renders boss casts and tracked player debuffs on the personal timeline', () => {

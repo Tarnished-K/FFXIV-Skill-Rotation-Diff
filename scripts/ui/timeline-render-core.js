@@ -102,6 +102,7 @@ function renderTimeline() {
 
   const hasDps = state.rollingDpsA.length > 0 || state.rollingDpsB.length > 0;
   const canShowDpsGraph = Boolean(state.isPremium);
+  const freeDpsPreviewSec = 30;
   const dpsGraphHeight = hasDps ? 80 : 0;
   const dpsGraphTop = hasDps ? 4 : 0;
   const rulerTop = dpsGraphTop + dpsGraphHeight;
@@ -125,18 +126,21 @@ function renderTimeline() {
 
   const buildDpsGraph = () => {
     if (!hasDps) return '';
-    if (!canShowDpsGraph) {
-      const title = state.lang === 'ja' ? 'DPS推移グラフはサポーター向け機能です' : 'DPS trend graph is a Supporter feature';
+    const buildFreeDpsMask = () => {
+      if (canShowDpsGraph || maxT <= freeDpsPreviewSec) return '';
+      const maskLeft = 60 + freeDpsPreviewSec * pxPerSec;
+      const maskWidth = Math.max(0, (maxT - freeDpsPreviewSec) * pxPerSec);
+      const title = state.lang === 'ja' ? '\u0033\u0030\u79d2\u4ee5\u964d\u306e\u0044\u0050\u0053\u63a8\u79fb\u306f\u30b5\u30dd\u30fc\u30bf\u30fc\u5411\u3051\u3067\u3059' : 'DPS after 30s is a Supporter feature';
       const body = state.lang === 'ja'
-        ? '基本のタイムライン比較、シナジー、デバフ、PT比較は無料で利用できます。'
-        : 'Core timeline comparison, synergy, debuff, and party comparison remain available for free.';
+        ? '\u6700\u521d\u306e\u0033\u0030\u79d2\u306f\u7121\u6599\u3067\u78ba\u8a8d\u3067\u304d\u307e\u3059\u3002\u4ee5\u964d\u306e\u63a8\u79fb\u3092\u78ba\u8a8d\u3059\u308b\u306b\u306f\u30b5\u30dd\u30fc\u30bf\u30fc\u767b\u9332\u3092\u3054\u5229\u7528\u304f\u3060\u3055\u3044\u3002'
+        : 'The first 30 seconds are visible for free. Register as a Supporter to inspect the rest of the graph.';
       const href = state.lang === 'en' ? '/premium.html?feature=dps-graph&lang=en' : '/premium.html?feature=dps-graph';
-      const cta = state.lang === 'ja' ? 'サポーター特典を見る' : 'View Supporter benefits';
-      return `<div class="dps-supporter-prompt" style="left:60px; top:${dpsGraphTop}px; width:${Math.max(360, Math.min(760, maxT * pxPerSec))}px; height:${dpsGraphHeight - 10}px">
+      const cta = state.lang === 'ja' ? '\u30b5\u30dd\u30fc\u30bf\u30fc\u7279\u5178\u3092\u898b\u308b' : 'View benefits';
+      return `<div class="dps-supporter-mask" style="left:${maskLeft}px; top:${dpsGraphTop}px; width:${maskWidth}px; height:${dpsGraphHeight - 10}px">
         <div><strong>${title}</strong><span>${body}</span></div>
         <a href="${href}">${cta}</a>
       </div>`;
-    }
+    };
     let dpsA = state.rollingDpsA;
     let dpsB = state.rollingDpsB;
     if (phaseA) dpsA = dpsA.filter((entry) => entry.t >= phaseA.startT && entry.t <= phaseA.endT);

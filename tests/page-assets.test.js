@@ -14,7 +14,7 @@ describe('page asset loading', () => {
       'href="styles.css"',
     ];
 
-    for (const fileName of ['index.html', 'tutorial.html', 'contact.html', 'feedback-admin.html', 'analytics.html', 'donation.html']) {
+    for (const fileName of ['index.html', 'tutorial.html', 'contact.html', 'feedback-admin.html', 'analytics.html']) {
       const html = readRootFile(fileName);
       let lastIndex = -1;
       for (const expectedLink of expectedLinks) {
@@ -33,22 +33,14 @@ describe('page asset loading', () => {
       .toBeLessThan(mainModule.indexOf("'./bootstrap.js'"));
   });
 
-  it('uses the standalone donation route from public footer links', () => {
+  it('uses the supporter registration page donation section from public footer links', () => {
     for (const fileName of ['index.html', 'tutorial.html', 'contact.html', 'commercial-transactions.html', 'privacy.html', 'terms.html', 'premium.html']) {
       const html = readRootFile(fileName);
 
-      expect(html).toContain('href="/donation.html"');
-      expect(html).not.toContain('/premium.html#donation');
+      expect(html).not.toContain('href="/donation.html"');
     }
-  });
-
-  it('keeps the standalone donation page separate from Supporter registration', () => {
-    const donation = readRootFile('donation.html');
-
-    expect(donation).toContain('Donationは任意の支援であり、サポーター登録とは別のものです。');
-    expect(donation).toContain('Donationの有無によって機能差は発生しません。');
-    expect(donation).toContain('href="/premium.html"');
-    expect(donation).toContain('data-donation-link');
+    expect(readRootFile('index.html')).toContain('href="/premium.html#donation"');
+    expect(readRootFile('premium.html')).toContain('href="#donation"');
   });
 
   it('explains next steps for Stripe checkout and portal failures', () => {
@@ -59,6 +51,13 @@ describe('page asset loading', () => {
     expect(premium).toContain('No charge has been completed.');
     expect(supporter).toContain('Could not open Stripe Customer Portal. Try once more');
     expect(supporter).toContain('No registration change has been completed.');
+  });
+
+  it('keeps the supporter page language toggle and omits the extra login button', () => {
+    const supporter = readRootFile('supporter.html');
+
+    expect(supporter).not.toContain('id="supporterLoginBtn"');
+    expect(supporter).toContain("location.href = lang === 'en' ? '/supporter.html' : '/supporter.html?lang=en'");
   });
 
   it('keeps FF14 asset visualizations out of supporter-only pricing copy', () => {

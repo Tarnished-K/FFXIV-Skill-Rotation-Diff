@@ -205,7 +205,10 @@
               <span class="step-number-badge">1</span>
             </div>
             <button id="loadResetBtn" type="button" class="step-reset-btn">リセット</button>
-            <h2 id="step1Title">FF Logsの公開ログを読み込む</h2>
+            <div class="step-title-row">
+              <h2 id="step1Title">FF Logsの公開ログを読み込む</h2>
+              <p id="step1Message" class="message"></p>
+            </div>
             <p id="publicOnlyNote" class="submessage">比較したい2つのレポートURLを入力してください。</p>
             <label id="logUrlALabel">A レポートURL（比較元）
               <input id="urlA" type="url" placeholder="https://www.fflogs.com/reports/xxxxxxxx#fight=1" />
@@ -214,7 +217,6 @@
               <input id="urlB" type="url" placeholder="https://www.fflogs.com/reports/yyyyyyyy#fight=1" />
             </label>
             <button id="loadBtn">読み込み開始</button>
-            <p id="step1Message" class="message"></p>
           </section>
 
           <!-- STEP 2 -->
@@ -222,7 +224,10 @@
             <div class="step-card-number">
               <span class="step-number-badge">2</span>
             </div>
-            <h2 id="step2Title">戦闘データを選択する</h2>
+            <div class="step-title-row">
+              <h2 id="step2Title">戦闘データを選択する</h2>
+              <p id="step2Message" class="submessage"></p>
+            </div>
             <p id="step2HelpText" class="submessage">各レポートから比較する戦闘を選択してください。</p>
             <div class="player-grid">
               <label id="logAFightLabel">A レポートの戦闘
@@ -231,7 +236,6 @@
                 <select id="fightB"></select></label>
             </div>
             <button id="loadPlayersBtn">この戦闘でプレイヤー一覧を取得</button>
-            <p id="step2Message" class="submessage"></p>
           </section>
 
           <!-- STEP 3 -->
@@ -239,7 +243,10 @@
             <div class="step-card-number">
               <span class="step-number-badge">3</span>
             </div>
-            <h2 id="step3Title">比較するプレイヤーを選択</h2>
+            <div class="step-title-row">
+              <h2 id="step3Title">比較するプレイヤーを選択</h2>
+              <p id="step3Message" class="submessage"></p>
+            </div>
             <p id="step3HelpText" class="submessage">比較したいプレイヤー（ジョブ・ロール）を選択してください。</p>
             <div class="player-grid">
               <label id="logAPlayerLabel">A プレイヤー（比較元）
@@ -248,7 +255,6 @@
                 <select id="playerB"></select></label>
             </div>
             <button id="compareBtn">比較を開始</button>
-            <p id="step3Message" class="submessage"></p>
           </section>
 
           <!-- MOTHERCRYSTAL STATUS PANEL -->
@@ -359,7 +365,7 @@
             </div>
             <div class="footer-legal">
               <small>© SQUARE ENIX. 本サイトは株式会社スクウェア・エニックスとは関係のない非公式ファンツールです。FINAL FANTASY XIV and related materials are trademarks and/or copyrighted works of SQUARE ENIX CO., LTD.</small>
-              <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FF Logs</a>. &nbsp;|&nbsp; <a id="privacyLink" href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms</a> &nbsp;|&nbsp; <a href="/commercial-transactions.html">Specified Commercial Transactions Act</a> &nbsp;|&nbsp; <a href="/donation.html">Donation</a></small>
+              <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FF Logs</a>. &nbsp;|&nbsp; <a id="privacyLink" href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms</a> &nbsp;|&nbsp; <a href="/commercial-transactions.html">Specified Commercial Transactions Act</a> &nbsp;|&nbsp; <a href="/premium.html#donation">Donation</a></small>
             </div>
             <small class="build-info" data-build-info>Version loading...</small>
           </div>

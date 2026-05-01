@@ -115,6 +115,7 @@ function renderTimeline() {
   // DPS グラフ
   const hasDps = state.rollingDpsA.length > 0 || state.rollingDpsB.length > 0;
   const canShowDpsGraph = Boolean(state.isPremium);
+  const freeDpsPreviewSec = 30;
   const dpsGraphHeight = hasDps ? 80 : 0;
   const dpsGraphTop = hasDps ? 4 : 0;
 
@@ -159,18 +160,21 @@ function renderTimeline() {
 
   const buildDpsGraph = () => {
     if (!hasDps) return '';
-    if (!canShowDpsGraph) {
-      const title = state.lang === 'ja' ? 'DPS推移グラフはサポーター向け機能です' : 'DPS trend graph is a Supporter feature';
+    const buildFreeDpsMask = () => {
+      if (canShowDpsGraph || maxT <= freeDpsPreviewSec) return '';
+      const maskLeft = 60 + freeDpsPreviewSec * pxPerSec;
+      const maskWidth = Math.max(0, (maxT - freeDpsPreviewSec) * pxPerSec);
+      const title = state.lang === 'ja' ? '30秒以降のDPS推移はサポーター向けです' : 'DPS after 30s is a Supporter feature';
       const body = state.lang === 'ja'
-        ? '基本のタイムライン比較、シナジー、デバフ、PT比較は無料で利用できます。'
-        : 'Core timeline comparison, synergy, debuff, and party comparison remain available for free.';
+        ? '最初の30秒は無料で確認できます。以降の推移を確認するにはサポーター登録をご利用ください。'
+        : 'The first 30 seconds are visible for free. Register as a Supporter to inspect the rest of the graph.';
       const href = state.lang === 'en' ? '/premium.html?feature=dps-graph&lang=en' : '/premium.html?feature=dps-graph';
-      const cta = state.lang === 'ja' ? 'サポーター特典を見る' : 'View Supporter benefits';
-      return `<div class="dps-supporter-prompt" style="left:60px; top:${dpsGraphTop}px; width:${Math.max(360, Math.min(760, maxT * pxPerSec))}px; height:${dpsGraphHeight - 10}px">
+      const cta = state.lang === 'ja' ? 'サポーター特典を見る' : 'View benefits';
+      return `<div class="dps-supporter-mask" style="left:${maskLeft}px; top:${dpsGraphTop}px; width:${maskWidth}px; height:${dpsGraphHeight - 10}px">
         <div><strong>${title}</strong><span>${body}</span></div>
         <a href="${href}">${cta}</a>
       </div>`;
-    }
+    };
     let dpsA = state.rollingDpsA;
     let dpsB = state.rollingDpsB;
     if (phaseA) dpsA = dpsA.filter(d => d.t >= phaseA.startT && d.t <= phaseA.endT);
@@ -230,7 +234,7 @@ function renderTimeline() {
       ${hoverLines(dpsB, '#f97316', labelB)}
       ${hitPoints(dpsA, '#38bdf8', labelA)}
       ${hitPoints(dpsB, '#f97316', labelB)}
-    </svg>`;
+    </svg>${buildFreeDpsMask()}`;
   };
 
   const buildRulerAtTop = () => {
@@ -601,6 +605,7 @@ function renderPartyTimeline() {
   const groupLabelGap = 26;
   const rowHeight = 40;
   const graphHeight = 82;
+  const freeDpsPreviewSec = 30;
   const assignCastLaneTops = (laneGroup, areaTop) => {
     let offset = areaTop;
     const addTop = laneGroup.hasAddLane ? offset : 0;
@@ -701,18 +706,21 @@ function renderPartyTimeline() {
     const dpsA = filterGraphPoints(sourceA, 'dps', 'a');
     const dpsB = filterGraphPoints(sourceB, 'dps', 'b');
     if (!dpsA.length && !dpsB.length) return '';
-    if (!state.isPremium) {
-      const title = state.lang === 'ja' ? 'PT DPS推移グラフはサポーター向け機能です' : 'Party DPS trend graph is a Supporter feature';
+    const buildFreeDpsMask = () => {
+      if (state.isPremium || maxT <= freeDpsPreviewSec) return '';
+      const maskLeft = xStart + freeDpsPreviewSec * pxPerSec;
+      const maskWidth = Math.max(0, (maxT - freeDpsPreviewSec) * pxPerSec);
+      const title = state.lang === 'ja' ? '\u0033\u0030\u79d2\u4ee5\u964d\u306e\u0050\u0054\u0020\u0044\u0050\u0053\u63a8\u79fb\u306f\u30b5\u30dd\u30fc\u30bf\u30fc\u5411\u3051\u3067\u3059' : 'Party DPS after 30s is a Supporter feature';
       const body = state.lang === 'ja'
-        ? 'PT比較の行動タイムラインと絞り込みは無料で利用できます。'
-        : 'Party timeline rows and filters remain available for free.';
+        ? '\u6700\u521d\u306e\u0033\u0030\u79d2\u306f\u7121\u6599\u3067\u78ba\u8a8d\u3067\u304d\u307e\u3059\u3002\u4ee5\u964d\u306e\u63a8\u79fb\u3092\u78ba\u8a8d\u3059\u308b\u306b\u306f\u30b5\u30dd\u30fc\u30bf\u30fc\u767b\u9332\u3092\u3054\u5229\u7528\u304f\u3060\u3055\u3044\u3002'
+        : 'The first 30 seconds are visible for free. Register as a Supporter to inspect the rest of the graph.';
       const href = state.lang === 'en' ? '/premium.html?feature=dps-graph&lang=en' : '/premium.html?feature=dps-graph';
-      const cta = state.lang === 'ja' ? 'サポーター特典を見る' : 'View Supporter benefits';
-      return `<div class="dps-supporter-prompt party" style="left:${xStart}px; top:${graphTop}px; width:${Math.max(360, Math.min(760, maxT * pxPerSec))}px; height:${graphHeight}px">
+      const cta = state.lang === 'ja' ? '\u30b5\u30dd\u30fc\u30bf\u30fc\u7279\u5178\u3092\u898b\u308b' : 'View benefits';
+      return `<div class="dps-supporter-mask party" style="left:${maskLeft}px; top:${graphTop}px; width:${maskWidth}px; height:${graphHeight}px">
         <div><strong>${title}</strong><span>${body}</span></div>
         <a href="${href}">${cta}</a>
       </div>`;
-    }
+    };
     const maxDps = Math.max(...dpsA.map((point) => point.dps), ...dpsB.map((point) => point.dps), 1);
     const plotHeight = graphHeight - 18;
     const yBase = graphTop + plotHeight + 8;
@@ -755,7 +763,7 @@ function renderPartyTimeline() {
       ${hoverLines(dpsB, '#f97316', 'Log B')}
       ${hitPoints(dpsA, '#38bdf8', 'Log A')}
       ${hitPoints(dpsB, '#f97316', 'Log B')}
-    </svg>`;
+    </svg>${buildFreeDpsMask()}`;
   };
 
   const buildPartyFilterControls = () => {
@@ -982,5 +990,3 @@ Object.assign(globalThis, {
   scrollTimelineToPhase,
   scrollTimelineToTabFocus,
 });
-
-

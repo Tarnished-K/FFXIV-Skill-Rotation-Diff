@@ -57,6 +57,14 @@ async function getAuthStatus() {
   return fetchUsageStatus(jwt);
 }
 
+function redirectAfterSupporterLogout() {
+  if (!window.location.pathname.endsWith('/supporter.html')) return false;
+  const lang = globalThis.state?.lang
+    || (new URLSearchParams(globalThis.location?.search || '').get('lang') === 'en' ? 'en' : 'ja');
+  window.location.href = lang === 'en' ? '/premium.html?lang=en' : '/premium.html';
+  return true;
+}
+
 async function requirePremiumFeature(featureName) {
   const status = await getAuthStatus();
   if (status?.isPremium) return true;
@@ -88,6 +96,7 @@ function updateSidebarAuth(user, usageData) {
     if (loginLabel) loginLabel.textContent = authText('logoutBtn', 'ログアウト');
     if (loginBtn) loginBtn.onclick = async () => {
       await globalThis.AuthModule.signOut();
+      if (redirectAfterSupporterLogout()) return;
       renderHeaderAuth(null, null);
     };
   }
@@ -147,6 +156,7 @@ function renderHeaderAuth(user, usageData) {
       '<button id="logoutBtn" type="button" class="button-link ghost auth-btn logout-btn">' + escapeHtml(authText('logoutBtn', 'ログアウト')) + '</button>';
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
       await globalThis.AuthModule.signOut();
+      if (redirectAfterSupporterLogout()) return;
       renderHeaderAuth(null, null);
     });
   }

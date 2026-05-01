@@ -93,8 +93,8 @@
               </div>
               <div class="premium-hero-right">
                 <div class="premium-price-actions">
-                  <button id="supporterCheckoutBtn" type="button" class="premium-checkout-btn" data-premium-i18n="checkoutStart">
-                    登録内容を確認する
+                  <button id="supporterCheckoutBtn" type="button" class="premium-checkout-btn" data-premium-i18n="checkoutStart" disabled aria-disabled="true">
+                    準備中
                   </button>
                 </div>
                 <div class="premium-price-panel">
@@ -226,7 +226,7 @@
             monthly: 'Monthly',
             priceAmount: '¥200',
             taxIncluded: 'tax included, auto-renewing monthly',
-            checkoutStart: 'Review registration details',
+            checkoutStart: 'Coming soon',
             reassurance: 'Supporter registration is a monthly auto-renewing service. You will be charged every month until you cancel.',
             previewTitle: 'Feature Preview',
             previewLeadFree: 'This preview is generated from real FF Logs data. Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users.',
@@ -272,6 +272,7 @@
     <script type="module" src="scripts/auth/auth.js"></script>
     <script type="module" src="scripts/auth/auth-ui.js"></script>
     <script type="module">
+      const SUPPORTER_CHECKOUT_ENABLED = false;
       let checkoutAfterLogin = false;
 
       function setMessage(text) {
@@ -344,6 +345,10 @@
       }
 
       async function startCheckout() {
+        if (!SUPPORTER_CHECKOUT_ENABLED) {
+          setMessage(premiumText('サポーター登録は現在準備中です。', 'Supporter registration is currently coming soon.'));
+          return;
+        }
         const session = await getSessionOrLogin();
         if (!session) return;
         setMessage('');

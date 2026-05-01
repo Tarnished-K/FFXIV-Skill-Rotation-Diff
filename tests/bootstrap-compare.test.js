@@ -256,7 +256,7 @@ function loadCompareHarness(options = {}) {
   context.globalThis = context;
 
   vm.createContext(context);
-  vm.runInContext(`${source}\nmodule.exports = { handleCompare };`, context);
+  vm.runInContext(`${source}\nmodule.exports = { handleCompare, formatWorkflowError };`, context);
 
   context.__mocks = {
     setActiveTab(tab) {
@@ -373,11 +373,14 @@ function loadCompareHarness(options = {}) {
 
   return {
     handleCompare: context.module.exports.handleCompare,
+    formatWorkflowError: context.module.exports.formatWorkflowError,
     state,
     nodes,
     tabs,
     analyticsEvents,
     setActiveTabCalls,
+    mocks: context.__mocks,
+    context,
   };
 }
 
@@ -443,15 +446,45 @@ describe('handleCompare error UI', () => {
 
   it('adds has-error class on compare failure', async () => {
     const harness = loadCompareHarness();
-    harness.state.reportA.fights[0].startTime = 0;
-    harness.state.reportA.fights[0].endTime = 30000;
-
-    const ctx = harness;
-    ctx.__fetchFail = true;
+    harness.state.lang = 'ja';
+    harness.nodes.step4.classList.add('hidden');
+    harness.context.fetchPlayerTimelineV2 = async () => {
+      throw new Error('proxy unavailable');
+    };
 
     await harness.handleCompare({ skipShareUrl: true });
 
-    // After a failed compare, step4 should still be shown
     expect(harness.nodes.step4.classList.contains('hidden')).toBe(false);
+    expect(harness.nodes.step4.classList.contains('has-error')).toBe(true);
+    expect(harness.nodes.step3Message.classList.contains('step-message-error')).toBe(true);
+    expect(harness.nodes.step3Message.textContent).toContain('一度再試行');
+    expect(harness.nodes.step3Message.textContent).toContain('proxy unavailable');
+    expect(harness.analyticsEvents).toContainEqual({
+      eventName: 'api_error',
+      payload: { stage: 'compare', message: 'proxy unavailable' },
+    });
+  });
+});
+
+describe('formatWorkflowError', () => {
+  it('gives report-load failures public URL and site/API guidance in English', () => {
+    const harness = loadCompareHarness();
+
+    const message = harness.formatWorkflowError('load_reports', new Error('forbidden'));
+
+    expect(message).toContain('public report URLs');
+    expect(message).toContain('site-side or FF Logs API issue');
+    expect(message).toContain('forbidden');
+  });
+
+  it('gives compare failures retry and alternate-log guidance in Japanese', () => {
+    const harness = loadCompareHarness();
+    harness.state.lang = 'ja';
+
+    const message = harness.formatWorkflowError('compare', new Error('timeout'));
+
+    expect(message).toContain('一度再試行');
+    expect(message).toContain('別のFF Logs URL');
+    expect(message).toContain('timeout');
   });
 });

@@ -11,6 +11,7 @@ import '../shared/buff-utils.js';
 import '../shared/phase-utils.js';
 import '../shared/timeline-utils.js';
 import '../data/fflogs.js';
+import '../ui/timeline-shared.js';
 import '../ui/timeline.js';
 import './bootstrap.js';
 import '../auth/auth.js';

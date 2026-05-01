@@ -45,7 +45,9 @@ function createTimelineWrap() {
 }
 
 function loadTimelineHarness() {
+  const sharedPath = path.join(__dirname, '../scripts/ui/timeline-shared.js');
   const sourcePath = path.join(__dirname, '../scripts/ui/timeline.js');
+  const sharedSource = fs.readFileSync(sharedPath, 'utf8');
   const source = fs.readFileSync(sourcePath, 'utf8');
   const timelineWrap = createTimelineWrap();
 
@@ -180,7 +182,7 @@ function loadTimelineHarness() {
   context.globalThis = context;
 
   vm.createContext(context);
-  vm.runInContext(`${source}\nmodule.exports = { renderTimeline, renderPartyTimeline, bindTimelineInteractions, __findSelfBuff: findSelfBuff, correlateHealing, removeKnownNonDamageFollowupCasts };`, context);
+  vm.runInContext(`${sharedSource}\n${source}\nmodule.exports = { renderTimeline, renderPartyTimeline, bindTimelineInteractions, __findSelfBuff: findSelfBuff, correlateHealing, removeKnownNonDamageFollowupCasts };`, context);
 
   return {
     renderTimeline: context.module.exports.renderTimeline,

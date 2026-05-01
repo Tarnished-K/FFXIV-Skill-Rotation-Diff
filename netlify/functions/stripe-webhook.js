@@ -1,6 +1,14 @@
 const crypto = require('crypto');
 const { readRuntimeEnv } = require('../../lib/runtime-env');
-const { recordWebhookEvent, upsertBillingCustomer, upsertSubscription } = require('../../lib/billing');
+const {
+  getBillingCustomerByStripeCustomerId,
+  markWebhookEventProcessed,
+  recordWebhookEvent,
+  upsertBillingCustomer,
+  upsertSubscription,
+} = require('../../lib/billing');
+
+const STRIPE_SIGNATURE_TOLERANCE_SECONDS = 5 * 60;
 
 function verifyStripeSignature({ rawBody, signature, secret }) {
   const parts = {};
@@ -12,6 +20,10 @@ function verifyStripeSignature({ rawBody, signature, secret }) {
   const timestamp = parts.t;
   const expectedSig = parts.v1;
   if (!timestamp || !expectedSig) return false;
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isFinite(timestampSeconds)) return false;
+  const ageSeconds = Math.abs((Date.now() / 1000) - timestampSeconds);
+  if (ageSeconds > STRIPE_SIGNATURE_TOLERANCE_SECONDS) return false;
   const payload = `${timestamp}.${rawBody}`;
   const hmac = crypto.createHmac('sha256', secret).update(payload, 'utf8').digest('hex');
   try {
@@ -22,6 +34,55 @@ function verifyStripeSignature({ rawBody, signature, secret }) {
   } catch {
     return false;
   }
+}
+
+function getRawBody(event) {
+  if (!event.body) return '';
+  return event.isBase64Encoded
+    ? Buffer.from(event.body, 'base64').toString('utf8')
+    : event.body;
+}
+
+async function fetchStripeSubscription(subscriptionId) {
+  const stripeSecretKey = readRuntimeEnv('STRIPE_SECRET_KEY');
+  if (!stripeSecretKey || !subscriptionId) return null;
+  const res = await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(subscriptionId)}`, {
+    headers: { Authorization: `Bearer ${stripeSecretKey}` },
+  });
+  if (!res.ok) return null;
+  return res.json().catch(() => null);
+}
+
+async function resolveUserIdFromCustomer(customerId) {
+  const customer = await getBillingCustomerByStripeCustomerId(customerId);
+  return customer?.user_id || null;
+}
+
+function getSubscriptionPeriodEnd(subscription) {
+  const unixSeconds = subscription?.current_period_end
+    || subscription?.items?.data?.[0]?.current_period_end
+    || subscription?.items?.data?.find?.((item) => item?.current_period_end)?.current_period_end;
+  return Number.isFinite(Number(unixSeconds))
+    ? new Date(Number(unixSeconds) * 1000).toISOString()
+    : null;
+}
+
+async function upsertStripeSubscriptionObject(obj, fallbackUserId) {
+  if (!obj?.id) return;
+  const userId = obj.metadata?.user_id || fallbackUserId || await resolveUserIdFromCustomer(String(obj.customer || ''));
+  if (!userId) return;
+  const currentPeriodEnd = getSubscriptionPeriodEnd(obj);
+  if (!currentPeriodEnd) return;
+  await upsertBillingCustomer({ userId, stripeCustomerId: String(obj.customer) });
+  await upsertSubscription({
+    id: obj.id,
+    user_id: userId,
+    stripe_customer_id: String(obj.customer),
+    status: obj.status,
+    current_period_end: currentPeriodEnd,
+    cancel_at_period_end: obj.cancel_at_period_end || false,
+    updated_at: new Date().toISOString(),
+  });
 }
 
 exports.handler = async (event) => {
@@ -36,7 +97,7 @@ exports.handler = async (event) => {
   if (!signature) {
     return { statusCode: 400, body: 'Missing stripe-signature' };
   }
-  const rawBody = event.body || '';
+  const rawBody = getRawBody(event);
   if (!verifyStripeSignature({ rawBody, signature, secret: webhookSecret })) {
     return { statusCode: 400, body: 'Invalid signature' };
   }
@@ -46,12 +107,12 @@ exports.handler = async (event) => {
   } catch {
     return { statusCode: 400, body: 'Invalid JSON' };
   }
-  const { isDuplicate } = await recordWebhookEvent({
+  const { isDuplicate, processedAt } = await recordWebhookEvent({
     stripeEventId: stripeEvent.id,
     type: stripeEvent.type,
     payload: stripeEvent,
   });
-  if (isDuplicate) {
+  if (isDuplicate && processedAt) {
     return { statusCode: 200, body: JSON.stringify({ ok: true, skipped: true }) };
   }
   const obj = stripeEvent.data && stripeEvent.data.object;
@@ -66,37 +127,30 @@ exports.handler = async (event) => {
     }
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
-      const userId = obj && obj.metadata && obj.metadata.user_id;
-      if (userId && obj && obj.id) {
-        await upsertSubscription({
-          id: obj.id,
-          user_id: userId,
-          stripe_customer_id: String(obj.customer),
-          status: obj.status,
-          current_period_end: new Date(obj.current_period_end * 1000).toISOString(),
-          cancel_at_period_end: obj.cancel_at_period_end || false,
-          updated_at: new Date().toISOString(),
-        });
-      }
+      await upsertStripeSubscriptionObject(obj);
       break;
     }
     case 'customer.subscription.deleted': {
-      const userId = obj && obj.metadata && obj.metadata.user_id;
-      if (userId && obj && obj.id) {
-        await upsertSubscription({
-          id: obj.id,
-          user_id: userId,
-          stripe_customer_id: String(obj.customer),
-          status: 'canceled',
-          current_period_end: new Date(obj.current_period_end * 1000).toISOString(),
-          cancel_at_period_end: false,
-          updated_at: new Date().toISOString(),
-        });
+      await upsertStripeSubscriptionObject({ ...obj, status: 'canceled', cancel_at_period_end: false });
+      break;
+    }
+    case 'invoice.payment_succeeded':
+    case 'invoice.payment_failed': {
+      const subscriptionId = obj && (typeof obj.subscription === 'string'
+        ? obj.subscription
+        : obj.subscription?.id);
+      const subscription = await fetchStripeSubscription(subscriptionId);
+      const fallbackUserId = obj?.subscription_details?.metadata?.user_id
+        || obj?.metadata?.user_id
+        || await resolveUserIdFromCustomer(String(obj?.customer || ''));
+      if (subscription) {
+        await upsertStripeSubscriptionObject(subscription, fallbackUserId);
       }
       break;
     }
     default:
       break;
   }
+  await markWebhookEventProcessed(stripeEvent.id);
   return { statusCode: 200, body: JSON.stringify({ ok: true }) };
 };

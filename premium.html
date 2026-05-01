@@ -4,10 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>サポーター登録 | FFXIV Skill Rotation Diff</title>
-    <meta
-      name="description"
-      content="FFXIV Skill Rotation Diff のサポータープラン案内ページです。"
-    />
+    <meta name="description" content="FFXIV Skill Rotation Diff のサポーター登録案内ページです。" />
     <link rel="preload" as="image" href="assets/ui/bg-main-shell.webp" fetchpriority="high" />
     <link rel="preload" as="image" href="assets/ui/support-panel.webp" fetchpriority="high" />
     <link rel="stylesheet" href="styles-base.css" />
@@ -23,119 +20,155 @@
     "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
   }
 }
-</script>
+    </script>
   </head>
   <body class="feedback-page premium-page">
     <div class="app-shell">
       <aside class="sidebar" data-site-sidebar data-active-page="supporter"></aside>
       <div class="main-content">
-    <header class="topbar">
-      <div class="topbar-identity">
-          <h1 data-premium-i18n="pageTitle">サポーター登録</h1>
-          <p data-premium-i18n="pageLead">当サイト独自の解析処理、保存機能、広告非表示などを拡張するプランです。</p>
-      </div>
-      <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
-    </header>
+        <header class="topbar">
+          <div class="topbar-identity">
+            <h1 data-premium-i18n="pageTitle">サポーター登録</h1>
+            <p data-premium-i18n="pageLead">当サイト独自の解析処理、保存機能、広告非表示などを拡張する月額自動更新の登録です。</p>
+          </div>
+          <button id="langToggle" type="button" class="topbar-btn lang-btn" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;overflow:hidden;">EN</button>
+        </header>
 
-    <main class="feedback-main premium-main shell-page-main">
-      <section class="card premium-hero-card">
-        <div class="premium-hero-layout">
-          <!-- Left: header + benefits -->
-          <div class="premium-hero-left">
-            <div class="premium-hero-header">
-              <span class="premium-kicker-inline">Supporter Plan</span>
-              <span class="premium-kicker-sep" aria-hidden="true">|</span>
-              <h2 data-premium-i18n="benefitsTitle">サポーター特典</h2>
+        <main class="feedback-main premium-main shell-page-main">
+          <section class="card premium-hero-card">
+            <div class="premium-hero-layout">
+              <div class="premium-hero-left">
+                <div class="premium-hero-header">
+                  <span class="premium-kicker-inline">Supporter Plan</span>
+                  <span class="premium-kicker-sep" aria-hidden="true">|</span>
+                  <h2 data-premium-i18n="benefitsTitle">サポーター特典</h2>
+                </div>
+                <p class="premium-lead" data-premium-i18n="benefitsLead">
+                  サポータープランは、当サイト独自の解析処理、保存機能、広告非表示などを提供するものです。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。
+                </p>
+                <div class="premium-benefits">
+                  <div class="premium-benefit">
+                    <img class="premium-benefit-icon" src="assets/ui/icon-load.webp" alt="" loading="lazy" decoding="async" />
+                    <div class="premium-benefit-body">
+                      <strong data-premium-i18n="benefitAnalyzeTitle">解析回数の上限拡張</strong>
+                      <span data-premium-i18n="benefitAnalyzeBody">日々の比較・検証をしやすいように、通常より高い利用上限を提供します。</span>
+                    </div>
+                  </div>
+                  <div class="premium-benefit">
+                    <img class="premium-benefit-icon" src="assets/ui/benefit-add-block.webp" alt="" loading="lazy" decoding="async" />
+                    <div class="premium-benefit-body">
+                      <strong data-premium-i18n="benefitAdTitle">広告非表示</strong>
+                      <span data-premium-i18n="benefitAdBody">比較画面や主要ページの広告を非表示にし、作業に集中しやすくします。</span>
+                    </div>
+                  </div>
+                  <div class="premium-benefit">
+                    <img class="premium-benefit-icon" src="assets/ui/benefit-boss-cast.webp" alt="" loading="lazy" decoding="async" />
+                    <div class="premium-benefit-body">
+                      <strong data-premium-i18n="benefitBossTitle">ボス詠唱表示</strong>
+                      <span data-premium-i18n="benefitBossBody">詠唱タイミングと行動の噛み合いを確認できます。</span>
+                    </div>
+                  </div>
+                  <div class="premium-benefit">
+                    <img class="premium-benefit-icon" src="assets/ui/benefit-party.webp" alt="" loading="lazy" decoding="async" />
+                    <div class="premium-benefit-body">
+                      <strong data-premium-i18n="benefitDpsGraphTitle">DPS推移グラフ</strong>
+                      <span data-premium-i18n="benefitDpsGraphBody">比較中の火力推移を波形で確認し、バーストや立て直しの流れを追いやすくします。</span>
+                    </div>
+                  </div>
+                  <div class="premium-benefit">
+                    <img class="premium-benefit-icon" src="assets/ui/benefit-bookmark.webp" alt="" loading="lazy" decoding="async" />
+                    <div class="premium-benefit-body">
+                      <strong data-premium-i18n="benefitBookmarkTitle">ブックマーク最大100件</strong>
+                      <span data-premium-i18n="benefitBookmarkBody">重要な比較状態を保存し、あとから開き直せます。</span>
+                    </div>
+                  </div>
+                  <div class="premium-benefit">
+                    <img class="premium-benefit-icon" src="assets/ui/sap-icon.webp" alt="" loading="lazy" decoding="async" />
+                    <div class="premium-benefit-body">
+                      <strong data-premium-i18n="benefitConvenienceTitle">将来的な追加利便性・新機能へのアクセス</strong>
+                      <span data-premium-i18n="benefitConvenienceBody">今後追加予定の利便性機能を、サポーター向けに順次提供します。</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="premium-hero-right">
+                <div class="premium-price-actions">
+                  <button id="supporterCheckoutBtn" type="button" class="premium-checkout-btn" data-premium-i18n="checkoutStart">
+                    登録内容を確認する
+                  </button>
+                </div>
+                <div class="premium-price-panel">
+                  <div class="premium-price-frame">
+                    <p class="premium-price-label" data-premium-i18n="monthly">月額</p>
+                    <div class="premium-price">
+                      <strong data-premium-i18n="priceAmount">200円</strong>
+                    </div>
+                  </div>
+                  <p id="premiumMessage" class="submessage premium-message"></p>
+                  <p class="premium-reassurance" data-premium-i18n="reassurance">
+                    サポーター登録は月額自動更新です。解約されるまで毎月決済されます。
+                  </p>
+                </div>
+              </div>
             </div>
-            <p class="premium-lead" data-premium-i18n="benefitsLead">
-              Proプランは、当サイト独自の解析処理、保存機能、広告非表示などを提供するものです。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。
+          </section>
+
+          <section class="card premium-preview-card">
+            <h2 data-premium-i18n="previewTitle">機能プレビュー</h2>
+            <p class="premium-lead">
+              <span data-premium-i18n="previewLeadFree">実際のFF Logsデータから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。</span><br>
+              <span data-premium-i18n="previewLeadSupporter">サポータープランではボス詠唱表示、DPS推移グラフ、保存機能、解析回数上限などが拡張されます。新機能が追加され次第、こちらのプレビューでも公開します。</span>
             </p>
-            <div class="premium-feature-focus">
-              <div>
-                <strong data-premium-i18n="focusTitle">Pro expands site-side convenience</strong>
-                <span data-premium-i18n="focusBody">デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。Proでは、解析回数上限や保存・利便性機能が拡張されます。</span>
-              </div>
-            </div>
-            <div class="premium-benefits">
-              <div class="premium-benefit">
-                <img class="premium-benefit-icon" src="assets/ui/icon-load.webp" alt="" loading="lazy" decoding="async" />
-                <div class="premium-benefit-body">
-                  <strong data-premium-i18n="benefitAnalyzeTitle">解析回数の上限拡張</strong>
-                  <span data-premium-i18n="benefitAnalyzeBody">日々の比較検証をしやすいように、通常より高い利用上限を提供します。</span>
-                </div>
-              </div>
-              <div class="premium-benefit">
-                <img class="premium-benefit-icon" src="assets/ui/benefit-add-block.webp" alt="" loading="lazy" decoding="async" />
-                <div class="premium-benefit-body">
-                  <strong data-premium-i18n="benefitAdTitle">広告非表示</strong>
-                  <span data-premium-i18n="benefitAdBody">比較画面や主要ページの広告を非表示にし、作業に集中しやすくします。</span>
-                </div>
-              </div>
-              <div class="premium-benefit">
-                <img class="premium-benefit-icon" src="assets/ui/benefit-boss-cast.webp" alt="" loading="lazy" decoding="async" />
-                <div class="premium-benefit-body">
-                  <strong data-premium-i18n="benefitBossTitle">ボス詠唱表示</strong>
-                  <span data-premium-i18n="benefitBossBody">詠唱タイミングと行動の噛み合いを確認できます。</span>
-                </div>
-              </div>
-              <div class="premium-benefit">
-                <img class="premium-benefit-icon" src="assets/ui/benefit-bookmark.webp" alt="" loading="lazy" decoding="async" />
-                <div class="premium-benefit-body">
-                  <strong data-premium-i18n="benefitBookmarkTitle">ブックマーク最大100件</strong>
-                  <span data-premium-i18n="benefitBookmarkBody">重要な比較状態を保存し、あとから開き直せます。</span>
-                </div>
-              </div>
-              <div class="premium-benefit">
-                <img class="premium-benefit-icon" src="assets/ui/sap-icon.webp" alt="" loading="lazy" decoding="async" />
-                <div class="premium-benefit-body">
-                  <strong data-premium-i18n="benefitConvenienceTitle">将来的な追加利便性・新機能へのアクセス</strong>
-                  <span data-premium-i18n="benefitConvenienceBody">今後追加予定の高度な利便性機能を、Pro向けに順次提供します。</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Right: price panel -->
-          <div class="premium-hero-right">
-            <div class="premium-price-panel">
-              <p class="premium-price-label" data-premium-i18n="monthly">月額</p>
-              <div class="premium-price">
-                <strong data-premium-i18n="priceAmount">200円</strong>
-                <span data-premium-i18n="taxIncluded">税込</span>
-              </div>
-              <button id="supporterCheckoutBtn" type="button" class="premium-checkout-btn" disabled data-premium-i18n="checkoutPending">
-                準備中
-              </button>
-              <p id="premiumMessage" class="submessage premium-message"></p>
-              <p class="premium-reassurance" data-premium-i18n="reassurance">サポーター登録機能は準備中です。<br>しばらくお待ちください。</p>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section class="card premium-preview-card">
-        <div class="guide-kicker" data-premium-i18n="previewKicker">実際の画面</div>
-        <h2 data-premium-i18n="previewTitle">機能プレビュー</h2>
-        <p class="premium-lead" data-premium-i18n="previewLead">
-          実際の FFLogs データから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は無料ユーザーでも利用できます。Proではボス詠唱表示、保存機能、解析回数上限などが拡張されます。新機能が追加され次第、こちらのプレビューでも公開します。
-        </p>
-        <div id="premiumPreviewOuter" class="premium-preview-outer"></div>
-      </section>
-      <section id="donation" class="card premium-donation-card">
-        <div class="premium-donation-copy">
-          <div class="guide-kicker" data-premium-i18n="donationKicker">Donation / 任意支援</div>
-          <h2 data-premium-i18n="donationTitle">任意Donation</h2>
-          <p data-premium-i18n="donationBody">このサイトは無料で利用できる非公式ファンツールです。支援は任意であり、支援の有無によって機能差はありません。いただいた支援は、サーバー費用・開発環境の維持に充てられます。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。</p>
-        </div>
-        <a class="premium-donation-btn" href="#" target="_blank" rel="noopener noreferrer" data-donation-link data-donation-disabled="true" data-premium-i18n="donationButton">Donation（準備中）</a>
-      </section>
-    </main>
+            <div id="premiumPreviewOuter" class="premium-preview-outer"></div>
+          </section>
 
-    <footer class="site-footer">
-      <div class="footer-legal">
-        <small>© SQUARE ENIX. 本サイトは株式会社スクウェア・エニックスとは関係のない非公式ファンツールです。FINAL FANTASY XIV and related materials are trademarks and/or copyrighted works of SQUARE ENIX CO., LTD.</small>
-        <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>. &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms</a> &nbsp;|&nbsp; <a href="/commercial-transactions.html">Specified Commercial Transactions Act</a> &nbsp;|&nbsp; <a href="#donation">Donation</a></small>
+          <section id="donation" class="card premium-donation-card">
+            <div class="premium-donation-copy">
+              <div class="guide-kicker" data-premium-i18n="donationKicker">Donation / 任意の支援</div>
+              <h2 data-premium-i18n="donationTitle">任意のDonation</h2>
+              <p data-premium-i18n="donationBody">Donationは任意の支援であり、サポーター登録とは別のものです。Donationの有無によって機能差は発生しません。支援はサーバー費用・開発環境の維持に充てられます。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。</p>
+            </div>
+            <a class="premium-donation-btn" href="#" target="_blank" rel="noopener noreferrer" data-donation-link data-donation-disabled="true" data-premium-i18n="donationButton">Donation（準備中）</a>
+          </section>
+        </main>
+
+        <footer class="site-footer">
+          <div class="footer-legal">
+            <small>© SQUARE ENIX. 本サイトは株式会社スクウェア・エニックスとは関係のない非公式ファンツールです。FINAL FANTASY XIV and related materials are trademarks and/or copyrighted works of SQUARE ENIX CO., LTD.</small>
+            <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FF Logs</a>. &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms</a> &nbsp;|&nbsp; <a href="/commercial-transactions.html">Specified Commercial Transactions Act</a> &nbsp;|&nbsp; <a href="#donation">Donation</a></small>
+          </div>
+          <small class="build-info" data-build-info>Version loading...</small>
+        </footer>
       </div>
-      <small class="build-info" data-build-info>Version loading...</small>
-    </footer>
+    </div>
+
+    <div id="supporterConfirmModal" class="supporter-confirm-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="supporterConfirmTitle">
+      <div id="supporterConfirmBackdrop" class="supporter-confirm-backdrop"></div>
+      <div class="supporter-confirm-card">
+        <div class="auth-modal-head">
+          <h2 id="supporterConfirmTitle" data-premium-i18n="confirmTitle">サポーター登録の確認</h2>
+          <button id="supporterConfirmCloseBtn" type="button" class="auth-close-btn" aria-label="閉じる">×</button>
+        </div>
+        <dl class="supporter-confirm-list">
+          <dt data-premium-i18n="confirmServiceLabel">内容</dt>
+          <dd data-premium-i18n="confirmServiceBody">サポーター登録は、当サイト独自の利便性機能を利用するための月額自動更新サービスです。</dd>
+          <dt data-premium-i18n="confirmPriceLabel">料金</dt>
+          <dd data-premium-i18n="confirmPriceBody">月額200円（税込）。初回決済日を起点に、解約されるまで毎月自動で決済されます。</dd>
+          <dt data-premium-i18n="confirmCancelLabel">解約方法</dt>
+          <dd data-premium-i18n="confirmCancelBody">登録後はサポーターページからStripe Customer Portalを開き、いつでも解約できます。</dd>
+          <dt data-premium-i18n="confirmPeriodLabel">解約後の利用可能期間</dt>
+          <dd data-premium-i18n="confirmPeriodBody">解約後も、支払い済み期間の終了日まではサポーター向け機能を利用できます。</dd>
+          <dt data-premium-i18n="confirmRefundLabel">返金条件</dt>
+          <dd data-premium-i18n="confirmRefundBody">デジタルサービスの性質上、決済完了後の返金は原則できません。重複決済など個別事情がある場合はお問い合わせください。</dd>
+          <dt data-premium-i18n="confirmAssetLabel">注意</dt>
+          <dd data-premium-i18n="confirmAssetBody">FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスや、FF Logs APIを利用する権利を販売するものではありません。</dd>
+        </dl>
+        <p class="supporter-confirm-links">
+          <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
+          <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+          <a href="/commercial-transactions.html" target="_blank" rel="noopener noreferrer">Specified Commercial Transactions Act</a>
+        </p>
+        <button id="supporterConfirmProceedBtn" type="button" class="premium-checkout-btn" data-premium-i18n="confirmProceed">上記に同意してStripe決済へ進む</button>
       </div>
     </div>
 
@@ -159,7 +192,7 @@
           <button id="authSubmitBtn" type="submit" class="auth-submit-btn">ログイン</button>
         </form>
         <div class="auth-divider"><span>または</span></div>
-        <button id="authGoogleBtn" type="button" class="auth-google-btn">Google でログイン / 登録</button>
+        <button id="authGoogleBtn" type="button" class="auth-google-btn">Googleでログイン / 登録</button>
         <p id="authSwitchText" class="auth-switch-text">アカウントをお持ちでない方は <a href="#" id="authSwitchLink">会員登録</a></p>
       </div>
     </div>
@@ -171,89 +204,68 @@
     <script src="./scripts/premium-preview.js"></script>
     <script>
       (function () {
-        const btn = document.getElementById('langToggle');
-        if (!btn) return;
-        const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
-        btn.textContent = lang === 'ja' ? 'EN' : 'JA';
-        btn.addEventListener('click', function () {
-          const url = new URL(location.href);
-          url.searchParams.set('lang', lang === 'ja' ? 'en' : 'ja');
-          location.href = url.toString();
-        });
-      }());
-    </script>
-    <script>
-      (function () {
         const copy = {
-          ja: {
-            pageTitle: 'サポーター登録',
-            pageLead: '当サイト独自の解析処理、保存機能、広告非表示などを拡張するプランです。',
-            benefitsTitle: 'サポーター特典',
-            benefitsLead: 'Proプランは、当サイト独自の解析処理、保存機能、広告非表示などを提供するものです。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。',
-            focusTitle: 'Pro expands site-side convenience',
-            focusBody: 'デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。Proでは、解析回数上限や保存・利便性機能が拡張されます。',
-            benefitAnalyzeTitle: '解析回数の上限拡張',
-            benefitAnalyzeBody: '日々の比較検証をしやすいように、通常より高い利用上限を提供します。',
-            benefitBossTitle: 'ボス詠唱表示',
-            benefitBossBody: '詠唱タイミングと行動の噛み合いを確認できます。',
-            benefitBookmarkTitle: 'ブックマーク最大100件',
-            benefitBookmarkBody: '重要な比較状態を保存し、あとから開き直せます。',
-            benefitAdTitle: '広告非表示',
-            benefitAdBody: '比較画面や主要ページの広告を非表示にし、作業に集中しやすくします。',
-            benefitConvenienceTitle: '将来的な追加利便性・新機能へのアクセス',
-            benefitConvenienceBody: '今後追加予定の高度な利便性機能を、Pro向けに順次提供します。',
-            monthly: '月額',
-            priceAmount: '200円',
-            taxIncluded: '税込',
-            checkoutPending: '準備中',
-            reassurance: 'サポーター登録機能は準備中です。<br>しばらくお待ちください。',
-            donationKicker: 'Donation / 任意支援',
-            donationTitle: '任意Donation',
-            donationBody: 'このサイトは無料で利用できる非公式ファンツールです。支援は任意であり、支援の有無によって機能差はありません。いただいた支援は、サーバー費用・開発環境の維持に充てられます。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。',
-            donationButton: 'Donation（準備中）',
-            previewKicker: '実際の画面',
-            previewTitle: '機能プレビュー',
-            previewLead: '実際の FFLogs データから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は無料ユーザーでも利用できます。Proではボス詠唱表示、保存機能、解析回数上限などが拡張されます。新機能が追加され次第、こちらのプレビューでも公開します。',
-          },
+          ja: {},
           en: {
-            pageTitle: 'Supporter Plan',
-            pageLead: 'Pro expands this site’s analysis processing, saved workflows, ad-free convenience, and related site features.',
+            pageTitle: 'Supporter Registration',
+            pageLead: 'A monthly auto-renewing registration that expands this site’s own analysis processing, saved workflows, ad-free convenience, and related features.',
             benefitsTitle: 'Supporter Benefits',
-            benefitsLead: 'Pro provides this site’s own analysis processing, saved workflows, ad-free convenience, and related site features. It does not sell access to FINAL FANTASY XIV images, names, icons, or related materials.',
-            focusTitle: 'Pro expands site-side convenience',
-            focusBody: 'Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users. Pro expands analysis limits, saved workflows, and convenience features.',
+            benefitsLead: 'The Supporter plan provides this site’s own analysis processing, saved workflows, ad-free convenience, and related features. It does not sell access to FINAL FANTASY XIV images, names, icons, or related materials.',
             benefitAnalyzeTitle: 'Expanded Analysis Limits',
             benefitAnalyzeBody: 'Provides higher daily analysis limits for repeated comparison work.',
-            benefitBossTitle: 'Boss Cast Display',
-            benefitBossBody: 'Review boss cast timing against player actions.',
-            benefitBookmarkTitle: 'Up to 100 Bookmarks',
-            benefitBookmarkBody: 'Save important comparison states and reopen them later.',
             benefitAdTitle: 'Ad-free',
             benefitAdBody: 'Removes ads from comparison and primary pages so analysis stays easier to focus on.',
-            benefitConvenienceTitle: 'Future Convenience Features and New Feature Access',
-            benefitConvenienceBody: 'Upcoming advanced convenience features will be offered to Pro as they are added.',
+            benefitBossTitle: 'Boss Cast Display',
+            benefitBossBody: 'Review boss cast timing against player actions.',
+            benefitDpsGraphTitle: 'DPS Trend Graph',
+            benefitDpsGraphBody: 'Review damage flow as a line graph to make burst windows and recovery patterns easier to inspect.',
+            benefitBookmarkTitle: 'Up to 100 Bookmarks',
+            benefitBookmarkBody: 'Save important comparison states and reopen them later.',
+            benefitConvenienceTitle: 'Future Convenience Features',
+            benefitConvenienceBody: 'Upcoming convenience features will be offered to Supporters as they are added.',
             monthly: 'Monthly',
             priceAmount: '¥200',
-            taxIncluded: 'tax included',
-            checkoutPending: 'Coming soon',
-            reassurance: 'Supporter registration is currently in preparation.<br>Please check back later.',
+            taxIncluded: 'tax included, auto-renewing monthly',
+            checkoutStart: 'Review registration details',
+            reassurance: 'Supporter registration is a monthly auto-renewing service. You will be charged every month until you cancel.',
+            previewTitle: 'Feature Preview',
+            previewLeadFree: 'This preview is generated from real FF Logs data. Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users.',
+            previewLeadSupporter: 'The Supporter plan expands boss cast display, DPS trend graphs, saved workflows, and analysis limits. Newly added features will also be published in this preview as they become available.',
             donationKicker: 'Donation / Optional Support',
             donationTitle: 'Optional Donation',
-            donationBody: 'xiv-srd.com is a free, unofficial fan-made tool. Donations are optional and do not unlock any FINAL FANTASY XIV materials or site features. Support is used to help cover hosting and development costs. This site is not affiliated with or endorsed by SQUARE ENIX CO., LTD.',
+            donationBody: 'Donation is optional and separate from Supporter registration. Donations do not unlock site features. Support is used to help cover hosting and development costs. It does not sell access to FINAL FANTASY XIV images, names, icons, or related materials.',
             donationButton: 'Donation (coming soon)',
-            previewKicker: 'Preview',
-            previewTitle: 'Feature Preview',
-            previewLead: 'This preview is generated from real FFLogs data. Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users. Pro expands boss cast display, saved workflows, and analysis limits. Newly added features will also be published in this preview as they become available.',
+            confirmTitle: 'Confirm Supporter Registration',
+            confirmServiceLabel: 'Service',
+            confirmServiceBody: 'Supporter registration is a monthly auto-renewing service for this site’s own convenience features.',
+            confirmPriceLabel: 'Price',
+            confirmPriceBody: '¥200 per month including tax. Starting on the first payment date, you will be charged monthly until you cancel.',
+            confirmCancelLabel: 'Cancellation',
+            confirmCancelBody: 'After registration, open Stripe Customer Portal from the Supporter page to cancel at any time.',
+            confirmPeriodLabel: 'Access after cancellation',
+            confirmPeriodBody: 'After cancellation, Supporter features remain available until the end of the paid billing period.',
+            confirmRefundLabel: 'Refunds',
+            confirmRefundBody: 'Because this is a digital service, completed payments are generally non-refundable. Contact us for duplicate payments or special circumstances.',
+            confirmAssetLabel: 'Notice',
+            confirmAssetBody: 'This does not sell access to FINAL FANTASY XIV images, names, icons, or rights to use the FF Logs API.',
+            confirmProceed: 'Agree and proceed to Stripe Checkout',
           },
         };
         const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
         document.documentElement.lang = lang;
         document.querySelectorAll('[data-premium-i18n]').forEach((node) => {
           const value = copy[lang]?.[node.dataset.premiumI18n];
-          if (!value) return;
-          if (value.includes('<br>')) node.innerHTML = value;
-          else node.textContent = value;
+          if (value) node.textContent = value;
         });
+        const btn = document.getElementById('langToggle');
+        if (btn) {
+          btn.textContent = lang === 'ja' ? 'EN' : 'JA';
+          btn.addEventListener('click', function () {
+            const url = new URL(location.href);
+            url.searchParams.set('lang', lang === 'ja' ? 'en' : 'ja');
+            location.href = url.toString();
+          });
+        }
         globalThis.DonationModule?.applyDonationLinks?.();
       }());
     </script>
@@ -262,56 +274,100 @@
     <script type="module">
       let checkoutAfterLogin = false;
 
-      async function startCheckout() {
+      function setMessage(text) {
         const message = document.getElementById('premiumMessage');
-        const button = document.getElementById('supporterCheckoutBtn');
-        if (message) message.textContent = 'サポーター登録は準備中です。';
-        return;
+        if (message) message.textContent = text || '';
+      }
+
+      function premiumLang() {
+        return new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
+      }
+
+      function premiumText(ja, en) {
+        return premiumLang() === 'en' ? en : ja;
+      }
+
+      function formatCheckoutError(error) {
+        const detail = error?.message || premiumText('不明なエラー', 'Unknown error');
+        return premiumText(
+          `支払い画面を開けませんでした。一度再試行し、続く場合は時間をおいてからもう一度お試しください。請求は完了していません。詳細: ${detail}`,
+          `Could not open Stripe Checkout. Try once more, then try again later if it keeps failing. No charge has been completed. Detail: ${detail}`,
+        );
+      }
+
+      async function getSessionOrLogin() {
+        const auth = globalThis.AuthModule;
+        await auth?.init?.();
+        const session = await auth?.getSession?.();
+        if (session?.access_token) return session;
+        checkoutAfterLogin = true;
+        setMessage(premiumText('先にログインまたは会員登録をしてください。', 'Please log in or sign up first.'));
+        globalThis.AuthUIModule?.openAuthModal?.('login');
+        return null;
+      }
+
+      function openConfirmModal() {
+        const modal = document.getElementById('supporterConfirmModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+        document.getElementById('supporterConfirmProceedBtn')?.focus();
+      }
+
+      function closeConfirmModal() {
+        const modal = document.getElementById('supporterConfirmModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      async function requestCheckout() {
+        const button = document.getElementById('supporterConfirmProceedBtn');
         if (button) button.disabled = true;
         try {
-          const auth = globalThis.AuthModule;
-          await auth?.init?.();
-          const session = await auth?.getSession?.();
-          if (!session?.access_token) {
-            checkoutAfterLogin = true;
-            if (message) message.textContent = '先にログインまたは会員登録をしてください。';
-            globalThis.AuthUIModule?.openAuthModal?.('login');
-            return;
-          }
+          const session = await getSessionOrLogin();
+          if (!session) return;
           const res = await fetch('/api/create-checkout', {
             method: 'POST',
             headers: { Authorization: 'Bearer ' + session.access_token },
           });
           const data = await res.json().catch(() => null);
           if (!res.ok || !data?.url) {
-            throw new Error(data?.error || '支払い画面の作成に失敗しました。');
+            throw new Error(data?.error || premiumText('支払い画面の作成に失敗しました。', 'Failed to create the checkout page.'));
           }
           window.location.href = data.url;
         } catch (error) {
-          if (message) message.textContent = error.message || 'エラーが発生しました。';
+          setMessage(formatCheckoutError(error));
         } finally {
           if (button) button.disabled = false;
         }
       }
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-          globalThis.AuthUIModule?.initAuthUI?.();
-          globalThis.AuthModule?.onAuthStateChange?.(() => {
-            if (!checkoutAfterLogin) return;
-            checkoutAfterLogin = false;
-            startCheckout();
-          });
-          document.getElementById('supporterCheckoutBtn')?.addEventListener('click', startCheckout);
-        });
-      } else {
+      async function startCheckout() {
+        const session = await getSessionOrLogin();
+        if (!session) return;
+        setMessage('');
+        openConfirmModal();
+      }
+
+      function bindSupporterPage() {
         globalThis.AuthUIModule?.initAuthUI?.();
         globalThis.AuthModule?.onAuthStateChange?.(() => {
-          if (!checkoutAfterLogin) return;
-          checkoutAfterLogin = false;
-          startCheckout();
+          if (checkoutAfterLogin) {
+            checkoutAfterLogin = false;
+            startCheckout();
+          }
         });
         document.getElementById('supporterCheckoutBtn')?.addEventListener('click', startCheckout);
+        document.getElementById('supporterConfirmProceedBtn')?.addEventListener('click', requestCheckout);
+        document.getElementById('supporterConfirmCloseBtn')?.addEventListener('click', closeConfirmModal);
+        document.getElementById('supporterConfirmBackdrop')?.addEventListener('click', closeConfirmModal);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindSupporterPage);
+      } else {
+        bindSupporterPage();
       }
     </script>
   </body>

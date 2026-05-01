@@ -20,12 +20,26 @@
 
   function computeRollingDps(damageEvents, maxT, windowSec = 15) {
     if (!damageEvents || !damageEvents.length) return [];
+    const events = [...damageEvents]
+      .map((event) => ({
+        t: Number(event?.t || 0),
+        amount: Number(event?.amount || 0),
+      }))
+      .filter((event) => Number.isFinite(event.t) && Number.isFinite(event.amount))
+      .sort((a, b) => a.t - b.t);
     const points = [];
+    let totalDamage = 0;
+    let addIndex = 0;
+    let removeIndex = 0;
     for (let t = 0; t <= maxT; t += 1) {
       const windowStart = Math.max(0, t - windowSec);
-      let totalDamage = 0;
-      for (const event of damageEvents) {
-        if (event.t >= windowStart && event.t < t) totalDamage += event.amount;
+      while (addIndex < events.length && events[addIndex].t < t) {
+        totalDamage += events[addIndex].amount;
+        addIndex += 1;
+      }
+      while (removeIndex < addIndex && events[removeIndex].t < windowStart) {
+        totalDamage -= events[removeIndex].amount;
+        removeIndex += 1;
       }
       const elapsed = Math.min(t, windowSec);
       points.push({ t, dps: elapsed > 0 ? totalDamage / elapsed : 0 });

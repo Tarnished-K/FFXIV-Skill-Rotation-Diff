@@ -7,7 +7,7 @@ const {
 } = require('../scripts/shared/app-utils');
 
 describe('parseFFLogsUrl', () => {
-  it('extracts report ids from FFLogs report urls', () => {
+  it('extracts report ids from FF Logs report urls', () => {
     expect(parseFFLogsUrl('https://ja.fflogs.com/reports/8TP4ZKDkxbBwgmtC?fight=21&type=damage-done')).toEqual({
       reportId: '8TP4ZKDkxbBwgmtC',
       original: 'https://ja.fflogs.com/reports/8TP4ZKDkxbBwgmtC?fight=21&type=damage-done',

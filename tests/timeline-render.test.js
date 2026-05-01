@@ -45,7 +45,9 @@ function createTimelineWrap() {
 }
 
 function loadTimelineHarness() {
+  const sharedPath = path.join(__dirname, '../scripts/ui/timeline-shared.js');
   const sourcePath = path.join(__dirname, '../scripts/ui/timeline.js');
+  const sharedSource = fs.readFileSync(sharedPath, 'utf8');
   const source = fs.readFileSync(sourcePath, 'utf8');
   const timelineWrap = createTimelineWrap();
 
@@ -180,7 +182,7 @@ function loadTimelineHarness() {
   context.globalThis = context;
 
   vm.createContext(context);
-  vm.runInContext(`${source}\nmodule.exports = { renderTimeline, renderPartyTimeline, bindTimelineInteractions, __findSelfBuff: findSelfBuff, correlateHealing, removeKnownNonDamageFollowupCasts };`, context);
+  vm.runInContext(`${sharedSource}\n${source}\nmodule.exports = { renderTimeline, renderPartyTimeline, bindTimelineInteractions, __findSelfBuff: findSelfBuff, correlateHealing, removeKnownNonDamageFollowupCasts };`, context);
 
   return {
     renderTimeline: context.module.exports.renderTimeline,
@@ -248,7 +250,8 @@ describe('renderTimeline', () => {
 
 describe('renderPartyTimeline', () => {
   it('renders compact party rows for both logs', () => {
-    const { renderPartyTimeline, timelineWrap } = loadTimelineHarness();
+    const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.isPremium = true;
 
     renderPartyTimeline();
 
@@ -263,6 +266,32 @@ describe('renderPartyTimeline', () => {
     expect(timelineWrap.innerHTML).toContain('data-party-filter="th"');
     expect((timelineWrap.innerHTML.match(/data-party-filter="/g) || []).length).toBe(4);
     expect(timelineWrap.innerHTML).not.toContain('data-party-graph-mode');
+  });
+
+  it('shows the first 30 seconds of the personal DPS graph for free users and masks the rest', () => {
+    const { renderTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.isPremium = false;
+    context.state.lang = 'en';
+    context.state.rollingDpsA = [{ t: 8, dps: 1000 }, { t: 40, dps: 1200 }];
+    context.state.rollingDpsB = [{ t: 8, dps: 900 }, { t: 40, dps: 1100 }];
+
+    renderTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('dps-graph-svg');
+    expect(timelineWrap.innerHTML).toContain('dps-supporter-mask');
+    expect(timelineWrap.innerHTML).toContain('DPS after 30s is a Supporter feature');
+  });
+
+  it('shows the first 30 seconds of the party DPS graph for free users and masks the rest', () => {
+    const { renderPartyTimeline, timelineWrap, context } = loadTimelineHarness();
+    context.state.isPremium = false;
+    context.state.lang = 'en';
+
+    renderPartyTimeline();
+
+    expect(timelineWrap.innerHTML).toContain('pt-dps-graph');
+    expect(timelineWrap.innerHTML).toContain('dps-supporter-mask party');
+    expect(timelineWrap.innerHTML).toContain('Party DPS after 30s is a Supporter feature');
   });
 
   it('renders boss casts and tracked player debuffs on the personal timeline', () => {

@@ -175,7 +175,7 @@ async function fetchJaNames(actionIds) {
 // --- Main ---
 
 async function main() {
-  console.log(`Fetching FFLogs report ${REPORT_CODE}, fight ${FIGHT_ID} ...`);
+  console.log(`Fetching FF Logs report ${REPORT_CODE}, fight ${FIGHT_ID} ...`);
 
   const report = await fetchReportMeta(REPORT_CODE);
   const fight = report.fights.find(f => f.id === FIGHT_ID);

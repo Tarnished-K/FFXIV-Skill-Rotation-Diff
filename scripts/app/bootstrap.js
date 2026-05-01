@@ -186,6 +186,26 @@ function setStepMessage(step, message = '', isError = false) {
   target.classList.toggle('step-message-error', Boolean(isError && message));
 }
 
+function formatWorkflowError(stage, error) {
+  const detail = error?.message || String(error || '');
+  if (state.lang === 'en') {
+    if (stage === 'load_reports') {
+      return `Failed to load FF Logs reports. Check that both URLs are public report URLs, then try again. If the URLs are valid and this repeats, it may be a site-side or FF Logs API issue. Detail: ${detail}`;
+    }
+    if (stage === 'load_players') {
+      return `Failed to load players for the selected fights. Try again once. If it still fails, choose another kill fight or report the issue. Detail: ${detail}`;
+    }
+    return `Comparison failed while loading timeline data. Retry once, or try another FF Logs URL if the same player/fight keeps failing. Detail: ${detail}`;
+  }
+  if (stage === 'load_reports') {
+    return `FF Logsレポートを読み込めませんでした。2つとも公開レポートURLか確認してから再試行してください。URLが正しく何度も失敗する場合は、サイト側またはFF Logs API側の問題の可能性があります。詳細: ${detail}`;
+  }
+  if (stage === 'load_players') {
+    return `選択した戦闘のプレイヤー一覧を取得できませんでした。一度再試行し、続く場合は別のKill戦闘または別のログURLを試してください。詳細: ${detail}`;
+  }
+  return `タイムラインデータの取得中に比較へ失敗しました。一度再試行し、同じプレイヤー・戦闘で続く場合は別のFF Logs URLも試してください。詳細: ${detail}`;
+}
+
 function clearStepMessages() {
   setStepMessage(1, '');
   setStepMessage(2, '');
@@ -671,7 +691,11 @@ async function handleLoadReports(options = {}) {
     logDebug('ability map indexed', {count: state.abilityById.size});
     const fightsA = extractSelectableFights(state.reportA);
     const fightsB = extractSelectableFights(state.reportB);
-    if (!fightsA.length || !fightsB.length) throw new Error('選択可能なKill戦闘が見つかりませんでした。');
+    if (!fightsA.length || !fightsB.length) {
+      throw new Error(state.lang === 'en'
+        ? 'No kill fights were found. Wipe support is not available yet, so another public report URL with a kill is needed.'
+        : '選択可能なKill戦闘が見つかりませんでした。Wipeにはまだ対応していないため、Killが含まれる別の公開ログURLが必要です。');
+    }
     fillFightSelect(el.fightA, fightsA, state.reportA);
     fillFightSelect(el.fightB, fightsB, state.reportB);
     const playerPlaceholder = `<option value="">${t('playersNeedReload')}</option>`;
@@ -703,7 +727,7 @@ async function handleLoadReports(options = {}) {
     return true;
   } catch (e) {
     sendAnalyticsEvent('api_error', { stage: 'load_reports', message: e.message });
-    setStepMessage(1, `取得失敗: ${e.message}`, true);
+    setStepMessage(1, formatWorkflowError('load_reports', e), true);
     return false;
   } finally {
     setLoadingWorkflowDisabled(false);
@@ -763,7 +787,7 @@ async function handleLoadPlayers(options = {}) {
     return true;
   } catch (e) {
     sendAnalyticsEvent('api_error', { stage: 'load_players', message: e.message });
-    setStepMessage(2, `プレイヤー取得失敗: ${e.message}`, true);
+    setStepMessage(2, formatWorkflowError('load_players', e), true);
     return false;
   } finally {
     setLoadingWorkflowDisabled(false);
@@ -971,7 +995,7 @@ async function handleCompare(options = {}) {
     resetComparisonData();
     setComparisonError('compare', e.message);
     logError('TL取得失敗', {error: e.message});
-    setStepMessage(3, t('compareFailed')(e.message), true);
+    setStepMessage(3, formatWorkflowError('compare', e), true);
   }
   el.step4.classList.remove('hidden');
   setMcPower(state.compareError ? 0 : 100, state.compareError ? 'ERROR' : 'COMPLETE');

@@ -32,7 +32,12 @@ exports.handler = async (event) => {
     return json(405, { ok: false, error: 'Method Not Allowed' });
   }
 
-  const payload = JSON.parse(event.body || '{}');
+  let payload;
+  try {
+    payload = JSON.parse(event.body || '{}');
+  } catch {
+    return json(400, { ok: false, error: 'Request body must be valid JSON.' });
+  }
   const normalized = normalizeFeedbackInput(payload);
   if (!normalized.ok) {
     return json(400, { ok: false, error: normalized.error });

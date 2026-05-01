@@ -35,7 +35,7 @@
       introTitle: localized.tutorialIntroTitle || english.tutorialIntroTitle || 'Quick Start Guide',
       introBody: localized.tutorialIntroBody || english.tutorialIntroBody || 'This guide walks you through the minimum steps needed to load two public logs and reach the comparison timeline.',
       loadReportsTitle: localized.tutorialLoadReportsTitle || english.tutorialLoadReportsTitle || '1. Enter two public log URLs',
-      loadReportsBody: localized.tutorialLoadReportsBody || english.tutorialLoadReportsBody || 'Paste one FFLogs report URL into A and one into B, then load the reports. When the fight selectors appear, this step is complete.',
+      loadReportsBody: localized.tutorialLoadReportsBody || english.tutorialLoadReportsBody || 'Paste one FF Logs report URL into A and one into B, then load the reports. When the fight selectors appear, this step is complete.',
       loadPlayersTitle: localized.tutorialLoadPlayersTitle || english.tutorialLoadPlayersTitle || '2. Choose fights and load players',
       loadPlayersBody: localized.tutorialLoadPlayersBody || english.tutorialLoadPlayersBody || 'Pick the fight you want to compare from each log, then load the player list for both sides.',
       compareTitle: localized.tutorialCompareTitle || english.tutorialCompareTitle || '3. Choose players and start comparison',

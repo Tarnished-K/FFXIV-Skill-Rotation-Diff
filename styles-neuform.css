@@ -1179,4 +1179,27 @@ body::before {
   .sidebar::before {
     width: 6px;
   }
+
+  .premium-page .premium-main.shell-page-main {
+    width: min(100%, calc(100vw - 84px));
+  }
+
+  .premium-page .topbar {
+    width: calc(100vw - 60px);
+    box-sizing: border-box;
+  }
+
+  .premium-page .topbar-identity {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .premium-page .topbar h1 {
+    white-space: normal;
+  }
+
+  .premium-page .topbar p {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }

@@ -6,7 +6,7 @@
     <title>FFXIV Skill Rotation Diff</title>
     <meta
       name="description"
-      content="FFLogs の公開ログ URL を 2 つ読み込み、プレイヤーごとのスキル回しとタイムラインを比較できるツールです。"
+      content="FF Logs の公開ログ URL を 2 つ読み込み、プレイヤーごとのスキル回しとタイムラインを比較できるツールです。"
     />
     <link rel="canonical" href="https://xiv-srd.com/" />
     <link rel="preload" as="image" href="assets/ui/bg-main-shell.webp" fetchpriority="high" />
@@ -205,7 +205,7 @@
               <span class="step-number-badge">1</span>
             </div>
             <button id="loadResetBtn" type="button" class="step-reset-btn">リセット</button>
-            <h2 id="step1Title">FFLogsの公開ログを読み込む</h2>
+            <h2 id="step1Title">FF Logsの公開ログを読み込む</h2>
             <p id="publicOnlyNote" class="submessage">比較したい2つのレポートURLを入力してください。</p>
             <label id="logUrlALabel">A レポートURL（比較元）
               <input id="urlA" type="url" placeholder="https://www.fflogs.com/reports/xxxxxxxx#fight=1" />
@@ -214,7 +214,6 @@
               <input id="urlB" type="url" placeholder="https://www.fflogs.com/reports/yyyyyyyy#fight=1" />
             </label>
             <button id="loadBtn">読み込み開始</button>
-            <p id="step1Message" class="message"></p>
           </section>
 
           <!-- STEP 2 -->
@@ -231,7 +230,6 @@
                 <select id="fightB"></select></label>
             </div>
             <button id="loadPlayersBtn">この戦闘でプレイヤー一覧を取得</button>
-            <p id="step2Message" class="submessage"></p>
           </section>
 
           <!-- STEP 3 -->
@@ -248,7 +246,6 @@
                 <select id="playerB"></select></label>
             </div>
             <button id="compareBtn">比較を開始</button>
-            <p id="step3Message" class="submessage"></p>
           </section>
 
           <!-- MOTHERCRYSTAL STATUS PANEL -->
@@ -325,6 +322,11 @@
                 <button id="saveBookmarkBtn" type="button" class="bookmark-action-btn">ブックマーク保存</button>
                 <button id="showBookmarksBtn" type="button" class="bookmark-action-btn ghost">ブックマーク一覧</button>
               </div>
+              <div class="step-message-stack" aria-live="polite">
+                <p id="step1Message" class="message"></p>
+                <p id="step2Message" class="submessage"></p>
+                <p id="step3Message" class="submessage"></p>
+              </div>
               <div id="uiToast" class="ui-toast hidden" role="status" aria-live="polite"></div>
             </div>
             <div id="phaseContainer" class="phase-btns"></div>
@@ -359,7 +361,7 @@
             </div>
             <div class="footer-legal">
               <small>© SQUARE ENIX. 本サイトは株式会社スクウェア・エニックスとは関係のない非公式ファンツールです。FINAL FANTASY XIV and related materials are trademarks and/or copyrighted works of SQUARE ENIX CO., LTD.</small>
-              <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FFLogs</a>. &nbsp;|&nbsp; <a id="privacyLink" href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms</a> &nbsp;|&nbsp; <a href="/commercial-transactions.html">Specified Commercial Transactions Act</a> &nbsp;|&nbsp; <a href="/premium.html#donation">Donation</a></small>
+              <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FF Logs</a>. &nbsp;|&nbsp; <a id="privacyLink" href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms</a> &nbsp;|&nbsp; <a href="/commercial-transactions.html">Specified Commercial Transactions Act</a> &nbsp;|&nbsp; <a href="/premium.html#donation">Donation</a></small>
             </div>
             <small class="build-info" data-build-info>Version loading...</small>
           </div>

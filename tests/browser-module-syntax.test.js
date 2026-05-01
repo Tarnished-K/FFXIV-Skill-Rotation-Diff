@@ -6,6 +6,8 @@ describe('browser-loaded module syntax', () => {
     const files = [
       'scripts/data/icon-resolver.js',
       'scripts/data/report-transforms.js',
+      'scripts/data/fflogs-report.js',
+      'scripts/data/fflogs-events.js',
       'scripts/data/fflogs.js',
       'scripts/data/analytics.js',
       'scripts/ui/phase-ui.js',

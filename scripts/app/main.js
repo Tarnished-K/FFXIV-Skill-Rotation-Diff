@@ -10,6 +10,8 @@ import '../shared/selection-utils.js';
 import '../shared/buff-utils.js';
 import '../shared/phase-utils.js';
 import '../shared/timeline-utils.js';
+import '../data/fflogs-report.js';
+import '../data/fflogs-events.js';
 import '../data/fflogs.js';
 import '../ui/timeline-shared.js';
 import '../ui/timeline.js';

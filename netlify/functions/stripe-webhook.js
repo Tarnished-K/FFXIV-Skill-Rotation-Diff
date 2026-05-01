@@ -8,6 +8,8 @@ const {
   upsertSubscription,
 } = require('../../lib/billing');
 
+const STRIPE_SIGNATURE_TOLERANCE_SECONDS = 5 * 60;
+
 function verifyStripeSignature({ rawBody, signature, secret }) {
   const parts = {};
   for (const part of signature.split(',')) {
@@ -18,6 +20,10 @@ function verifyStripeSignature({ rawBody, signature, secret }) {
   const timestamp = parts.t;
   const expectedSig = parts.v1;
   if (!timestamp || !expectedSig) return false;
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isFinite(timestampSeconds)) return false;
+  const ageSeconds = Math.abs((Date.now() / 1000) - timestampSeconds);
+  if (ageSeconds > STRIPE_SIGNATURE_TOLERANCE_SECONDS) return false;
   const payload = `${timestamp}.${rawBody}`;
   const hmac = crypto.createHmac('sha256', secret).update(payload, 'utf8').digest('hex');
   try {

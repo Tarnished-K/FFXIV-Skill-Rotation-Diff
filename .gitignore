@@ -2,6 +2,10 @@
 .netlify
 node_modules/
 netlify-dev*.log
+*.log
+.env
+.env.*
+!.env.example
 .claude/settings.local.json
 .preview-export/
 test-results/

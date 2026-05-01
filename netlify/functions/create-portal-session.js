@@ -9,15 +9,20 @@ const {
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
   'Cache-Control': 'no-store',
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-function json(statusCode, body) {
+function corsHeaders(origin) {
+  const headers = { ...JSON_HEADERS, Vary: 'Origin' };
+  if (isAllowedOrigin(origin)) headers['Access-Control-Allow-Origin'] = origin;
+  return headers;
+}
+
+function json(statusCode, body, origin = '') {
   return {
     statusCode,
-    headers: JSON_HEADERS,
+    headers: corsHeaders(origin),
     body: JSON.stringify(body),
   };
 }
@@ -45,7 +50,9 @@ function isAllowedOrigin(origin) {
   try {
     const url = new URL(origin);
     return url.hostname === 'xiv-srd.com'
-      || url.hostname.endsWith('.netlify.app')
+      || url.hostname === 'www.xiv-srd.com'
+      || url.hostname === 'vermillion-crumble-a1f1aa.netlify.app'
+      || url.hostname.endsWith('--vermillion-crumble-a1f1aa.netlify.app')
       || url.hostname === 'localhost'
       || url.hostname === '127.0.0.1';
   } catch {
@@ -69,6 +76,10 @@ function getSubscriptionPeriodEnd(subscription) {
     : null;
 }
 
+function stripeSearchLiteral(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 async function createPortalSession(stripeSecretKey, customerId, returnUrl) {
   const params = new URLSearchParams();
   params.set('customer', customerId);
@@ -88,9 +99,9 @@ async function createPortalSession(stripeSecretKey, customerId, returnUrl) {
 
 async function recoverCustomerFromLiveSubscription(stripeSecretKey, userId) {
   const params = new URLSearchParams();
-  params.set('status', 'all');
-  params.set('limit', '100');
-  const res = await fetch(`https://api.stripe.com/v1/subscriptions?${params.toString()}`, {
+  params.set('query', `metadata['user_id']:'${stripeSearchLiteral(userId)}'`);
+  params.set('limit', '10');
+  const res = await fetch(`https://api.stripe.com/v1/subscriptions/search?${params.toString()}`, {
     headers: { Authorization: `Bearer ${stripeSecretKey}` },
   });
   if (!res.ok) return null;
@@ -125,32 +136,32 @@ async function recoverCustomerFromLiveSubscription(stripeSecretKey, userId) {
 }
 
 exports.handler = async (event) => {
+  const origin = getOrigin(event);
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: JSON_HEADERS, body: '' };
+    return { statusCode: 204, headers: corsHeaders(origin), body: '' };
   }
   if (event.httpMethod !== 'POST') {
-    return json(405, { ok: false, error: 'Method Not Allowed' });
+    return json(405, { ok: false, error: 'Method Not Allowed' }, origin);
   }
 
   const stripeSecretKey = readRuntimeEnv('STRIPE_SECRET_KEY');
   if (!stripeSecretKey) {
-    return json(503, { ok: false, error: 'Customer Portal is not configured.' });
+    return json(503, { ok: false, error: 'Customer Portal is not configured.' }, origin);
   }
 
   const jwt = extractJWT(event);
   const userId = jwt ? await getUserIdFromJWT(jwt) : null;
   if (!userId) {
-    return json(401, { ok: false, error: 'Login required.' });
+    return json(401, { ok: false, error: 'Login required.' }, origin);
   }
 
   const customer = await getBillingCustomer(userId);
   if (!customer?.stripe_customer_id) {
-    return json(404, { ok: false, error: 'No supporter registration was found for this account.' });
+    return json(404, { ok: false, error: 'No supporter registration was found for this account.' }, origin);
   }
 
-  const origin = getOrigin(event);
   if (!isAllowedOrigin(origin)) {
-    return json(400, { ok: false, error: 'Origin is not allowed for the portal.' });
+    return json(400, { ok: false, error: 'Origin is not allowed for the portal.' }, origin);
   }
 
   const returnUrl = readRuntimeEnv('STRIPE_PORTAL_RETURN_URL') || `${origin}/premium.html`;
@@ -162,19 +173,19 @@ exports.handler = async (event) => {
       if (recoveredCustomerId) {
         ({ res, data } = await createPortalSession(stripeSecretKey, recoveredCustomerId, returnUrl));
         if (res.ok && data?.url) {
-          return json(200, { ok: true, url: data.url });
+          return json(200, { ok: true, url: data.url }, origin);
         }
       }
       return json(409, {
         ok: false,
         error: 'Saved supporter billing data is not available in the current billing mode. Please register again.',
-      });
+      }, origin);
     }
     return json(res.status || 502, {
       ok: false,
       error: 'Failed to create Customer Portal session.',
-    });
+    }, origin);
   }
 
-  return json(200, { ok: true, url: data.url });
+  return json(200, { ok: true, url: data.url }, origin);
 };

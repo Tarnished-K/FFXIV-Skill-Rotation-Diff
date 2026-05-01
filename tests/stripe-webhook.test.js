@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 function signPayload(rawBody, secret) {
-  const timestamp = '1777611813';
+  const timestamp = String(Math.floor(Date.now() / 1000));
   const signature = crypto
     .createHmac('sha256', secret)
     .update(`${timestamp}.${rawBody}`, 'utf8')
@@ -181,5 +181,25 @@ describe('stripe webhook handler', () => {
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual({ ok: true, skipped: true });
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects signatures outside the timestamp tolerance', async () => {
+    const handler = await loadHandler();
+    const secret = 'whsec_test_secret';
+    const rawBody = JSON.stringify({ id: 'evt_old', type: 'customer.subscription.updated', data: { object: {} } });
+    const timestamp = String(Math.floor(Date.now() / 1000) - 301);
+    const signature = crypto
+      .createHmac('sha256', secret)
+      .update(`${timestamp}.${rawBody}`, 'utf8')
+      .digest('hex');
+
+    const response = await handler({
+      httpMethod: 'POST',
+      headers: { 'stripe-signature': `t=${timestamp},v1=${signature}` },
+      body: rawBody,
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toBe('Invalid signature');
   });
 });

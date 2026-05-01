@@ -39,7 +39,13 @@ exports.handler = async (event) => {
     return json(503, { ok: false, error: 'Feedback storage is not configured.' });
   }
 
-  const { id, isRead } = JSON.parse(event.body || '{}');
+  let payload;
+  try {
+    payload = JSON.parse(event.body || '{}');
+  } catch {
+    return json(400, { ok: false, error: 'Request body must be valid JSON.' });
+  }
+  const { id, isRead } = payload;
   const result = await feedbackDb.updateFeedbackReadState({ id, isRead });
 
   return json(200, {

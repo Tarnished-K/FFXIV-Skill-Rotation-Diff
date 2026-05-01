@@ -4,15 +4,20 @@ const { getBillingCustomer, getUserIdFromJWT } = require('../../lib/billing');
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
   'Cache-Control': 'no-store',
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-function json(statusCode, body) {
+function corsHeaders(origin) {
+  const headers = { ...JSON_HEADERS, Vary: 'Origin' };
+  if (isAllowedOrigin(origin)) headers['Access-Control-Allow-Origin'] = origin;
+  return headers;
+}
+
+function json(statusCode, body, origin = '') {
   return {
     statusCode,
-    headers: JSON_HEADERS,
+    headers: corsHeaders(origin),
     body: JSON.stringify(body),
   };
 }
@@ -44,7 +49,9 @@ function isAllowedOrigin(origin) {
   try {
     const url = new URL(origin);
     return url.hostname === 'xiv-srd.com'
-      || url.hostname.endsWith('.netlify.app')
+      || url.hostname === 'www.xiv-srd.com'
+      || url.hostname === 'vermillion-crumble-a1f1aa.netlify.app'
+      || url.hostname.endsWith('--vermillion-crumble-a1f1aa.netlify.app')
       || url.hostname === 'localhost'
       || url.hostname === '127.0.0.1';
   } catch {
@@ -79,32 +86,32 @@ async function createCheckoutSession(stripeSecretKey, params) {
 }
 
 exports.handler = async (event) => {
+  const origin = getOrigin(event);
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: JSON_HEADERS, body: '' };
+    return { statusCode: 204, headers: corsHeaders(origin), body: '' };
   }
   if (event.httpMethod !== 'POST') {
-    return json(405, { ok: false, error: 'Method Not Allowed' });
+    return json(405, { ok: false, error: 'Method Not Allowed' }, origin);
   }
 
   const stripeSecretKey = readRuntimeEnv('STRIPE_SECRET_KEY');
   const priceId = readRuntimeEnv('STRIPE_PRICE_ID');
   const paymentsEnabled = isTruthy(readRuntimeEnv('SUPPORTER_PAYMENTS_ENABLED'));
   if (!paymentsEnabled) {
-    return json(503, { ok: false, error: 'Supporter registration is not enabled yet.' });
+    return json(503, { ok: false, error: 'Supporter registration is not enabled yet.' }, origin);
   }
   if (!stripeSecretKey || !priceId) {
-    return json(503, { ok: false, error: 'Checkout is not configured.' });
+    return json(503, { ok: false, error: 'Checkout is not configured.' }, origin);
   }
 
   const jwt = extractJWT(event);
   const userId = jwt ? await getUserIdFromJWT(jwt) : null;
   if (!userId) {
-    return json(401, { ok: false, error: 'Login required.' });
+    return json(401, { ok: false, error: 'Login required.' }, origin);
   }
 
-  const origin = getOrigin(event);
   if (!isAllowedOrigin(origin)) {
-    return json(400, { ok: false, error: 'Origin is not allowed for checkout.' });
+    return json(400, { ok: false, error: 'Origin is not allowed for checkout.' }, origin);
   }
   const customer = await getBillingCustomer(userId);
   const params = new URLSearchParams();
@@ -129,8 +136,8 @@ exports.handler = async (event) => {
     return json(res.status || 502, {
       ok: false,
       error: data?.error?.message || 'Failed to create checkout session.',
-    });
+    }, origin);
   }
 
-  return json(200, { ok: true, url: data.url });
+  return json(200, { ok: true, url: data.url }, origin);
 };

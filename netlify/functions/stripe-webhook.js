@@ -52,16 +52,28 @@ async function resolveUserIdFromCustomer(customerId) {
   return customer?.user_id || null;
 }
 
+function getSubscriptionPeriodEnd(subscription) {
+  const unixSeconds = subscription?.current_period_end
+    || subscription?.items?.data?.[0]?.current_period_end
+    || subscription?.items?.data?.find?.((item) => item?.current_period_end)?.current_period_end;
+  return Number.isFinite(Number(unixSeconds))
+    ? new Date(Number(unixSeconds) * 1000).toISOString()
+    : null;
+}
+
 async function upsertStripeSubscriptionObject(obj, fallbackUserId) {
   if (!obj?.id) return;
   const userId = obj.metadata?.user_id || fallbackUserId || await resolveUserIdFromCustomer(String(obj.customer || ''));
   if (!userId) return;
+  const currentPeriodEnd = getSubscriptionPeriodEnd(obj);
+  if (!currentPeriodEnd) return;
+  await upsertBillingCustomer({ userId, stripeCustomerId: String(obj.customer) });
   await upsertSubscription({
     id: obj.id,
     user_id: userId,
     stripe_customer_id: String(obj.customer),
     status: obj.status,
-    current_period_end: new Date(obj.current_period_end * 1000).toISOString(),
+    current_period_end: currentPeriodEnd,
     cancel_at_period_end: obj.cancel_at_period_end || false,
     updated_at: new Date().toISOString(),
   });
@@ -89,12 +101,12 @@ exports.handler = async (event) => {
   } catch {
     return { statusCode: 400, body: 'Invalid JSON' };
   }
-  const { isDuplicate } = await recordWebhookEvent({
+  const { isDuplicate, processedAt } = await recordWebhookEvent({
     stripeEventId: stripeEvent.id,
     type: stripeEvent.type,
     payload: stripeEvent,
   });
-  if (isDuplicate) {
+  if (isDuplicate && processedAt) {
     return { statusCode: 200, body: JSON.stringify({ ok: true, skipped: true }) };
   }
   const obj = stripeEvent.data && stripeEvent.data.object;

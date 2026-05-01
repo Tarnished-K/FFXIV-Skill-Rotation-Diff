@@ -1,5 +1,10 @@
 const { readRuntimeEnv } = require('../../lib/runtime-env');
-const { getBillingCustomer, getUserIdFromJWT } = require('../../lib/billing');
+const {
+  getBillingCustomer,
+  getUserIdFromJWT,
+  upsertBillingCustomer,
+  upsertSubscription,
+} = require('../../lib/billing');
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -48,6 +53,77 @@ function isAllowedOrigin(origin) {
   }
 }
 
+function isCustomerModeMismatch(data) {
+  const message = String(data?.error?.message || '');
+  return data?.error?.code === 'resource_missing'
+    && message.includes('No such customer')
+    && message.includes('similar object exists');
+}
+
+function getSubscriptionPeriodEnd(subscription) {
+  const unixSeconds = subscription?.current_period_end
+    || subscription?.items?.data?.[0]?.current_period_end
+    || subscription?.items?.data?.find?.((item) => item?.current_period_end)?.current_period_end;
+  return Number.isFinite(Number(unixSeconds))
+    ? new Date(Number(unixSeconds) * 1000).toISOString()
+    : null;
+}
+
+async function createPortalSession(stripeSecretKey, customerId, returnUrl) {
+  const params = new URLSearchParams();
+  params.set('customer', customerId);
+  params.set('return_url', returnUrl);
+
+  const res = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${stripeSecretKey}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+  const data = await res.json().catch(() => null);
+  return { res, data };
+}
+
+async function recoverCustomerFromLiveSubscription(stripeSecretKey, userId) {
+  const params = new URLSearchParams();
+  params.set('status', 'all');
+  params.set('limit', '100');
+  const res = await fetch(`https://api.stripe.com/v1/subscriptions?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${stripeSecretKey}` },
+  });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  const now = Date.now();
+  const subscription = data?.data
+    ?.filter((item) => item?.metadata?.user_id === userId)
+    ?.filter((item) => ['active', 'trialing'].includes(item?.status))
+    ?.find((item) => {
+      const periodEnd = getSubscriptionPeriodEnd(item);
+      return periodEnd && Date.parse(periodEnd) >= now;
+    });
+  if (!subscription?.customer) return null;
+
+  const stripeCustomerId = typeof subscription.customer === 'string'
+    ? subscription.customer
+    : subscription.customer.id;
+  const currentPeriodEnd = getSubscriptionPeriodEnd(subscription);
+  if (!stripeCustomerId || !currentPeriodEnd) return null;
+
+  await upsertBillingCustomer({ userId, stripeCustomerId });
+  await upsertSubscription({
+    id: subscription.id,
+    user_id: userId,
+    stripe_customer_id: stripeCustomerId,
+    status: subscription.status,
+    current_period_end: currentPeriodEnd,
+    cancel_at_period_end: subscription.cancel_at_period_end || false,
+    updated_at: new Date().toISOString(),
+  });
+  return stripeCustomerId;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: JSON_HEADERS, body: '' };
@@ -78,23 +154,25 @@ exports.handler = async (event) => {
   }
 
   const returnUrl = readRuntimeEnv('STRIPE_PORTAL_RETURN_URL') || `${origin}/premium.html`;
-  const params = new URLSearchParams();
-  params.set('customer', customer.stripe_customer_id);
-  params.set('return_url', returnUrl);
 
-  const res = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${stripeSecretKey}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: params.toString(),
-  });
-  const data = await res.json().catch(() => null);
+  let { res, data } = await createPortalSession(stripeSecretKey, customer.stripe_customer_id, returnUrl);
   if (!res.ok || !data?.url) {
+    if (isCustomerModeMismatch(data)) {
+      const recoveredCustomerId = await recoverCustomerFromLiveSubscription(stripeSecretKey, userId);
+      if (recoveredCustomerId) {
+        ({ res, data } = await createPortalSession(stripeSecretKey, recoveredCustomerId, returnUrl));
+        if (res.ok && data?.url) {
+          return json(200, { ok: true, url: data.url });
+        }
+      }
+      return json(409, {
+        ok: false,
+        error: 'Saved supporter billing data is not available in the current billing mode. Please register again.',
+      });
+    }
     return json(res.status || 502, {
       ok: false,
-      error: data?.error?.message || 'Failed to create Customer Portal session.',
+      error: 'Failed to create Customer Portal session.',
     });
   }
 

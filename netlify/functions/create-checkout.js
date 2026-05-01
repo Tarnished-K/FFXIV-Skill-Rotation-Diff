@@ -58,6 +58,26 @@ function checkoutUrl(name, origin, fallbackPath) {
   return `${origin}${fallbackPath}`;
 }
 
+function isCustomerModeMismatch(data) {
+  const message = String(data?.error?.message || '');
+  return data?.error?.code === 'resource_missing'
+    && message.includes('No such customer')
+    && message.includes('similar object exists');
+}
+
+async function createCheckoutSession(stripeSecretKey, params) {
+  const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${stripeSecretKey}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+  const data = await res.json().catch(() => null);
+  return { res, data };
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: JSON_HEADERS, body: '' };
@@ -99,15 +119,12 @@ exports.handler = async (event) => {
   params.set('success_url', checkoutUrl('STRIPE_SUCCESS_URL', origin, '/?payment=success'));
   params.set('cancel_url', checkoutUrl('STRIPE_CANCEL_URL', origin, '/premium.html?checkout=cancel'));
 
-  const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${stripeSecretKey}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: params.toString(),
-  });
-  const data = await res.json().catch(() => null);
+  let { res, data } = await createCheckoutSession(stripeSecretKey, params);
+  if (!res.ok && customer?.stripe_customer_id && isCustomerModeMismatch(data)) {
+    params.delete('customer');
+    ({ res, data } = await createCheckoutSession(stripeSecretKey, params));
+  }
+
   if (!res.ok || !data || !data.url) {
     return json(res.status || 502, {
       ok: false,

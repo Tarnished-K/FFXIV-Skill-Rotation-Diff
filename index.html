@@ -205,10 +205,7 @@
               <span class="step-number-badge">1</span>
             </div>
             <button id="loadResetBtn" type="button" class="step-reset-btn">リセット</button>
-            <div class="step-title-row">
-              <h2 id="step1Title">FF Logsの公開ログを読み込む</h2>
-              <p id="step1Message" class="message"></p>
-            </div>
+            <h2 id="step1Title">FF Logsの公開ログを読み込む</h2>
             <p id="publicOnlyNote" class="submessage">比較したい2つのレポートURLを入力してください。</p>
             <label id="logUrlALabel">A レポートURL（比較元）
               <input id="urlA" type="url" placeholder="https://www.fflogs.com/reports/xxxxxxxx#fight=1" />
@@ -224,10 +221,7 @@
             <div class="step-card-number">
               <span class="step-number-badge">2</span>
             </div>
-            <div class="step-title-row">
-              <h2 id="step2Title">戦闘データを選択する</h2>
-              <p id="step2Message" class="submessage"></p>
-            </div>
+            <h2 id="step2Title">戦闘データを選択する</h2>
             <p id="step2HelpText" class="submessage">各レポートから比較する戦闘を選択してください。</p>
             <div class="player-grid">
               <label id="logAFightLabel">A レポートの戦闘
@@ -243,10 +237,7 @@
             <div class="step-card-number">
               <span class="step-number-badge">3</span>
             </div>
-            <div class="step-title-row">
-              <h2 id="step3Title">比較するプレイヤーを選択</h2>
-              <p id="step3Message" class="submessage"></p>
-            </div>
+            <h2 id="step3Title">比較するプレイヤーを選択</h2>
             <p id="step3HelpText" class="submessage">比較したいプレイヤー（ジョブ・ロール）を選択してください。</p>
             <div class="player-grid">
               <label id="logAPlayerLabel">A プレイヤー（比較元）
@@ -330,6 +321,11 @@
               <div id="bookmarkControls" class="bookmark-controls hidden">
                 <button id="saveBookmarkBtn" type="button" class="bookmark-action-btn">ブックマーク保存</button>
                 <button id="showBookmarksBtn" type="button" class="bookmark-action-btn ghost">ブックマーク一覧</button>
+              </div>
+              <div class="step-message-stack" aria-live="polite">
+                <p id="step1Message" class="message"></p>
+                <p id="step2Message" class="submessage"></p>
+                <p id="step3Message" class="submessage"></p>
               </div>
               <div id="uiToast" class="ui-toast hidden" role="status" aria-live="polite"></div>
             </div>

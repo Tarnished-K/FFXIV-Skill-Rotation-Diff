@@ -92,16 +92,18 @@
                 </div>
               </div>
               <div class="premium-hero-right">
-                <div class="premium-price-panel">
-                  <p class="premium-price-label" data-premium-i18n="monthly">月額</p>
-                  <div class="premium-price">
-                    <strong data-premium-i18n="priceAmount">200円</strong>
-                    <span data-premium-i18n="taxIncluded">税込・月額自動更新</span>
-                  </div>
+                <div class="premium-price-actions">
                   <button id="supporterCheckoutBtn" type="button" class="premium-checkout-btn" data-premium-i18n="checkoutStart">
                     登録内容を確認する
                   </button>
-                  <a class="premium-supporter-area-link" href="/supporter.html" data-premium-i18n="supporterAreaLink">登録済みの方はこちら</a>
+                </div>
+                <div class="premium-price-panel">
+                  <div class="premium-price-frame">
+                    <p class="premium-price-label" data-premium-i18n="monthly">月額</p>
+                    <div class="premium-price">
+                      <strong data-premium-i18n="priceAmount">200円</strong>
+                    </div>
+                  </div>
                   <p id="premiumMessage" class="submessage premium-message"></p>
                   <p class="premium-reassurance" data-premium-i18n="reassurance">
                     サポーター登録は月額自動更新です。解約されるまで毎月決済されます。
@@ -113,9 +115,9 @@
 
           <section class="card premium-preview-card">
             <h2 data-premium-i18n="previewTitle">機能プレビュー</h2>
-            <p class="premium-lead" data-premium-i18n="previewLead">
-              実際のFF Logsデータから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。
-              サポータープランではボス詠唱表示、DPS推移グラフ、保存機能、解析回数上限などが拡張されます。新機能が追加され次第、こちらのプレビューでも公開します。
+            <p class="premium-lead">
+              <span data-premium-i18n="previewLeadFree">実際のFF Logsデータから生成した比較タイムラインです。デバフレーン、シナジーレーン、PT比較などの基本的な可視化機能は、無料ユーザーでも利用できます。</span><br>
+              <span data-premium-i18n="previewLeadSupporter">サポータープランではボス詠唱表示、DPS推移グラフ、保存機能、解析回数上限などが拡張されます。新機能が追加され次第、こちらのプレビューでも公開します。</span>
             </p>
             <div id="premiumPreviewOuter" class="premium-preview-outer"></div>
           </section>
@@ -225,10 +227,10 @@
             priceAmount: '¥200',
             taxIncluded: 'tax included, auto-renewing monthly',
             checkoutStart: 'Review registration details',
-            supporterAreaLink: 'Already registered? Open Supporter page',
             reassurance: 'Supporter registration is a monthly auto-renewing service. You will be charged every month until you cancel.',
             previewTitle: 'Feature Preview',
-            previewLead: 'This preview is generated from real FF Logs data. Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users. The Supporter plan expands boss cast display, DPS trend graphs, saved workflows, and analysis limits. Newly added features will also be published in this preview as they become available.',
+            previewLeadFree: 'This preview is generated from real FF Logs data. Basic visualization features such as debuff lanes, synergy lanes, and party comparison are available to free users.',
+            previewLeadSupporter: 'The Supporter plan expands boss cast display, DPS trend graphs, saved workflows, and analysis limits. Newly added features will also be published in this preview as they become available.',
             donationKicker: 'Donation / Optional Support',
             donationTitle: 'Optional Donation',
             donationBody: 'Donation is optional and separate from Supporter registration. Donations do not unlock site features. Support is used to help cover hosting and development costs. It does not sell access to FINAL FANTASY XIV images, names, icons, or related materials.',

@@ -60,6 +60,28 @@ describe('page asset loading', () => {
     expect(supporter).toContain("location.href = lang === 'en' ? '/supporter.html' : '/supporter.html?lang=en'");
   });
 
+  it('shows step 1-3 messages beside the bookmark controls', () => {
+    const html = readRootFile('index.html');
+
+    expect(html).not.toContain('step-title-row');
+    expect(html).toContain('class="step-message-stack"');
+    expect(html.indexOf('id="bookmarkControls"')).toBeLessThan(html.indexOf('id="step1Message"'));
+    expect(html.indexOf('id="step1Message"')).toBeLessThan(html.indexOf('id="uiToast"'));
+  });
+
+  it('keeps supporter registration copy and controls in the requested layout', () => {
+    const premium = readRootFile('premium.html');
+
+    expect(premium).toContain('サポータープランは、当サイト独自の解析処理、保存機能、広告非表示などを提供するものです。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。');
+    expect(premium).toContain('class="premium-price-frame"');
+    expect(premium).toContain('data-premium-i18n="previewLeadFree"');
+    expect(premium).toContain('<br>');
+    expect(premium).toContain('data-premium-i18n="previewLeadSupporter"');
+    expect(premium).not.toContain('登録済みの方はこちら');
+    expect(premium).not.toContain('premium-supporter-area-link');
+    expect(premium).not.toContain('税込・月額自動更新');
+  });
+
   it('keeps FF14 asset visualizations out of supporter-only pricing copy', () => {
     const premium = readRootFile('premium.html');
 

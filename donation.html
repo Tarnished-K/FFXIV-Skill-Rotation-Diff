@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="pageTitle">Donation | FFXIV Skill Rotation Diff</title>
+    <meta name="description" content="FFXIV Skill Rotation Diffへの任意Donationページです。Donationはサポーター登録とは別で、機能差は発生しません。" />
+    <link rel="icon" type="image/png" href="/assets/ui/favicon-crystal.png" />
+    <link rel="stylesheet" href="styles-base.css" />
+    <link rel="stylesheet" href="styles-layout.css" />
+    <link rel="stylesheet" href="styles-timeline.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="feedback-page premium-page">
+    <header>
+      <div class="header-row">
+        <div>
+          <h1 data-i18n="heading">Donation</h1>
+          <p class="submessage" data-i18n="lead">任意の支援ページです。サポーター登録とは別のものです。</p>
+        </div>
+        <div class="header-actions">
+          <a class="button-link ghost" data-i18n="backBtn" data-i18n-href-ja="/" data-i18n-href-en="/?lang=en" href="/">トップへ戻る</a>
+          <button id="langToggle" type="button" class="lang-btn">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="feedback-main">
+      <section class="card premium-donation-card">
+        <div class="premium-donation-copy">
+          <div class="guide-kicker" data-i18n="kicker">Donation / 任意の支援</div>
+          <h2 data-i18n="title">任意のDonation</h2>
+          <p data-i18n="body">Donationは任意の支援であり、サポーター登録とは別のものです。Donationの有無によって機能差は発生しません。支援はサーバー費用・開発環境の維持に充てられます。FINAL FANTASY XIVの画像・名称・アイコン等へのアクセスを販売するものではありません。</p>
+        </div>
+        <a class="premium-donation-btn" href="#" target="_blank" rel="noopener noreferrer" data-donation-link data-donation-disabled="true" data-i18n="button">Donation（準備中）</a>
+      </section>
+
+      <section class="card feedback-form-card">
+        <h2 data-i18n="policyTitle">Donationの扱い</h2>
+        <ul>
+          <li data-i18n="policy1">Donationは任意であり、サポーター機能の利用条件ではありません。</li>
+          <li data-i18n="policy2">Donationを行っても、解析回数、広告表示、保存機能などの扱いは変わりません。</li>
+          <li data-i18n="policy3">サポーター登録や請求管理は、サポーター登録ページまたはサポーターページから行ってください。</li>
+        </ul>
+        <p>
+          <a class="button-link ghost" href="/premium.html" data-i18n="supporterLink">サポーター登録ページへ</a>
+          <a class="button-link ghost" href="/terms.html" data-i18n="termsLink">利用規約</a>
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-legal">
+        <small>&copy; SQUARE ENIX. This is an unofficial fan tool and is not affiliated with SQUARE ENIX CO., LTD. FINAL FANTASY XIV and related materials are trademarks and/or copyrighted works of SQUARE ENIX CO., LTD.</small>
+        <small>Data provided by <a href="https://www.fflogs.com" target="_blank" rel="noopener noreferrer">FF Logs</a>. &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms</a> &nbsp;|&nbsp; <a href="/commercial-transactions.html">Specified Commercial Transactions Act</a></small>
+      </div>
+      <small class="build-info" data-build-info>Version loading...</small>
+    </footer>
+
+    <script src="./scripts/shared/donation-config.js"></script>
+    <script src="./scripts/shared/build-info.js"></script>
+    <script src="./scripts/shared/donation.js"></script>
+    <script>
+(function () {
+  const LANG = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
+  document.documentElement.lang = LANG;
+
+  const T = {
+    ja: {},
+    en: {
+      pageTitle: 'Donation | FFXIV Skill Rotation Diff',
+      heading: 'Donation',
+      lead: 'Optional support, separate from Supporter registration.',
+      backBtn: 'Back to App',
+      kicker: 'Donation / Optional Support',
+      title: 'Optional Donation',
+      body: 'Donation is optional and separate from Supporter registration. Donations do not unlock site features. Support is used to help cover hosting and development costs. It does not sell access to FINAL FANTASY XIV images, names, icons, or related materials.',
+      button: 'Donation (coming soon)',
+      policyTitle: 'Donation Policy',
+      policy1: 'Donation is optional and is not required to use Supporter features.',
+      policy2: 'Donation does not change analysis limits, ads, saved features, or any other site feature.',
+      policy3: 'Use the Supporter registration page or Supporter page for Supporter registration and billing management.',
+      supporterLink: 'Open Supporter registration',
+      termsLink: 'Terms',
+    },
+  };
+
+  const t = T[LANG];
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      const key = el.dataset.i18n;
+      if (t[key]) el.textContent = t[key];
+      const href = el.dataset['i18nHref' + (LANG === 'en' ? 'En' : 'Ja')];
+      if (href) el.setAttribute('href', href);
+    });
+    document.title = t.pageTitle || document.title;
+    const langToggle = document.getElementById('langToggle');
+    if (langToggle) {
+      langToggle.textContent = LANG === 'ja' ? 'EN' : 'JA';
+      langToggle.addEventListener('click', function () {
+        location.href = LANG === 'ja' ? '/donation.html?lang=en' : '/donation.html';
+      });
+    }
+    if (globalThis.DonationModule) globalThis.DonationModule.applyDonationLinks();
+  });
+}());
+    </script>
+  </body>
+</html>

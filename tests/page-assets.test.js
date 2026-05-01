@@ -14,7 +14,7 @@ describe('page asset loading', () => {
       'href="styles.css"',
     ];
 
-    for (const fileName of ['index.html', 'tutorial.html', 'contact.html', 'feedback-admin.html', 'analytics.html']) {
+    for (const fileName of ['index.html', 'tutorial.html', 'contact.html', 'feedback-admin.html', 'analytics.html', 'donation.html']) {
       const html = readRootFile(fileName);
       let lastIndex = -1;
       for (const expectedLink of expectedLinks) {
@@ -31,6 +31,24 @@ describe('page asset loading', () => {
     expect(mainModule).toContain("'./tutorial.js'");
     expect(mainModule.indexOf("'./tutorial.js'"))
       .toBeLessThan(mainModule.indexOf("'./bootstrap.js'"));
+  });
+
+  it('uses the standalone donation route from public footer links', () => {
+    for (const fileName of ['index.html', 'tutorial.html', 'contact.html', 'commercial-transactions.html', 'privacy.html', 'terms.html', 'premium.html']) {
+      const html = readRootFile(fileName);
+
+      expect(html).toContain('href="/donation.html"');
+      expect(html).not.toContain('/premium.html#donation');
+    }
+  });
+
+  it('keeps the standalone donation page separate from Supporter registration', () => {
+    const donation = readRootFile('donation.html');
+
+    expect(donation).toContain('Donationは任意の支援であり、サポーター登録とは別のものです。');
+    expect(donation).toContain('Donationの有無によって機能差は発生しません。');
+    expect(donation).toContain('href="/premium.html"');
+    expect(donation).toContain('data-donation-link');
   });
 
   it('keeps FF14 asset visualizations out of supporter-only pricing copy', () => {

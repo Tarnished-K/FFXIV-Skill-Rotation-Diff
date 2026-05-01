@@ -149,6 +149,14 @@
         if (node) node.textContent = value || '';
       }
 
+      function formatPortalError(error) {
+        const detail = error?.message || text('不明なエラー', 'Unknown error');
+        return text(
+          `Stripe Customer Portalを開けませんでした。一度再試行し、続く場合は時間をおいてからもう一度お試しください。登録状況の変更は完了していません。詳細: ${detail}`,
+          `Could not open Stripe Customer Portal. Try once more, then try again later if it keeps failing. No registration change has been completed. Detail: ${detail}`,
+        );
+      }
+
       async function getSessionOrLogin() {
         const auth = globalThis.AuthModule;
         await auth?.init?.();
@@ -199,7 +207,7 @@
           }
           window.location.href = data.url;
         } catch (error) {
-          setMessage(error.message || text('エラーが発生しました。', 'An error occurred.'));
+          setMessage(formatPortalError(error));
         } finally {
           if (button) button.disabled = false;
         }

@@ -51,6 +51,16 @@ describe('page asset loading', () => {
     expect(donation).toContain('data-donation-link');
   });
 
+  it('explains next steps for Stripe checkout and portal failures', () => {
+    const premium = readRootFile('premium.html');
+    const supporter = readRootFile('supporter.html');
+
+    expect(premium).toContain('Could not open Stripe Checkout. Try once more');
+    expect(premium).toContain('No charge has been completed.');
+    expect(supporter).toContain('Could not open Stripe Customer Portal. Try once more');
+    expect(supporter).toContain('No registration change has been completed.');
+  });
+
   it('keeps FF14 asset visualizations out of supporter-only pricing copy', () => {
     const premium = readRootFile('premium.html');
 

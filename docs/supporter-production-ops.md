@@ -4,6 +4,24 @@ Last updated: 2026-05-01
 
 This memo covers routine production checks for supporter registration, Stripe webhook delivery, Netlify Function logs, Supabase billing tables, refunds, duplicate payments, and support inquiries.
 
+## 2026-05-01 Production Check Notes
+
+Confirmed from the local Netlify project link and CLI:
+- Current Netlify project: `vermillion-crumble-a1f1aa`
+- Production URL: `https://xiv-srd.com`
+- Project ID: `f80941de-2510-465f-bd17-294483c809fb`
+- The following functions are deployed: `stripe-webhook`, `create-checkout`, `create-portal-session`, `auth-status`, and the other current site functions.
+- Required Stripe/Supabase/supporter environment variable names exist in Netlify and were displayed masked by Netlify CLI.
+
+Not completed in this pass:
+- Supabase table contents were not inspected because BrowserMCP returned `Transport closed` when opening the Supabase dashboard.
+- Stripe Dashboard live-mode event details were not inspected in-browser in this pass.
+
+Follow-up:
+- Reopen Supabase dashboard for project `qywkgixcsnzepiruuzda` with BrowserMCP and inspect the three billing tables listed below.
+- Confirm the latest live Stripe webhook event in Stripe Dashboard and correlate its event ID with `stripe_webhook_events.processed_at`.
+- After 2026-06-01, confirm the canceled production test account is no longer treated as supporter.
+
 ## Routine Payment Verification
 
 1. Open Stripe Dashboard in live mode.
